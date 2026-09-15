@@ -237,6 +237,7 @@ consensus_table <- sig_deseq |>
 #| label: tbl-consensus
 #| tbl-cap: "Consensus between significant genes found by DESeq2 and EdgeR"
 #| echo: false
+saveRDS(consensus_table, file = "data/consensus_table.rds")
 
 consensus_table |>
   select(1, 6:10, 2:5) |> 

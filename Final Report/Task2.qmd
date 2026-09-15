@@ -1,8 +1,11 @@
 # Task 2: gRNA design for OAS2
 
 ```{r task2-setup}
+#| include: false
 library(tidyverse)
 library(knitr)
+
+consensus_table <- readRDS("data/consensus_table.rds")
 ```
 
 
