@@ -1,0 +1,105 @@
+# Task 1
+
+```{r setup}
+#| include: false
+library(tidyverse)
+library(DESeq2)
+library(edgeR)
+
+raw_counts_data <- read_delim(
+  "C:/Users/maxne/Documents/Master_DS/5. Semester @ QUT/Biomedical Data Science/Assignments/Project/00_data/raw_counts/gse159717_rnaseq_deseq_5dpi_counts_raw.tsv",
+  delim = "\t",
+  show_col_types = FALSE
+)
+```
+
+To identify genes that are significantly deregulated in COVID-19 patients compared to healthy (mock) controls, an RNA-seq differential expression analysis was performed. Raw count data was first processed to extract crucial metadata from the sample naming patterns `S_{donor}_{condition}_{time}_{sample_id}` (e.g. `S_2_SARS_5dpi_S70003`), allowing the assignment of each sample to a specific donor and condition.
+
+```{r creating_metadata}
+col_names <- colnames(raw_counts_data[7:12])
+
+col_data <- tibble(row_name = col_names) |>
+  separate_wider_delim(
+    row_name,
+    names = c("prefix", "donor", "condition", "time", "id"),
+    delim = "_",
+    cols_remove = FALSE
+  ) |>
+  select(row_name, donor, condition, id) |>
+  mutate(
+    donor = factor(donor, levels = unique(donor)),
+    condition = factor(condition, levels = unique(condition))
+  ) |>
+  as.data.frame() |>
+  column_to_rownames(var = "row_name")
+
+col_data <- col_data |>
+  mutate(condition = fct_relevel(condition, "mock"))
+```
+
+```{r setup_counts_data}
+#| include: false
+counts_data <- raw_counts_data |>
+  select(1, 7:12) |>
+  as.data.frame() |>
+  column_to_rownames(var = "gene_id")
+```
+
+Initially all genes with no counts in any sample have been removed from the data set.
+
+```{r}
+#| include: false
+genes_to_remove <- rowSums(counts_data) == 0
+counts_data <- counts_data[!genes_to_remove, ]
+```
+
+Before running the statistical models, the experimental design was established as `~ donor + condition`. This decision was driven by initial quality control, specifically Principal Component Analysis (PCA) (@pca-plot).
+
+```{r}
+#| echo: false
+#| label: pca-plot
+#| fig-cap: "PCA result"
+#| fig-alt: "Here you see the PCA result"
+design <- ~ donor + condition
+
+dds <- DESeqDataSetFromMatrix(
+  countData = counts_data,
+  colData = col_data,
+  design = design
+)
+
+dds <- DESeq(
+  dds
+)
+
+rld <- rlog(dds, blind = TRUE)
+plotPCA(rld, intgroup = "donor")
+```
+
+The PCA revealed that the largest source of variance (PC1) in the dataset was driven by differences between individual donors, rather than the infection status. By including donor as a covariate in the design matrix, we effectively controlled for this baseline patient-to-patient biological variation, allowing the models to isolate and accurately calculate the transcriptomic changes specifically caused by the SARS-CoV-2 infection.
+
+## Tool Selection and Preprocessing
+
+To ensure a robust and highly confident identification of differentially expressed genes (DEGs), a multi-tool approach was employed using two industry-standard R packages: DESeq2 (@Loveetal2014) and EdgeR (@Robinsonetal2009). Both tools model count data using a negative binomial distribution, which is ideal for the overdispersed nature of RNA-seq data. However, because they use slightly different methods for normalization, dispersion estimation, and outlier handling, requiring a consensus between the two significantly reduces the rate of false positives.
+
+Data preprocessing was tailored to the requirements of each tool:
+
+-   For DESeq2: Genes with a total count of zero across all samples were removed prior to analysis. DESeq2 handles its own internal filtering for low-count genes during the results generation phase to optimize the multiple testing adjustment.
+
+-   For EdgeR: The filterByExpr function was utilized to remove genes with low expression levels across the dataset prior to normalization (@Wickhametal2019). Removing these uninformative genes is critical for EdgeR as it reduces the burden of multiple hypothesis testing and improves the accuracy of dispersion estimates. The remaining library was then normalized using the Trimmed Mean of M-values (TMM) method.
+
+## Quality Control and Individual Tool Results
+
+For both tools, dispersion estimates were plotted and visually inspected. Both datasets exhibited the expected relationship: dispersion (variance) was highest for genes with low mean counts and steadily declined as expression increased, validating that the RNA-seq data adequately fit the statistical models.
+
+Following the model fitting, differential expression was calculated contrasting the SARS condition against the mock baseline.
+
+-   DESeq2 results were filtered for significance using a Benjamini-Hochberg adjusted p-value (padj) \< 0.05.
+
+-   EdgeR utilized a generalized linear model (GLM) likelihood ratio test, and results were filtered for a False Discovery Rate (FDR) \< 0.05.
+
+## Consensus Strategy
+
+To identify the most reliable candidate genes for downstream CRISPR targeting, the significant results from both DESeq2 and EdgeR were combined. An inner join was performed on the gene identifiers to isolate only the genes deemed statistically significant by both independent algorithms.
+
+Crucially, an additional filtering step was applied to ensure the directionality of the differential expression was consistent. We verified that the mathematical sign of the Log2 Fold Change (Log2FC) from DESeq2 matched the sign of the LogFC from EdgeR. This ensured that both tools agreed not only on a gene's significance, but also on whether it was upregulated or downregulated in COVID-19 patients. The resulting consensus table (Table 1) represents the core set of genes consistently and confidently deregulated by the virus, providing a reliable foundation for guide RNA design in Task 2.
