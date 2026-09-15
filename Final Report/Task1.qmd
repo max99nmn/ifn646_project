@@ -109,10 +109,12 @@ y <- calcNormFactors(y)
 
 ```
 
-
 ## Quality Control and Individual Tool Results
 
-For both tools, dispersion estimates were plotted and visually inspected (@fig-dispersionestimates and @fig-dispersionestimates2). Both datasets exhibited the expected relationship: dispersion (variance) was highest for genes with low mean counts and steadily declined as expression increased, validating that the RNA-seq data adequately fit the statistical models.
+To assess the fit of the statistical models, the variability of the data was plotted and visually inspected for both tools (@fig-dispersionestimates and @fig-dispersionestimates2). Both models exhibited the expected mean-variance relationship typical for RNA-seq data: variability is highest for genes with low expression counts and steadily declines as mean expression increases.
+
+For DESeq2 (@fig-dispersionestimates), the plot shows gene-wise dispersion estimates (black dots) being shrunk towards the fitted curve (red line) to yield the final dispersion estimates (blue dots). For edgeR (@fig-dispersionestimates2), the plot displays the Biological Coefficient of Variation (BCV). Similar to DESeq2, edgeR shrinks the tagwise (gene-specific) BCV estimates towards the abundance-dependent trend (blue line). These shrinkage patterns successfully reduce false positives and validate that the data adequately fit the negative binomial distribution assumptions of both tools.
+
 ```{r}
 #| label: fig-dispersionestimates
 #| fig-cap: "Dispersion Estimates (DESeq2)"
@@ -123,7 +125,7 @@ plotDispEsts(dds, main = "DESeq2 Dispersion Estimates")
 
 ```{r}
 #| label: fig-dispersionestimates2
-#| fig-cap: "Dispersion Estimates (EdgeR)"
+#| fig-cap: "Biological Coefficient of Variation (edgeR)"
 #| echo: false
 y_dispersion <- estimateDisp(
   y,
@@ -155,7 +157,6 @@ lrt <- glmLRT(
   coef = "conditionSARS"
 )
 ```
-
 
 ```{r calc-deseq-results-contd}
 #| include: false
