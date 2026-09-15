@@ -11,5 +11,5 @@ The research is framed by a three-part underlying hypothesis:
 To investigate this hypothesis, the analysis is structured into three specific tasks:
 
 -   **Differential Expression Analysis:** Utilizing raw RNA-seq counts and a consensus of multiple tools to identify genes with a significant difference in expression due to COVID-19.
--   **CRISPR Guide Design:** Designing suitable guide RNA (gRNA) sequences for CRISPR (either CRISPRi or CRISPRa) that target the first exon of a selected gene, while evaluating predicted efficiency and specificity.
+-   **CRISPR Guide RNA (gRNA) Design:** Designing suitable guide RNA (gRNA) sequences for CRISPR (either CRISPRi or CRISPRa) that target the first exon of a selected gene, while evaluating predicted efficiency and specificity.
 -   **Genomic Variation Assessment:** Refining the gRNA analysis using variant information (VCF files) from real human genomes to assess how individual genetic differences impact guide suitability and the risk of off-target modifications.
