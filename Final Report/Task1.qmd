@@ -76,9 +76,10 @@ dds <- DESeq(
 #| warning: false
 #| label: fig-pca
 #| fig-cap: "PCA result"
-#| fig-alt: "Here you see the PCA result"
+#| fig-alt: "PCA result"
 rld <- rlog(dds, blind = TRUE)
-plotPCA(rld, intgroup = "donor")
+plotPCA(rld, intgroup = "donor") +
+  labs(title = "PC2 vs. PC1 colored by Donor (1 point per condition)")
 
 ```
 
@@ -111,13 +112,19 @@ y <- calcNormFactors(y)
 
 ## Quality Control and Individual Tool Results
 
-For both tools, dispersion estimates were plotted and visually inspected (@fig-dispersionestimates). Both datasets exhibited the expected relationship: dispersion (variance) was highest for genes with low mean counts and steadily declined as expression increased, validating that the RNA-seq data adequately fit the statistical models.
+For both tools, dispersion estimates were plotted and visually inspected (@fig-dispersionestimates and @fig-dispersionestimates2). Both datasets exhibited the expected relationship: dispersion (variance) was highest for genes with low mean counts and steadily declined as expression increased, validating that the RNA-seq data adequately fit the statistical models.
 ```{r}
 #| label: fig-dispersionestimates
+#| fig-cap: "Dispersion Estimates (DESeq2)"
 #| echo: false
 
 plotDispEsts(dds, main = "DESeq2 Dispersion Estimates")
+```
 
+```{r}
+#| label: fig-dispersionestimates2
+#| fig-cap: "Dispersion Estimates (EdgeR)"
+#| echo: false
 y_dispersion <- estimateDisp(
   y,
   design_matrix,
@@ -125,7 +132,6 @@ y_dispersion <- estimateDisp(
 )
 plotBCV(y_dispersion, main = "EdgeR Biological Coeficient of Variation")
 ```
-
 
 Following the model fitting, differential expression was calculated contrasting the SARS condition against the mock baseline.
 
@@ -202,7 +208,7 @@ print(paste0("Significant genes: ", nrow(sig_deseq), " found by DESeq2 and ", nr
 
 To identify the most reliable candidate genes for downstream CRISPR targeting, the significant results from both DESeq2 and EdgeR were combined. An inner join was performed on the gene identifiers to isolate only the genes deemed statistically significant by both independent algorithms.
 
-Crucially, an additional filtering step was applied to ensure the directionality of the differential expression was consistent. We verified that the mathematical sign of the Log2 Fold Change (Log2FC) from DESeq2 matched the sign of the LogFC from EdgeR. This ensured that both tools agreed not only on a gene's significance, but also on whether it was upregulated or downregulated in COVID-19 patients. The resulting consensus table (Table 1) represents the core set of genes consistently and confidently deregulated by the virus, providing a reliable foundation for guide RNA design in Task 2.
+Crucially, an additional filtering step was applied to ensure the directionality of the differential expression was consistent. We verified that the mathematical sign of the Log2 Fold Change (Log2FC) from DESeq2 matched the sign of the LogFC from EdgeR. This ensured that both tools agreed not only on a gene's significance, but also on whether it was upregulated or downregulated in COVID-19 patients. The resulting consensus table (@tbl-consensus) represents the core set of genes consistently and confidently deregulated by the virus, providing a reliable foundation for guide RNA design in Task 2.
 
 ```{r generate-consensus-table}
 consensus_table <- sig_deseq |>
@@ -228,9 +234,72 @@ consensus_table <- sig_deseq |>
 
 ```{r}
 #| label: tbl-consensus
+#| tbl-cap: "Consensus between significant genes found by DESeq2 and EdgeR"
 #| echo: false
 
 consensus_table |> 
-  kable(digits = 3, caption = "Consensus between significant genes found by DESeq2 and EdgeR")
+  kable(digits = 3)
+```
+
+
+```{r export-task1-for-task2}
+#| include: false
+
+consensus_for_task2 <- sig_deseq |>
+  select(
+    gene_id,
+    DESeq2_log2FC = log2FoldChange,
+    DESeq2_FDR = padj
+  ) |>
+  inner_join(
+    sig_edger |>
+      select(
+        gene_id,
+        edgeR_logFC = logFC,
+        edgeR_FDR = FDR
+      ),
+    by = "gene_id"
+  ) |>
+  filter(
+    sign(DESeq2_log2FC) == sign(edgeR_logFC)
+  ) |>
+  left_join(
+    raw_counts_data |>
+      select(
+        gene_id,
+        gene_name,
+        gene_biotype,
+        location
+      ) |>
+      distinct(gene_id, .keep_all = TRUE),
+    by = "gene_id"
+  ) |>
+  mutate(
+    direction = if_else(
+      DESeq2_log2FC > 0,
+      "Upregulated",
+      "Downregulated"
+    ),
+    consensus_FDR = pmax(
+      DESeq2_FDR,
+      edgeR_FDR
+    )
+  ) |>
+  arrange(
+    consensus_FDR,
+    DESeq2_FDR
+  ) |>
+  select(
+    gene_id,
+    gene_name,
+    gene_biotype,
+    location,
+    direction,
+    DESeq2_log2FC,
+    DESeq2_FDR,
+    edgeR_logFC,
+    edgeR_FDR
+  )
+
 ```
 
