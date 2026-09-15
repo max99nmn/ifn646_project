@@ -8,7 +8,7 @@ library(edgeR)
 library(knitr)
 
 raw_counts_data <- read_delim(
-  "C:/Users/maxne/Documents/Master_DS/5. Semester @ QUT/Biomedical Data Science/Assignments/Project/00_data/raw_counts/gse159717_rnaseq_deseq_5dpi_counts_raw.tsv",
+  "data/gse159717_rnaseq_deseq_5dpi_counts_raw.tsv",
   delim = "\t",
   show_col_types = FALSE
 )
