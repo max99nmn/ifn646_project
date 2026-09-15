@@ -2,13 +2,14 @@ project:
   type: book
 
 book:
-  title: "Final Report"
-  author: "Norah Jones"
+  title: "Precision CRISPR Guide RNA Design for Differentially Expressed Genes in COVID-19"
+  author: "Laura Calvete Pena, Maximilian Neumann, Lorenz Pietsch, Simran Prasad"
   date: "15.9.2026"
   chapters:
     - index.qmd
     - intro.qmd
     - summary.qmd
+    - Task1.qmd
     - Task2.qmd
     - references.qmd
 
