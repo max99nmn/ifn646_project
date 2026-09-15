@@ -1,5 +1,11 @@
 # Task 2: gRNA design for OAS2
 
+```{r task2-setup}
+library(tidyverse)
+library(knitr)
+```
+
+
 ## Target gene selection
 
 Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-consensus.
