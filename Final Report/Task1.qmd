@@ -228,7 +228,7 @@ consensus_table <- sig_deseq |>
       select(1:6),
     by = join_by(gene_id)
   ) |> 
-  select(-(2:5))
+  mutate(across(where(is.numeric), ~ as.character(signif(.x, 3))))
 
 ```
 
@@ -237,69 +237,8 @@ consensus_table <- sig_deseq |>
 #| tbl-cap: "Consensus between significant genes found by DESeq2 and EdgeR"
 #| echo: false
 
-consensus_table |> 
-  kable(digits = 3)
+consensus_table |>
+  select(1, 6:10, 2:5) |> 
+  arrange(adj_p_value_edger) |> 
+  kable()
 ```
-
-
-```{r export-task1-for-task2}
-#| include: false
-
-consensus_for_task2 <- sig_deseq |>
-  select(
-    gene_id,
-    DESeq2_log2FC = log2FoldChange,
-    DESeq2_FDR = padj
-  ) |>
-  inner_join(
-    sig_edger |>
-      select(
-        gene_id,
-        edgeR_logFC = logFC,
-        edgeR_FDR = FDR
-      ),
-    by = "gene_id"
-  ) |>
-  filter(
-    sign(DESeq2_log2FC) == sign(edgeR_logFC)
-  ) |>
-  left_join(
-    raw_counts_data |>
-      select(
-        gene_id,
-        gene_name,
-        gene_biotype,
-        location
-      ) |>
-      distinct(gene_id, .keep_all = TRUE),
-    by = "gene_id"
-  ) |>
-  mutate(
-    direction = if_else(
-      DESeq2_log2FC > 0,
-      "Upregulated",
-      "Downregulated"
-    ),
-    consensus_FDR = pmax(
-      DESeq2_FDR,
-      edgeR_FDR
-    )
-  ) |>
-  arrange(
-    consensus_FDR,
-    DESeq2_FDR
-  ) |>
-  select(
-    gene_id,
-    gene_name,
-    gene_biotype,
-    location,
-    direction,
-    DESeq2_log2FC,
-    DESeq2_FDR,
-    edgeR_logFC,
-    edgeR_FDR
-  )
-
-```
-

@@ -1,52 +1,8 @@
 # Task 2: gRNA design for OAS2
 
-```{r task2-setup}
-#| include: false
-
-library(tidyverse)
-library(knitr)
-
-# These are the six consensus genes obtained in Task 1.
-
-task1_consensus <- tribble(
-  ~gene_id, ~gene_name, ~gene_biotype, ~chromosome, ~DESeq2_log2FC, ~DESeq2_FDR, ~edgeR_logFC, ~edgeR_FDR,
-  "ENSG00000111335", "OAS2",       "protein_coding", "chr12",  9.90, 9.69e-10, 10.30, 1.69e-04,
-  "ENSG00000198932", "GPRASP1",    "protein_coding", "chrX",  10.10, 1.28e-05, 11.00, 1.69e-04,
-  "ENSG00000197632", "SERPINB2",   "protein_coding", "chr18", -1.69, 1.75e-04, -1.67, 1.20e-02,
-  "ENSG00000272323", "AC026801.2", "lncRNA",         "chr5",  10.10, 5.32e-04, 10.70, 1.92e-02,
-  "ENSG00000165949", "IFI27",      "protein_coding", "chr14",  3.82, 5.85e-05,  3.83, 2.15e-02,
-  "ENSG00000169248", "CXCL11",     "protein_coding", "chr4",   6.07, 1.26e-04,  6.03, 3.76e-02
-)
-
-oas2 <- task1_consensus |>
-  filter(gene_name == "OAS2")
-```
-
 ## Target gene selection
 
-Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-task1-consensus.
-
-```{r tbl-task1-consensus}
-#| echo: false
-#| tbl-cap: "Consensus genes identified in Task 1."
-
-task1_consensus |>
-  arrange(edgeR_FDR, DESeq2_FDR) |>
-  transmute(
-    Gene = gene_name,
-    `Ensembl ID` = gene_id,
-    Biotype = gene_biotype,
-    Chromosome = chromosome,
-    `DESeq2 log2FC` = DESeq2_log2FC,
-    `DESeq2 FDR` = formatC(DESeq2_FDR, format = "e", digits = 2),
-    `edgeR logFC` = edgeR_logFC,
-    `edgeR FDR` = formatC(edgeR_FDR, format = "e", digits = 2)
-  ) |>
-  kable(
-    digits = 2,
-    align = c("l", "l", "l", "l", "r", "r", "r", "r")
-  )
-```
+Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-consensus.
 
 For Task 2, we selected **OAS2** (`ENSG00000111335`). OAS2 showed a strong increase in expression in the SARS condition with both differential-expression methods. It also has a clear role in the human antiviral response. OAS2 is part of the interferon-induced OAS pathway and contributes to activation of RNase L after viral double-stranded RNA is detected [@merold2025]. OAS family genes have also been linked to severe COVID-19 and COVID-19-related heart failure [@gao2023; @hernandezramirez2026].
 
@@ -56,18 +12,27 @@ The Task 1 result for OAS2 is summarised in @tbl-oas2-de.
 #| echo: false
 #| tbl-cap: "Differential-expression results for OAS2 from Task 1."
 
-oas2_table <- tibble(
-  Method = c("DESeq2", "edgeR-LRT"),
-  `Fold change` = c(oas2$DESeq2_log2FC, oas2$edgeR_logFC),
-  `Adjusted p-value / FDR` = c(
-    formatC(oas2$DESeq2_FDR, format = "e", digits = 2),
-    formatC(oas2$edgeR_FDR, format = "e", digits = 2)
-  )
-)
-
-oas2_table |>
+consensus_table |>
+  filter(gene_name == "OAS2") |> 
+  select(fold_change_deseq, adj_p_value_deseq, fold_change_edger, adj_p_value_edger) |> 
+  pivot_longer(
+    cols = everything(),
+    names_to = c(".value", "Method"),
+    names_pattern = "(.*)_(deseq|edger)"
+  ) |> 
+  mutate(
+    Method = recode_values(
+      Method,
+      "deseq" ~ "DESeq2",
+      "edger" ~ "edgeR-LRT"
+    )
+  ) |> 
+  dplyr::rename(
+    `Fold change` = fold_change,
+    `Adjusted p-value / FDR` = adj_p_value
+  ) |> 
   kable(
-    digits = 2,
+    digits = 3,
     align = c("l", "r", "r")
   )
 ```
