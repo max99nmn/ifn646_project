@@ -45,13 +45,13 @@ consensus_table |>
   )
 ```
 
-OAS2 had a DESeq2 log2 fold change of **9.90** and an edgeR logFC of **10.30**. Both values are positive. This shows strong upregulation in the SARS samples compared with mock.
+OAS2 had a DESeq2 log2 fold change of **9.90** and an edgeR logFC of **10.30**, with adjusted values of **9.69e-10** and **0.000169**, respectively. Both methods support increased expression in SARS compared with mock. The table's "Fold change" column contains log2 values, not expression ratios. The low mock counts and two-donor design limit the interpretation of the size of this change.
 
 ## Choice of CRISPR strategy
 
-The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was strongly upregulated, we selected **CRISPR interference (CRISPRi)** rather than CRISPR activation. CRISPRi uses catalytically inactive Cas9 together with a transcriptional repressor such as KRAB to reduce transcription [@jensen2021].
+The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was upregulated, we selected **CRISPR interference (CRISPRi)** to reduce transcription. CRISPRi uses catalytically inactive Cas9 with a repressor such as KRAB [@jensen2021]. This follows the direction-based choice in the project brief. OAS2 also has an antiviral role, so increased expression does not by itself show that repression would be beneficial [@merold2025].
 
-The project asks us to design guides within the **first exon** of the selected gene. We therefore identified the first exon of the OAS2 MANE Select transcript and used this sequence for guide design.
+The project asks for guides within the **first exon**. We therefore used the first exon of the OAS2 MANE Select transcript. This meets the project's target-region requirement; it does not establish that these sites give the strongest CRISPRi repression.
 
 ## OAS2 transcript selection
 
@@ -85,7 +85,7 @@ CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA
 
 ## Guide design with CRISPOR
 
-Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR [@li2023; @cui2018]. We selected **CRISPOR** because it reports predicted guide efficiency, specificity scores and possible off-target sites. It also provides genomic locations for predicted off-targets and allows the results to be downloaded for later analysis [@concordet2018].
+Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR [@li2023; @cui2018]. Lecture 6 separates guide assessment into efficiency at the intended site and specificity against other sites. We selected **CRISPOR** because it reports both types of prediction and provides downloadable off-target sequences and genomic locations for Task 3 [@concordet2018].
 
 The CRISPOR analysis used the following settings:
 
@@ -103,7 +103,7 @@ After submitting the sequence, CRISPOR returned the SpCas9-compatible guides wit
 
 ## Selected guide RNAs
 
-Two guides were selected from the CRISPOR output. We considered both predicted efficiency and specificity. Their main CRISPOR values are shown in @tbl-selected-guides.
+Two guides were selected by considering predicted efficiency and specificity together. The first-exon sequence and an NGG PAM were required for both. We favoured candidates without reported off-targets at zero, one or two protospacer mismatches and then compared specificity and efficiency scores. Their main values are shown in @tbl-selected-guides.
 
 ```{r tbl-selected-guides}
 #| echo: false
@@ -121,16 +121,18 @@ guide_table |>
   )
 ```
 
-gRNA 1 had the higher MIT specificity score (**97**). gRNA 2 had the higher RuleSet3 efficiency score (**89**). Both guides had a CFD specificity score of **96**.
+gRNA 1 (**200/fw**, called **200forw** in Task 3) had the higher MIT specificity score (**97**) and higher Doench 2016 and Moreno-Mateos scores (**64** and **48**). gRNA 2 (**248/fw**, or **248forw**) had the higher RuleSet3 score (**89**). Both had a CFD specificity score of **96**. We retained gRNA 1 for its stronger MIT score and gRNA 2 as an alternative supported by RuleSet3. The efficiency models disagree, so there is no single guide that is best under every displayed score.
 
-CRISPOR reported **52 possible off-target sites** for each guide. For gRNA 1, the off-target distribution was `0-0-0-4-48` for sites with 0, 1, 2, 3 and 4 mismatches. For gRNA 2, the distribution was `0-0-0-5-47`. Therefore, no perfect, one-mismatch or two-mismatch off-target was reported in the displayed results.
+CRISPOR reported **52 possible off-target sites** for each guide. For gRNA 1, the distribution was `0-0-0-4-48` for sites with 0, 1, 2, 3 and 4 mismatches; for gRNA 2 it was `0-0-0-5-47`. Neither has a reported perfect, one-mismatch or two-mismatch off-target in this search. gRNA 1 has one fewer three-mismatch site. As discussed in Lecture 6, counts alone are insufficient because mismatch position also affects recognition; the CFD model additionally accounts for mismatch type [@haeussler2016].
 
-These values are predictions. They are useful for comparing guide candidates, but they do not prove how well a guide will work experimentally.
+The displayed alternatives also support the choice. Compared with 166/rev, 200/fw has higher MIT and CFD specificity (97 versus 90 and 96 versus 92) and fewer reported off-targets (52 versus 79). The 150/rev candidate is marked "Inefficient" and has lower Doench 2016 and RuleSet3 values than 248/fw (31 versus 55 and -77 versus 89). These comparisons support retaining the selected pair for Task 3.
+
+These scores are predictions, not measured success rates. Values should be compared within the same scoring model rather than averaged across models. CRISPOR's cleavage-based predictions do not directly measure CRISPRi repression. Both guides therefore remain candidates that require individual sequence checks and experimental validation.
 
 ## Preparation for Task 3
 
-The selected guides and their off-target information can now be carried forward to Task 3. The next step is to check whether genetic variants in individual genomes change the guide target sequence or alter possible off-target sites.
+The selected guides and their off-target information are carried forward to Task 3. The reference-genome design does not confirm that each individual's target and PAM are unchanged. OAS2 is on chromosome 12, whereas the supplied variant subsets cover chromosomes 1 and 2. Task 3 can therefore reassess off-targets on those chromosomes but cannot confirm OAS2 target availability from those files.
 
 ## Task 2 conclusion
 
-OAS2 was selected from the six Task 1 consensus genes because it showed strong and consistent upregulation in both DESeq2 and edgeR and has a clear role in the antiviral response. CRISPRi was selected to reduce its expression. The MANE Select transcript `ENST00000392583.7` was used to identify the 267 bp first exon. CRISPOR was then used with the GRCh38/hg38 reference genome and SpCas9-NGG settings. Two candidate guides at positions **200/fw** and **248/fw** were selected based on their predicted efficiency and specificity. These guides will be used in Task 3.
+OAS2 was selected from the six consensus genes because both expression methods support upregulation and the gene has a documented antiviral role. CRISPRi was chosen under the project's expression-restoration hypothesis. The 267 bp first exon of `ENST00000392583.7` was analysed with GRCh38/hg38 and SpCas9-NGG settings. **200/fw** was retained for its stronger MIT specificity and **248/fw** as a second candidate with a higher RuleSet3 prediction. Their suitability in individual genomes is assessed within the available data in Task 3.

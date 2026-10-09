@@ -1,15 +1,15 @@
 # Introduction
 
-This report details a multi-stage analysis of real-world biomedical data. The overarching objective of this collaborative project is to conceptually explore the development of novel drugs against COVID-19.
+This report presents a three-stage analysis of biomedical data. The project explores how differential-expression results can support CRISPR guide design in a teaching scenario about COVID-19.
 
-The research is framed by a three-part underlying hypothesis:
+The project uses three statements to frame the analysis:
 
 -   COVID-19 patients suffer from a deregulation in gene expression.
 -   CRISPR can be used to regulate the expression of specific genes of interest.
--   If we can restore the expression of specific genes deregulated in COVID-19, it will lead to a faster and more complete recovery.
+-   Restoring the expression of selected genes could improve recovery. This is the fictional working hypothesis used for the project.
 
-To investigate this hypothesis, the analysis is structured into three specific tasks:
+The analysis addresses three tasks. It does not test whether the proposed guides improve recovery:
 
--   **Differential Expression Analysis:** Utilizing raw RNA-seq counts and a consensus of multiple tools to identify genes with a significant difference in expression due to COVID-19.
--   **CRISPR Guide RNA (gRNA) Design:** Designing suitable guide RNA (gRNA) sequences for CRISPR (either CRISPRi or CRISPRa) that target the first exon of a selected gene, while evaluating predicted efficiency and specificity.
--   **Genomic Variation Assessment:** Refining the gRNA analysis using variant information (VCF files) from real human genomes to assess how individual genetic differences impact guide suitability and the risk of off-target modifications.
+-   **Differential Expression Analysis:** Using raw RNA-seq counts and agreement between two tools to identify genes with different expression in SARS and mock samples.
+-   **CRISPR Guide RNA (gRNA) Design:** Selecting guides in the first exon of a consensus gene, choosing CRISPRi or CRISPRa based on the expression change, and comparing predicted efficiency and specificity.
+-   **Genomic Variation Assessment:** Using individual variant information to reassess guide suitability and possible off-target recognition. For the selected CRISPRi strategy, unintended gene regulation is the relevant concern.

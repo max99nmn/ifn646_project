@@ -2,13 +2,11 @@
 
 ## Findings across the three tasks
 
-The project connects differential-expression analysis with CRISPR guide
-design and an assessment of individual genetic variation. Task 1 provides
-the expression-analysis stage and the basis for selecting a gene. Task 2
-takes OAS2 forward for CRISPRi and selects the guides **200forw** and
-**248forw** using CRISPOR predictions. The detailed expression results,
-selection thresholds and guide scores are reported in their respective
-task chapters.
+The project connects differential-expression analysis, guide design and individual variant assessment. Task 1 found **68 significant genes with DESeq2** and **7 with edgeR**. Six genes were significant in both tools with the same direction of change: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five were upregulated and SERPINB2 was downregulated. The intersection favours agreement between methods, but may leave out real changes detected by only one tool.
+
+Task 2 selected **OAS2** because both methods supported increased expression and it has a documented antiviral role. Its log2 fold changes were **9.90** and **10.30**, although low mock counts and two donors limit the interpretation of these large values. CRISPRi was chosen under the project's working hypothesis; the analysis does not show that reducing OAS2 would improve recovery.
+
+CRISPOR identified **200forw** and **248forw** as candidates in the first exon. Their MIT specificity scores were **97** and **89**, and both had a CFD specificity score of **96**. Each had 52 reported off-targets, with none at zero, one or two mismatches in that search. 200forw had stronger MIT specificity, while 248forw had the higher RuleSet3 prediction. Neither prediction establishes experimental CRISPRi activity.
 
 Task 3 refines the reference-based assessment using reported variant and
 genotype information for seven individuals. One G>A variant at
@@ -25,6 +23,8 @@ PAM on both haplotypes. Thus, one variant is present in four individuals,
 with different allele-level implications. No overlapping variant was
 reported for 200forw in the chromosome 1/2 subset assessed.
 
+The intended OAS2 targets were also checked using **chromosome 12 data**. No overlapping VCF record was found for 200forw, while four were found for 248forw. All seven individuals had the reference genotype `0|0` at all four sites. Both local copies reconstructed from the supplied calls had **zero protospacer mismatches** and retained **TGG** for both guides in all seven individuals. These results describe the supplied variant calls; sequence coverage was not checked.
+
 ## Implications for guide selection
 
 The guides selected in Task 2 remain candidates for further evaluation.
@@ -33,11 +33,7 @@ the reference-based prediction [@lessard2017]. It is not sufficient to
 rank one guide as safer overall or to confirm either guide for every
 individual.
 
-Two questions remain open. First, the intended OAS2 target sequences and
-their PAMs must be checked using matching chromosome 12 data. Second,
-the current off-target comparison cannot identify new sites created by
-variants outside the original CRISPOR list. A wider variant-aware search
-is needed to address this limitation.
+The chromosome 12 check found no called change in either intended target or PAM for the seven individuals. Reliable sequence coverage across those regions still needs to be confirmed. The off-target comparison also cannot identify new sites created by variants outside the original CRISPOR list. A wider variant-aware search is needed to address this limitation.
 
 The interpretation also needs to match the proposed CRISPRi system.
 CRISPRi regulates transcription rather than cutting DNA [@jensen2021].
@@ -46,10 +42,4 @@ but do not directly establish the extent of off-target gene regulation.
 
 ## Overall conclusion
 
-The analysis provides a clear path from expression evidence to guide
-selection and individual variant assessment. Its most specific Task 3
-finding is a genotype-dependent PAM change at a reference-predicted
-248forw off-target site. Completing the on-target assessment, checking
-for variant-created off-target sites and validating guide activity would
-be necessary before making stronger claims about individual guide
-suitability or biological effects.
+Task 1 identified six consensus candidates, and Task 2 selected two OAS2 guides for further evaluation. Task 3 identified a genotype-dependent PAM change at one predicted 248forw off-target site. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Checking sequence coverage and searching for variant-created off-targets would strengthen individual guide assessment. Experimental work would still be needed to test guide activity and biological effects.
