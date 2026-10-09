@@ -1,12 +1,35 @@
 # Preface {.unnumbered}
 
-This is a Quarto book.
+This report presents our group project for **IFN646 Biomedical Data Science
+at Queensland University of Technology**. It connects three stages of a
+biomedical data analysis: identifying changes in gene expression, selecting
+CRISPR guide RNAs, and assessing how human genetic variation may affect
+those guides.
 
-To learn more about Quarto books visit <https://quarto.org/docs/books>.
+The project uses real biomedical data within a teaching scenario. Its
+working hypothesis is that regulating genes affected by COVID-19 could
+support recovery. This hypothesis provides a reason for the analysis;
+the project does not test whether the proposed guides improve clinical
+outcomes.
 
-```{r}
-1 + 3
-```
+The report follows the decisions from the RNA-seq analysis to the evaluation
+of **OAS2** and the selected guides **200forw** and **248forw**. Each task
+explains the approach, presents the findings, and discusses what the
+results support. The final chapters bring these findings together and
+document how to reproduce the analysis.
 
+## How to read this report
 
+| Chapter | Purpose |
+|:--|:--|
+| [Introduction](intro.qmd) | Explain the project context and the questions addressed. |
+| [Task 1](Task1.qmd) | Analyse differential expression and combine evidence from the selected tools. |
+| [Task 2](Task2.qmd) | Explain the choice of OAS2 and assess guide efficiency and specificity. |
+| [Task 3](Task3.qmd) | Reassess the guides using individual variant information. |
+| [Summary](summary.qmd) | Connect the findings and explain the main limitations. |
+| [Reproducibility](reproducibility.qmd) | Describe the required files and how to run the analysis. |
+| [References](references.qmd) | List the sources cited throughout the report. |
 
+Analysis code is available in expandable blocks. Important tables and
+figures remain visible so that the main findings can be read without
+opening the code.

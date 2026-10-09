@@ -8,7 +8,6 @@ library(knitr)
 consensus_table <- readRDS("data/consensus_table.rds")
 ```
 
-
 ## Target gene selection
 
 Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-consensus.

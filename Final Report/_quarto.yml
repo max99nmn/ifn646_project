@@ -1,27 +1,46 @@
 project:
   type: book
+  output-dir: _book
 
 book:
   title: "Precision CRISPR Guide RNA Design for Differentially Expressed Genes in COVID-19"
-  author: "Laura Calvete Pena, Maximilian Neumann, Lorenz Pietsch, Simran Prasad"
-  date: "15.9.2026"
+  author:
+    - "Laura Calvete Pena"
+    - "Maximilian Neumann"
+    - "Lorenz Pietsch"
+    - "Simran Prasad"
+  date: "2026-09-15"
+  date-format: "D MMMM YYYY"
   chapters:
     - index.qmd
     - intro.qmd
-    - summary.qmd
     - Task1.qmd
     - Task2.qmd
+    - Task3.qmd
+    - summary.qmd
+    - reproducibility.qmd
     - references.qmd
 
 bibliography: references.bib
+link-citations: true
+number-depth: 2
 
 format:
   html:
-    theme:
-      - cosmo
-      - brand
-  pdf:
-    documentclass: scrreprt
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    code-fold: true
+    code-summary: "Show analysis code"
+    code-tools: true
+
+execute:
+  enabled: true
+  echo: true
+  warning: false
+  message: false
+  error: false
+  freeze: false
+  cache: false
 
 editor: visual
-

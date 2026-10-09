@@ -1,7 +1,55 @@
 # Summary
 
-In summary, this book has no content whatsoever.
+## Findings across the three tasks
 
-```{r}
-1 + 1
-```
+The project connects differential-expression analysis with CRISPR guide
+design and an assessment of individual genetic variation. Task 1 provides
+the expression-analysis stage and the basis for selecting a gene. Task 2
+takes OAS2 forward for CRISPRi and selects the guides **200forw** and
+**248forw** using CRISPOR predictions. The detailed expression results,
+selection thresholds and guide scores are reported in their respective
+task chapters.
+
+Task 3 refines the reference-based assessment using reported variant and
+genotype information for seven individuals. One G>A variant at
+**chr1:224,887,199** overlaps a predicted off-target site for 248forw.
+The variant changes the PAM from **AGG to AGA**, while the 20-base
+protospacer remains unchanged at **four mismatches**. This alters the
+sequence's suitability under the canonical NGG-PAM framework; it does not
+provide a measured change in off-target activity.
+
+The effect differs between individuals. **HG00142, HG03129 and NA19175**
+are heterozygous and retain the reference PAM on one haplotype.
+**NA19462** is homozygous for the alternate allele and has the changed
+PAM on both haplotypes. Thus, one variant is present in four individuals,
+with different allele-level implications. No overlapping variant was
+reported for 200forw in the chromosome 1/2 subset assessed.
+
+## Implications for guide selection
+
+The guides selected in Task 2 remain candidates for further evaluation.
+The variant finding illustrates why an individual genome can differ from
+the reference-based prediction [@lessard2017]. It is not sufficient to
+rank one guide as safer overall or to confirm either guide for every
+individual.
+
+Two questions remain open. First, the intended OAS2 target sequences and
+their PAMs must be checked using matching chromosome 12 data. Second,
+the current off-target comparison cannot identify new sites created by
+variants outside the original CRISPOR list. A wider variant-aware search
+is needed to address this limitation.
+
+The interpretation also needs to match the proposed CRISPRi system.
+CRISPRi regulates transcription rather than cutting DNA [@jensen2021].
+Cleavage-based prediction scores therefore support candidate assessment
+but do not directly establish the extent of off-target gene regulation.
+
+## Overall conclusion
+
+The analysis provides a clear path from expression evidence to guide
+selection and individual variant assessment. Its most specific Task 3
+finding is a genotype-dependent PAM change at a reference-predicted
+248forw off-target site. Completing the on-target assessment, checking
+for variant-created off-target sites and validating guide activity would
+be necessary before making stronger claims about individual guide
+suitability or biological effects.
