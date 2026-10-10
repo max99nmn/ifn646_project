@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.7.32">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>3&nbsp; Task 2: gRNA design for OAS2 – Precision CRISPR Guide RNA Design for Differentially Expressed Genes in COVID-19</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./Task3.html" rel="next">
+<link href="./Task1.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-364982630eef5352dd1537128a8ed5cb.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./Task2.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">Precision CRISPR Guide RNA Design for Differentially Expressed Genes in COVID-19</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Task1.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Task 1: Differential Expression Analysis</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Task2.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./Task3.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Task 3: Impact of Human Genetic Variation on CRISPR Guide Performance</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Summary</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./reproducibility.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Reproducibility</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">References</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#target-gene-selection" id="toc-target-gene-selection" class="nav-link active" data-scroll-target="#target-gene-selection"><span class="header-section-number">3.1</span> Target gene selection</a></li>
+  <li><a href="#choice-of-crispr-strategy" id="toc-choice-of-crispr-strategy" class="nav-link" data-scroll-target="#choice-of-crispr-strategy"><span class="header-section-number">3.2</span> Choice of CRISPR strategy</a></li>
+  <li><a href="#oas2-transcript-selection" id="toc-oas2-transcript-selection" class="nav-link" data-scroll-target="#oas2-transcript-selection"><span class="header-section-number">3.3</span> OAS2 transcript selection</a></li>
+  <li><a href="#selection-of-the-first-exon" id="toc-selection-of-the-first-exon" class="nav-link" data-scroll-target="#selection-of-the-first-exon"><span class="header-section-number">3.4</span> Selection of the first exon</a></li>
+  <li><a href="#guide-design-with-crispor" id="toc-guide-design-with-crispor" class="nav-link" data-scroll-target="#guide-design-with-crispor"><span class="header-section-number">3.5</span> Guide design with CRISPOR</a></li>
+  <li><a href="#selected-guide-rnas" id="toc-selected-guide-rnas" class="nav-link" data-scroll-target="#selected-guide-rnas"><span class="header-section-number">3.6</span> Selected guide RNAs</a></li>
+  <li><a href="#preparation-for-task-3" id="toc-preparation-for-task-3" class="nav-link" data-scroll-target="#preparation-for-task-3"><span class="header-section-number">3.7</span> Preparation for Task 3</a></li>
+  <li><a href="#task-2-conclusion" id="toc-task-2-conclusion" class="nav-link" data-scroll-target="#task-2-conclusion"><span class="header-section-number">3.8</span> Task 2 conclusion</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="target-gene-selection" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="target-gene-selection"><span class="header-section-number">3.1</span> Target gene selection</h2>
+<p>Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in <a href="Task1.html#tbl-consensus" class="quarto-xref">Table&nbsp;<span>2.1</span></a>.</p>
+<p>For Task 2, we selected <strong>OAS2</strong> (<code>ENSG00000111335</code>). OAS2 showed a strong increase in expression in the SARS condition with both differential-expression methods. It also has a clear role in the human antiviral response. OAS2 is part of the interferon-induced OAS pathway and contributes to activation of RNase L after viral double-stranded RNA is detected <span class="citation" data-cites="merold2025">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>)</span>. OAS family genes have also been linked to severe COVID-19 and COVID-19-related heart failure <span class="citation" data-cites="gao2023 hernandezramirez2026">(<a href="references.html#ref-gao2023" role="doc-biblioref">Gao et al. 2023</a>; <a href="references.html#ref-hernandezramirez2026" role="doc-biblioref">Hernandez-Ramirez et al. 2026</a>)</span>.</p>
+<p>The Task 1 result for OAS2 is summarised in <a href="#tbl-oas2-de" class="quarto-xref">Table&nbsp;<span>3.1</span></a>.</p>
+<div class="cell">
+<div id="tbl-oas2-de" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-oas2-de-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3.1: Differential-expression results for OAS2 from Task 1.
+</figcaption>
+<div aria-describedby="tbl-oas2-de-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Method</th>
+<th style="text-align: right;">Fold change</th>
+<th style="text-align: right;">Adjusted p-value / FDR</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">DESeq2</td>
+<td style="text-align: right;">9.9</td>
+<td style="text-align: right;">9.69e-10</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">edgeR-LRT</td>
+<td style="text-align: right;">10.3</td>
+<td style="text-align: right;">0.000169</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>OAS2 had a DESeq2 log2 fold change of <strong>9.90</strong> and an edgeR logFC of <strong>10.30</strong>, with adjusted values of <strong>9.69e-10</strong> and <strong>0.000169</strong>, respectively. Both methods support increased expression in SARS compared with mock. The table’s “Fold change” column contains log2 values, not expression ratios. The low mock counts and two-donor design limit the interpretation of the size of this change.</p>
+</section>
+<section id="choice-of-crispr-strategy" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="choice-of-crispr-strategy"><span class="header-section-number">3.2</span> Choice of CRISPR strategy</h2>
+<p>The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was upregulated, we selected <strong>CRISPR interference (CRISPRi)</strong> to reduce transcription. CRISPRi uses catalytically inactive Cas9 with a repressor such as KRAB <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>. This follows the direction-based choice in the project brief. OAS2 also has an antiviral role, so increased expression does not by itself show that repression would be beneficial <span class="citation" data-cites="merold2025">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>)</span>.</p>
+<p>The project asks for guides within the <strong>first exon</strong>. We therefore used the first exon of the OAS2 MANE Select transcript. This meets the project’s target-region requirement; it does not establish that these sites give the strongest CRISPRi repression.</p>
+</section>
+<section id="oas2-transcript-selection" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="oas2-transcript-selection"><span class="header-section-number">3.3</span> OAS2 transcript selection</h2>
+<p>OAS2 was inspected in Ensembl using the human <strong>GRCh38.p14</strong> reference assembly. The gene is located on chromosome 12 and is on the forward strand.</p>
+<p>The <strong>MANE Select transcript <code>ENST00000392583.7</code></strong> was selected. MANE provides a representative transcript that is matched between NCBI and EMBL-EBI <span class="citation" data-cites="morales2022">(<a href="references.html#ref-morales2022" role="doc-biblioref">Morales et al. 2022</a>)</span>.</p>
+<div id="fig-oas2-ensembl" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oas2-ensembl-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/task2/OAS2_ensembl.png" class="img-fluid figure-img" style="width:95.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oas2-ensembl-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.1: OAS2 gene view in Ensembl. The MANE Select transcript <code>ENST00000392583.7</code> is shown for the protein-coding OAS2 gene on chromosome 12.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="selection-of-the-first-exon" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="selection-of-the-first-exon"><span class="header-section-number">3.4</span> Selection of the first exon</h2>
+<p>The MANE Select transcript contains 10 exons. The first exon is <strong><code>ENSE00002421397.2</code></strong>. It is located at <code>chr12:112,978,519-112,978,785</code>, is on the forward strand, and has a length of <strong>267 bp</strong>.</p>
+<div id="fig-oas2-first-exon" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-oas2-first-exon-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/task2/OAS2_Selection of the first exon of OAS2.png" class="img-fluid figure-img" style="width:95.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oas2-first-exon-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.2: First exon of the OAS2 MANE Select transcript. Exon 1 (<code>ENSE00002421397.2</code>) is 267 bp long and was used for guide design.
+</figcaption>
+</figure>
+</div>
+<p>The first-exon sequence was copied from Ensembl and used as the input sequence for CRISPOR.</p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+First exon sequence used for CRISPOR
+</div>
+<div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
+</div>
+<div id="callout-1" class="callout-1-contents callout-collapse collapse">
+<div class="callout-body-container callout-body">
+<p><code>&gt;ENSE00002421397.2 gene:ENSG00000111335.15 transcript:ENST00000392583.7 exon:1 total_exons:10</code></p>
+<pre class="text"><code>AGTTTCAGTTTCCTGGCTCTGGGCAGCAGCAAGAATTCCTCTGCCTCCCATCCTACCAT
+TCACTGTCTTGCCGGCAGCCAGCTGAGAGCAATGGGAAATGGGGAGTCCCAGCTGTC
+CTCGGTGCCTGCTCAGAAGCTGGGTTGGTTTATCCAGGAATACCTGAAGCCCTACGAA
+GAATGTCAGACACTGATCGACGAGATGGTGAACACCATCTGTGACGTCCTGCAGGAAC
+CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA</code></pre>
+</div>
+</div>
+</div>
+</section>
+<section id="guide-design-with-crispor" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="guide-design-with-crispor"><span class="header-section-number">3.5</span> Guide design with CRISPOR</h2>
+<p>Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR <span class="citation" data-cites="li2023 cui2018">(<a href="references.html#ref-li2023" role="doc-biblioref">Li et al. 2023</a>; <a href="references.html#ref-cui2018" role="doc-biblioref">Cui et al. 2018</a>)</span>. Lecture 6 separates guide assessment into efficiency at the intended site and specificity against other sites. We selected <strong>CRISPOR</strong> because it reports both types of prediction and provides downloadable off-target sequences and genomic locations for Task 3 <span class="citation" data-cites="concordet2018">(<a href="references.html#ref-concordet2018" role="doc-biblioref">Concordet and Haeussler 2018</a>)</span>.</p>
+<p>The CRISPOR analysis used the following settings:</p>
+<ul>
+<li><strong>Reference genome:</strong> Homo sapiens GRCh38/hg38</li>
+<li><strong>Target sequence:</strong> first exon of OAS2 (<code>ENSE00002421397.2</code>)</li>
+<li><strong>Nuclease:</strong> SpCas9</li>
+<li><strong>PAM:</strong> NGG</li>
+<li><strong>Guide length:</strong> 20 bp</li>
+</ul>
+<div id="fig-crispor-settings" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-crispor-settings-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/task2/crispr_settings.png" class="img-fluid figure-img" style="width:95.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-crispor-settings-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.3: CRISPOR input settings used for the OAS2 first exon. The human GRCh38/hg38 reference genome and the 20bp-NGG SpCas9 PAM setting were selected.
+</figcaption>
+</figure>
+</div>
+<p>After submitting the sequence, CRISPOR returned the SpCas9-compatible guides within the first exon. The output includes specificity scores, several predicted efficiency scores and predicted off-target sites.</p>
+<div id="fig-crispor-results" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-crispor-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/task2/crispr_results_table.png" class="img-fluid figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-crispor-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.4: CRISPOR candidate guides for the first exon of OAS2. The table shows guide position, sequence, specificity scores, predicted efficiency scores and off-target information.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="selected-guide-rnas" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="selected-guide-rnas"><span class="header-section-number">3.6</span> Selected guide RNAs</h2>
+<p>Two guides were selected by considering predicted efficiency and specificity together. The first-exon sequence and an NGG PAM were required for both. We favoured candidates without reported off-targets at zero, one or two protospacer mismatches and then compared specificity and efficiency scores. Their main values are shown in <a href="#tbl-selected-guides" class="quarto-xref">Table&nbsp;<span>3.2</span></a>.</p>
+<div class="cell">
+<div id="tbl-selected-guides" class="cell quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-selected-guides-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;3.2: Selected OAS2 guide RNAs and CRISPOR prediction scores.
+</figcaption>
+<div aria-describedby="tbl-selected-guides-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 16%">
+<col style="width: 3%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 10%">
+<col style="width: 6%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Guide</th>
+<th style="text-align: left;">Position</th>
+<th style="text-align: left;">Protospacer</th>
+<th style="text-align: center;">PAM</th>
+<th style="text-align: right;">MIT specificity</th>
+<th style="text-align: right;">CFD specificity</th>
+<th style="text-align: right;">Doench 2016</th>
+<th style="text-align: right;">Moreno-Mateos</th>
+<th style="text-align: right;">RuleSet3</th>
+<th style="text-align: right;">Predicted off-targets</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">gRNA 1</td>
+<td style="text-align: left;">200/fw</td>
+<td style="text-align: left;">TCAGACACTGATCGACGAGA</td>
+<td style="text-align: center;">TGG</td>
+<td style="text-align: right;">97</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">48</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">52</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">gRNA 2</td>
+<td style="text-align: left;">248/fw</td>
+<td style="text-align: left;">GGAACCCGAACAGTTCCCCC</td>
+<td style="text-align: center;">TGG</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">89</td>
+<td style="text-align: right;">52</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+<p>gRNA 1 (<strong>200/fw</strong>, called <strong>200forw</strong> in Task 3) had the higher MIT specificity score (<strong>97</strong>) and higher Doench 2016 and Moreno-Mateos scores (<strong>64</strong> and <strong>48</strong>). gRNA 2 (<strong>248/fw</strong>, or <strong>248forw</strong>) had the higher RuleSet3 score (<strong>89</strong>). Both had a CFD specificity score of <strong>96</strong>. We retained gRNA 1 for its stronger MIT score and gRNA 2 as an alternative supported by RuleSet3. The efficiency models disagree, so there is no single guide that is best under every displayed score.</p>
+<p>CRISPOR reported <strong>52 possible off-target sites</strong> for each guide. For gRNA 1, the distribution was <code>0-0-0-4-48</code> for sites with 0, 1, 2, 3 and 4 mismatches; for gRNA 2 it was <code>0-0-0-5-47</code>. Neither has a reported perfect, one-mismatch or two-mismatch off-target in this search. gRNA 1 has one fewer three-mismatch site. As discussed in Lecture 6, counts alone are insufficient because mismatch position also affects recognition; the CFD model additionally accounts for mismatch type <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>.</p>
+<p>The displayed alternatives also support the choice. Compared with 166/rev, 200/fw has higher MIT and CFD specificity (97 versus 90 and 96 versus 92) and fewer reported off-targets (52 versus 79). The 150/rev candidate is marked “Inefficient” and has lower Doench 2016 and RuleSet3 values than 248/fw (31 versus 55 and -77 versus 89). These comparisons support retaining the selected pair for Task 3.</p>
+<p>These scores are predictions, not measured success rates. Values should be compared within the same scoring model rather than averaged across models. CRISPOR’s cleavage-based predictions do not directly measure CRISPRi repression. Both guides therefore remain candidates that require individual sequence checks and experimental validation.</p>
+</section>
+<section id="preparation-for-task-3" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="preparation-for-task-3"><span class="header-section-number">3.7</span> Preparation for Task 3</h2>
+<p>The selected guides and their off-target information are carried forward to Task 3. The reference-genome design does not confirm that each individual’s target and PAM are unchanged. OAS2 is on chromosome 12, whereas the supplied variant subsets cover chromosomes 1 and 2. Task 3 can therefore reassess off-targets on those chromosomes but cannot confirm OAS2 target availability from those files.</p>
+</section>
+<section id="task-2-conclusion" class="level2" data-number="3.8">
+<h2 data-number="3.8" class="anchored" data-anchor-id="task-2-conclusion"><span class="header-section-number">3.8</span> Task 2 conclusion</h2>
+<p>OAS2 was selected from the six consensus genes because both expression methods support upregulation and the gene has a documented antiviral role. CRISPRi was chosen under the project’s expression-restoration hypothesis. The 267 bp first exon of <code>ENST00000392583.7</code> was analysed with GRCh38/hg38 and SpCas9-NGG settings. <strong>200/fw</strong> was retained for its stronger MIT specificity and <strong>248/fw</strong> as a second candidate with a higher RuleSet3 prediction. Their suitability in individual genomes is assessed within the available data in Task 3.</p>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-concordet2018" class="csl-entry" role="listitem">
+Concordet, Jean-Paul, and Maximilian Haeussler. 2018. <span>“<span>CRISPOR</span>: Intuitive Guide Selection for <span>CRISPR/Cas9</span> Genome Editing Experiments and Screens.”</span> <em>Nucleic Acids Research</em> 46 (W1): W242–45. <a href="https://doi.org/10.1093/nar/gky354">https://doi.org/10.1093/nar/gky354</a>.
+</div>
+<div id="ref-cui2018" class="csl-entry" role="listitem">
+Cui, Yingbo, Jiaming Xu, Minxia Cheng, Xiangke Liao, and Shaoliang Peng. 2018. <span>“Review of <span>CRISPR/Cas9</span> sgRNA Design Tools.”</span> <em>Interdisciplinary Sciences: Computational Life Sciences</em> 10 (2): 455–65. <a href="https://doi.org/10.1007/s12539-018-0298-z">https://doi.org/10.1007/s12539-018-0298-z</a>.
+</div>
+<div id="ref-gao2023" class="csl-entry" role="listitem">
+Gao, Li-Juan, Zhong-Mei He, Yi-Ying Li, Rui-Rui Yang, Min Yan, Xuan Shang, and Ji-Min Cao. 2023. <span>“Role of <span>OAS</span> Gene Family in <span>COVID-19</span> Induced Heart Failure.”</span> <em>Journal of Translational Medicine</em> 21 (1): 212. <a href="https://doi.org/10.1186/s12967-023-04058-x">https://doi.org/10.1186/s12967-023-04058-x</a>.
+</div>
+<div id="ref-haeussler2016" class="csl-entry" role="listitem">
+Haeussler, Maximilian, Kai Schönig, Hélène Eckert, Alexis Eschstruth, Joffrey Mianné, Jean-Baptiste Renaud, Sylvie Schneider-Maunoury, et al. 2016. <span>“Evaluation of Off-Target and on-Target Scoring Algorithms and Integration into the Guide <span>RNA</span> Selection Tool <span>CRISPOR</span>.”</span> <em>Genome Biology</em> 17: 148. <a href="https://doi.org/10.1186/s13059-016-1012-2">https://doi.org/10.1186/s13059-016-1012-2</a>.
+</div>
+<div id="ref-hernandezramirez2026" class="csl-entry" role="listitem">
+Hernandez-Ramirez, Cristian Oswaldo, Hazael Ramiro Ceja-Galvez, Kevin J. Arellano-Arteaga, Elvira Miramontes-Luna, Jorge Hernandez-Bello, Pablo Michael Navarro-Rodriguez, et al. 2026. <span>“Overexpression of <span>OAS</span> Genes in Severe <span>COVID-19</span>: A Cross-Sectional Study of Hospitalized Patients Infected with Delta and Omicron Variants.”</span> <em>Journal of Clinical Medicine</em> 15 (6): 2189. <a href="https://doi.org/10.3390/jcm15062189">https://doi.org/10.3390/jcm15062189</a>.
+</div>
+<div id="ref-jensen2021" class="csl-entry" role="listitem">
+Jensen, Trine I., Nanna S. Mikkelsen, Zongliang Gao, Johannes Foßelteder, Gabriel Pabst, Esben Axelgaard, Anders Laustsen, Saskia König, Andreas Reinisch, and Rasmus O. Bak. 2021. <span>“Targeted Regulation of Transcription in Primary Cells Using <span>CRISPRa</span> and <span>CRISPRi</span>.”</span> <em>Genome Research</em> 31 (11): 2120–30. <a href="https://doi.org/10.1101/gr.275607.121">https://doi.org/10.1101/gr.275607.121</a>.
+</div>
+<div id="ref-li2023" class="csl-entry" role="listitem">
+Li, Chao, Wen Chu, Rafaqat Ali Gill, Shifei Sang, Yuqin Shi, Xuezhi Hu, Yuting Yang, Qamar U. Zaman, and Baohong Zhang. 2023. <span>“Computational Tools and Resources for <span>CRISPR/Cas</span> Genome Editing.”</span> <em>Genomics, Proteomics &amp; Bioinformatics</em> 21 (1): 108–26. <a href="https://doi.org/10.1016/j.gpb.2022.02.006">https://doi.org/10.1016/j.gpb.2022.02.006</a>.
+</div>
+<div id="ref-merold2025" class="csl-entry" role="listitem">
+Merold, Veronika, Indra Bekere, Stefanie Kretschmer, Adrian F. Schnell, Dorota Kmiec, Rinu Sivarajan, et al. 2025. <span>“Structural Basis for <span>OAS2</span> Regulation and Its Antiviral Function.”</span> <em>Molecular Cell</em> 85 (11): 2176–2193.e13. <a href="https://doi.org/10.1016/j.molcel.2025.05.001">https://doi.org/10.1016/j.molcel.2025.05.001</a>.
+</div>
+<div id="ref-morales2022" class="csl-entry" role="listitem">
+Morales, Joannella, Shashikant Pujar, Jane E. Loveland, Alex Astashyn, Ruth Bennett, Andrew Berry, et al. 2022. <span>“A Joint <span>NCBI</span> and <span>EMBL-EBI</span> Transcript Set for Clinical Genomics and Research.”</span> <em>Nature</em> 604 (7905): 310–15. <a href="https://doi.org/10.1038/s41586-022-04558-8">https://doi.org/10.1038/s41586-022-04558-8</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+        const codeEl = trigger.previousElementSibling.cloneNode(true);
+        for (const childEl of codeEl.children) {
+          if (isCodeAnnotation(childEl)) {
+            childEl.remove();
+          }
+        }
+        return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+    const viewSource = window.document.getElementById('quarto-view-source') ||
+                       window.document.getElementById('quarto-code-tools-source');
+    if (viewSource) {
+      const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+      viewSource.addEventListener("click", function(e) {
+        if (sourceUrl) {
+          // rstudio viewer pane
+          if (/\bcapabilities=\b/.test(window.location)) {
+            window.open(sourceUrl);
+          } else {
+            window.location.href = sourceUrl;
+          }
+        } else {
+          const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+          modal.show();
+        }
+        return false;
+      });
+    }
+    function toggleCodeHandler(show) {
+      return function(e) {
+        const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+        for (let i=0; i<detailsSrc.length; i++) {
+          const details = detailsSrc[i].parentElement;
+          if (show) {
+            details.open = true;
+          } else {
+            details.removeAttribute("open");
+          }
+        }
+        const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+        const fromCls = show ? "hidden" : "unhidden";
+        const toCls = show ? "unhidden" : "hidden";
+        for (let i=0; i<cellCodeDivs.length; i++) {
+          const codeDiv = cellCodeDivs[i];
+          if (codeDiv.classList.contains(fromCls)) {
+            codeDiv.classList.remove(fromCls);
+            codeDiv.classList.add(toCls);
+          } 
+        }
+        return false;
+      }
+    }
+    const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+    if (hideAllCode) {
+      hideAllCode.addEventListener("click", toggleCodeHandler(false));
+    }
+    const showAllCode = window.document.getElementById("quarto-show-all-code");
+    if (showAllCode) {
+      showAllCode.addEventListener("click", toggleCodeHandler(true));
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./Task1.html" class="pagination-link" aria-label="Task 1: Differential Expression Analysis">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Task 1: Differential Expression Analysis</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./Task3.html" class="pagination-link" aria-label="Task 3: Impact of Human Genetic Variation on CRISPR Guide Performance">
+        <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Task 3: Impact of Human Genetic Variation on CRISPR Guide Performance</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Task 2: gRNA design for OAS2</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="in">```{r task2-setup}</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/consensus_table.rds"</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">## Target gene selection</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-consensus.</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>For Task 2, we selected **OAS2** (<span class="in">`ENSG00000111335`</span>). OAS2 showed a strong increase in expression in the SARS condition with both differential-expression methods. It also has a clear role in the human antiviral response. OAS2 is part of the interferon-induced OAS pathway and contributes to activation of RNase L after viral double-stranded RNA is detected <span class="co">[</span><span class="ot">@merold2025</span><span class="co">]</span>. OAS family genes have also been linked to severe COVID-19 and COVID-19-related heart failure <span class="co">[</span><span class="ot">@gao2023; @hernandezramirez2026</span><span class="co">]</span>.</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>The Task 1 result for OAS2 is summarised in @tbl-oas2-de.</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-oas2-de}</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Differential-expression results for OAS2 from Task 1."</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="sc">|&gt;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(gene_name <span class="sc">==</span> <span class="st">"OAS2"</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(fold_change_deseq, adj_p_value_deseq, fold_change_edger, adj_p_value_edger) <span class="sc">|&gt;</span> </span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">everything</span>(),</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="fu">c</span>(<span class="st">".value"</span>, <span class="st">"Method"</span>),</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_pattern =</span> <span class="st">"(.*)_(deseq|edger)"</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">Method =</span> <span class="fu">recode_values</span>(</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>      Method,</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>      <span class="st">"deseq"</span> <span class="sc">~</span> <span class="st">"DESeq2"</span>,</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      <span class="st">"edger"</span> <span class="sc">~</span> <span class="st">"edgeR-LRT"</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Fold change</span><span class="st">`</span> <span class="ot">=</span> fold_change,</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Adjusted p-value / FDR</span><span class="st">`</span> <span class="ot">=</span> adj_p_value</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>OAS2 had a DESeq2 log2 fold change of **9.90** and an edgeR logFC of **10.30**, with adjusted values of **9.69e-10** and **0.000169**, respectively. Both methods support increased expression in SARS compared with mock. The table's "Fold change" column contains log2 values, not expression ratios. The low mock counts and two-donor design limit the interpretation of the size of this change.</span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choice of CRISPR strategy</span></span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was upregulated, we selected **CRISPR interference (CRISPRi)** to reduce transcription. CRISPRi uses catalytically inactive Cas9 with a repressor such as KRAB <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>. This follows the direction-based choice in the project brief. OAS2 also has an antiviral role, so increased expression does not by itself show that repression would be beneficial <span class="co">[</span><span class="ot">@merold2025</span><span class="co">]</span>.</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>The project asks for guides within the **first exon**. We therefore used the first exon of the OAS2 MANE Select transcript. This meets the project's target-region requirement; it does not establish that these sites give the strongest CRISPRi repression.</span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="fu">## OAS2 transcript selection</span></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>OAS2 was inspected in Ensembl using the human **GRCh38.p14** reference assembly. The gene is located on chromosome 12 and is on the forward strand.</span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>The **MANE Select transcript `ENST00000392583.7`** was selected. MANE provides a representative transcript that is matched between NCBI and EMBL-EBI <span class="co">[</span><span class="ot">@morales2022</span><span class="co">]</span>.</span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="al">![OAS2 gene view in Ensembl. The MANE Select transcript `ENST00000392583.7` is shown for the protein-coding OAS2 gene on chromosome 12.](figures/task2/OAS2_ensembl.png)</span>{#fig-oas2-ensembl width="95%"}</span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="fu">## Selection of the first exon</span></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>The MANE Select transcript contains 10 exons. The first exon is **`ENSE00002421397.2`**. It is located at `chr12:112,978,519-112,978,785`, is on the forward strand, and has a length of **267 bp**.</span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="al">![First exon of the OAS2 MANE Select transcript. Exon 1 (`ENSE00002421397.2`) is 267 bp long and was used for guide design.](figures/task2/OAS2_Selection%20of%20the%20first%20exon%20of%20OAS2.png)</span>{#fig-oas2-first-exon width="95%"}</span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>The first-exon sequence was copied from Ensembl and used as the input sequence for CRISPOR.</span>
+<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a><span class="fu">## First exon sequence used for CRISPOR</span></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="in">`&gt;ENSE00002421397.2 gene:ENSG00000111335.15 transcript:ENST00000392583.7 exon:1 total_exons:10`</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="in">``` text</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="in">AGTTTCAGTTTCCTGGCTCTGGGCAGCAGCAAGAATTCCTCTGCCTCCCATCCTACCAT</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="in">TCACTGTCTTGCCGGCAGCCAGCTGAGAGCAATGGGAAATGGGGAGTCCCAGCTGTC</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a><span class="in">CTCGGTGCCTGCTCAGAAGCTGGGTTGGTTTATCCAGGAATACCTGAAGCCCTACGAA</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a><span class="in">GAATGTCAGACACTGATCGACGAGATGGTGAACACCATCTGTGACGTCCTGCAGGAAC</span></span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a><span class="in">CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA</span></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Guide design with CRISPOR</span></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR <span class="co">[</span><span class="ot">@li2023; @cui2018</span><span class="co">]</span>. Lecture 6 separates guide assessment into efficiency at the intended site and specificity against other sites. We selected **CRISPOR** because it reports both types of prediction and provides downloadable off-target sequences and genomic locations for Task 3 <span class="co">[</span><span class="ot">@concordet2018</span><span class="co">]</span>.</span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>The CRISPOR analysis used the following settings:</span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Reference genome:** Homo sapiens GRCh38/hg38</span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Target sequence:** first exon of OAS2 (<span class="in">`ENSE00002421397.2`</span>)</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Nuclease:** SpCas9</span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**PAM:** NGG</span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Guide length:** 20 bp</span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a><span class="al">![CRISPOR input settings used for the OAS2 first exon. The human GRCh38/hg38 reference genome and the 20bp-NGG SpCas9 PAM setting were selected.](figures/task2/crispr_settings.png)</span>{#fig-crispor-settings width="95%"}</span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>After submitting the sequence, CRISPOR returned the SpCas9-compatible guides within the first exon. The output includes specificity scores, several predicted efficiency scores and predicted off-target sites.</span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="al">![CRISPOR candidate guides for the first exon of OAS2. The table shows guide position, sequence, specificity scores, predicted efficiency scores and off-target information.](figures/task2/crispr_results_table.png)</span>{#fig-crispor-results width="100%"}</span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## Selected guide RNAs</span></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>Two guides were selected by considering predicted efficiency and specificity together. The first-exon sequence and an NGG PAM were required for both. We favoured candidates without reported off-targets at zero, one or two protospacer mismatches and then compared specificity and efficiency scores. Their main values are shown in @tbl-selected-guides.</span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-selected-guides}</span></span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Selected OAS2 guide RNAs and CRISPOR prediction scores."</span></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a>guide_table <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>Guide, <span class="sc">~</span>Position, <span class="sc">~</span>Protospacer, <span class="sc">~</span>PAM, <span class="sc">~</span><span class="st">`</span><span class="at">MIT specificity</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">CFD specificity</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Doench 2016</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Moreno-Mateos</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">RuleSet3</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Predicted off-targets</span><span class="st">`</span>,</span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a>  <span class="st">"gRNA 1"</span>, <span class="st">"200/fw"</span>, <span class="st">"TCAGACACTGATCGACGAGA"</span>, <span class="st">"TGG"</span>, <span class="dv">97</span>, <span class="dv">96</span>, <span class="dv">64</span>, <span class="dv">48</span>, <span class="dv">44</span>, <span class="dv">52</span>,</span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a>  <span class="st">"gRNA 2"</span>, <span class="st">"248/fw"</span>, <span class="st">"GGAACCCGAACAGTTCCCCC"</span>, <span class="st">"TGG"</span>, <span class="dv">89</span>, <span class="dv">96</span>, <span class="dv">55</span>, <span class="dv">27</span>, <span class="dv">89</span>, <span class="dv">52</span></span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a>guide_table <span class="sc">|&gt;</span></span>
+<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"c"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
+<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a>gRNA 1 (**200/fw**, called **200forw** in Task 3) had the higher MIT specificity score (**97**) and higher Doench 2016 and Moreno-Mateos scores (**64** and **48**). gRNA 2 (**248/fw**, or **248forw**) had the higher RuleSet3 score (**89**). Both had a CFD specificity score of **96**. We retained gRNA 1 for its stronger MIT score and gRNA 2 as an alternative supported by RuleSet3. The efficiency models disagree, so there is no single guide that is best under every displayed score.</span>
+<span id="cb2-125"><a href="#cb2-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-126"><a href="#cb2-126" aria-hidden="true" tabindex="-1"></a>CRISPOR reported **52 possible off-target sites** for each guide. For gRNA 1, the distribution was <span class="in">`0-0-0-4-48`</span> for sites with 0, 1, 2, 3 and 4 mismatches; for gRNA 2 it was <span class="in">`0-0-0-5-47`</span>. Neither has a reported perfect, one-mismatch or two-mismatch off-target in this search. gRNA 1 has one fewer three-mismatch site. As discussed in Lecture 6, counts alone are insufficient because mismatch position also affects recognition; the CFD model additionally accounts for mismatch type <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>.</span>
+<span id="cb2-127"><a href="#cb2-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-128"><a href="#cb2-128" aria-hidden="true" tabindex="-1"></a>The displayed alternatives also support the choice. Compared with 166/rev, 200/fw has higher MIT and CFD specificity (97 versus 90 and 96 versus 92) and fewer reported off-targets (52 versus 79). The 150/rev candidate is marked "Inefficient" and has lower Doench 2016 and RuleSet3 values than 248/fw (31 versus 55 and -77 versus 89). These comparisons support retaining the selected pair for Task 3.</span>
+<span id="cb2-129"><a href="#cb2-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-130"><a href="#cb2-130" aria-hidden="true" tabindex="-1"></a>These scores are predictions, not measured success rates. Values should be compared within the same scoring model rather than averaged across models. CRISPOR's cleavage-based predictions do not directly measure CRISPRi repression. Both guides therefore remain candidates that require individual sequence checks and experimental validation.</span>
+<span id="cb2-131"><a href="#cb2-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a><span class="fu">## Preparation for Task 3</span></span>
+<span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a>The selected guides and their off-target information are carried forward to Task 3. The reference-genome design does not confirm that each individual's target and PAM are unchanged. OAS2 is on chromosome 12, whereas the supplied variant subsets cover chromosomes 1 and 2. Task 3 can therefore reassess off-targets on those chromosomes but cannot confirm OAS2 target availability from those files.</span>
+<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Task 2 conclusion</span></span>
+<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-138"><a href="#cb2-138" aria-hidden="true" tabindex="-1"></a>OAS2 was selected from the six consensus genes because both expression methods support upregulation and the gene has a documented antiviral role. CRISPRi was chosen under the project's expression-restoration hypothesis. The 267 bp first exon of <span class="in">`ENST00000392583.7`</span> was analysed with GRCh38/hg38 and SpCas9-NGG settings. **200/fw** was retained for its stronger MIT specificity and **248/fw** as a second candidate with a higher RuleSet3 prediction. Their suitability in individual genomes is assessed within the available data in Task 3.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
