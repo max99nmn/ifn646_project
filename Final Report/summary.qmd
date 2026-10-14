@@ -1,45 +1,40 @@
 # Summary
 
-## Findings across the three tasks
+This project integrates transcriptomic differential expression analysis (Task 1), computational CRISPR guide RNA design (Task 2), and personal genome variant screening (Task 3) into a unified, reproducible R workflow.
 
-The project connects differential-expression analysis, guide design and individual variant assessment. Task 1 found **68 significant genes with DESeq2** and **7 with edgeR**. Six genes were significant in both tools with the same direction of change: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five were upregulated and SERPINB2 was downregulated. The intersection favours agreement between methods, but may leave out real changes detected by only one tool.
+### Task 1: Consensus Differential Expression Analysis
 
-Task 2 selected **OAS2** because both methods supported increased expression and it has a documented antiviral role. Its log2 fold changes were **9.90** and **10.30**, although low mock counts and two donors limit the interpretation of these large values. CRISPRi was chosen under the project's working hypothesis; the analysis does not show that reducing OAS2 would improve recovery.
+To identify genes deregulated during SARS-CoV-2 infection (`SARS` vs. `mock` at 5 days post-infection) while controlling for baseline inter-donor variance (`~ donor + condition`), raw RNA-seq counts were analysed using two complementary Negative Binomial Generalized Linear Model frameworks: **DESeq2** (median-of-ratios normalisation, empirical Bayes dispersion shrinkage, and Wald testing) and **edgeR** (`filterByExpr` pre-filtering, TMM normalisation, and Likelihood Ratio Testing). 
 
-CRISPOR identified **200forw** and **248forw** as candidates in the first exon. Their MIT specificity scores were **97** and **89**, and both had a CFD specificity score of **96**. Each had 52 reported off-targets, with none at zero, one or two mismatches in that search. 200forw had stronger MIT specificity, while 248forw had the higher RuleSet3 prediction. Neither prediction establishes experimental CRISPRi activity.
+At a Benjamini-Hochberg adjusted threshold of $0.05$, **DESeq2 identified 68 significant genes** and **edgeR identified 7 significant genes**. Applying a conservative intersection with strict fold-change sign concordance yielded **six high-confidence consensus genes**: five upregulated (`OAS2`, `GPRASP1`, `AC026801.2`, `IFI27`, and `CXCL11`) and one downregulated (`SERPINB2`). Prioritising method intersection over a union or p-value meta-analysis minimised tool-specific false positives prior to downstream guide design.
 
-Task 3 refines the reference-based assessment using reported variant and
-genotype information for seven individuals. One G>A variant at
-**chr1:224,887,199** overlaps a predicted off-target site for 248forw.
-The variant changes the PAM from **AGG to AGA**, while the 20-base
-protospacer remains unchanged at **four mismatches**. This alters the
-sequence's suitability under the canonical NGG-PAM framework; it does not
-provide a measured change in off-target activity.
+### Task 2: Target Selection and CRISPRi Guide Design
 
-The effect differs between individuals. **HG00142, HG03129 and NA19175**
-are heterozygous and retain the reference PAM on one haplotype.
-**NA19462** is homozygous for the alternate allele and has the changed
-PAM on both haplotypes. Thus, one variant is present in four individuals,
-with different allele-level implications. No overlapping variant was
-reported for 200forw in the chromosome 1/2 subset assessed.
+From the six consensus candidates, **OAS2** (`ENSG00000111335`) was selected over `AC026801.2` (non-coding lncRNA), `GPRASP1` (zero baseline mock counts and no primary antiviral role), `SERPINB2` (downregulated, modest effect size), and `IFI27`/`CXCL11` due to its strong, concordant induction ($\log_2\text{FC} = 9.90$ in `DESeq2`, $10.30$ in `edgeR`) and its direct enzymatic role in the 2'-5'-oligoadenylate synthetase/RNase L innate antiviral and hyperinflammatory pathway [@merold2025; @gao2023; @hernandezramirez2026]. Because *OAS2* is upregulated in SARS-CoV-2 infection, **CRISPR interference (CRISPRi)** using dCas9-KRAB transcriptional repression was selected to restore expression toward baseline without inducing permanent double-stranded DNA breaks [@jensen2021].
 
-The intended OAS2 targets were also checked using **chromosome 12 data**. No overlapping VCF record was found for 200forw, while four were found for 248forw. All seven individuals had the reference genotype `0|0` at all four sites. Both local copies reconstructed from the supplied calls had **zero protospacer mismatches** and retained **TGG** for both guides in all seven individuals. These results describe the supplied variant calls; sequence coverage was not checked.
+Using the canonical **MANE Select transcript (`ENST00000392583.7`)** on the forward strand of chromosome 12 (GRCh38.p14) [@morales2022], the 267 bp **first exon (`ENSE00002421397.2`, `chr12:112,978,519–112,978,785`)** was screened in **CRISPOR** (`20bp-NGG`, SpCas9) [@concordet2018; @haeussler2016]. Two forward-strand guides were selected after excluding any candidates with 0-, 1-, or 2-mismatch off-targets:
 
-## Implications for guide selection
+* **`200forw` (`chr12:112,978,698–112,978,720`):** Selected for the highest MIT specificity (**97**), high CFD specificity (**96**), strong Doench 2016 (**64**) and Moreno-Mateos (**48**) efficiency scores, and 52 predicted off-targets (`0-0-0-4-48`).
+* **`248forw` (`chr12:112,978,746–112,978,768`):** Selected as a complementary candidate matching the top CFD specificity (**96**) and total off-target count (**52**, `0-0-0-5-47`), while achieving the highest **RuleSet3 efficiency score (89)** and solid MIT specificity (**89**).
 
-The guides selected in Task 2 remain candidates for further evaluation.
-The variant finding illustrates why an individual genome can differ from
-the reference-based prediction [@lessard2017]. It is not sufficient to
-rank one guide as safer overall or to confirm either guide for every
-individual.
+### Task 3: Personal Genome Refinement Across Seven Individuals
 
-The chromosome 12 check found no called change in either intended target or PAM for the seven individuals. Reliable sequence coverage across those regions still needs to be confirmed. The off-target comparison also cannot identify new sites created by variants outside the original CRISPOR list. A wider variant-aware search is needed to address this limitation.
+To evaluate how human genetic variation impacts on-target guide availability and off-target binding risk [@lessard2017], both guides were screened in R across seven individuals from the 1000 Genomes Project (`HG00142`, `HG00178`, `HG00237`, `HG01521`, `HG03129`, `NA19175`, and `NA19462`) [@danecek2011]:
 
-The interpretation also needs to match the proposed CRISPRi system.
-CRISPRi regulates transcription rather than cutting DNA [@jensen2021].
-Cleavage-based prediction scores therefore support candidate assessment
-but do not directly establish the extent of off-target gene regulation.
+1. **On-target conservation in *OAS2* (Chromosome 12):** Subsetting the IGSR GRCh38 chromosome 12 phased VCF (`chr12_OAS2_7samples.vcf`) to the seven study individuals and filtering out population-only records (`0|0` across all seven samples) demonstrated **zero polymorphic variants** in either **200forw** or **248forw**. All seven individuals are homozygous reference (`0|0`) across both target intervals, retaining **zero protospacer mismatches** and an intact **`TGG` PAM** on both chromosome 12 haplotypes.
+2. **Off-target binding risk (Chromosomes 1 and 2):** Intersecting the exported CRISPOR off-target intervals (`offtargetsguide.txt`) with the 7-individual chromosome 1 and 2 VCF subsets (`sampled_chr1.vcf.zip` and `sampled_chr2.vcf.zip`) identified **zero overlapping variants for `200forw`** and **one overlapping SNP for `248forw`** at **chr1:224,887,199 (`G > A`)**.
+3. **Haplotype-specific PAM disruption:** Separating the 23-base off-target locus into its 20-base protospacer and 3-base PAM showed that the `chr1:224,887,199 G>A` substitution leaves the protospacer unchanged at **four mismatches** but mutates the canonical **`AGG` PAM to a non-canonical `AGA` PAM**, reducing predicted dCas9 binding affinity on alternate haplotypes [@haeussler2016]. Among the seven genomes, three individuals (`HG00178`, `HG00237`, `HG01521`) are homozygous reference (`0|0`, retaining `AGG / AGG`), three (`HG00142`, `HG03129`, `NA19175`) are heterozygous (`0|1` or `1|0`, carrying `AGG / AGA`), and one (`NA19462`) is homozygous alternate (`1|1`, carrying `AGA / AGA`).
 
-## Overall conclusion
+---
 
-Task 1 identified six consensus candidates, and Task 2 selected two OAS2 guides for further evaluation. Task 3 identified a genotype-dependent PAM change at one predicted 248forw off-target site. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Checking sequence coverage and searching for variant-created off-targets would strengthen individual guide assessment. Experimental work would still be needed to test guide activity and biological effects.
+## Implications and Methodological Limitations
+
+| Stage | Key Takeaway | Primary Limitation & Future Direction |
+|:---|:---|:---|
+| **Task 1 (Transcriptomics)** | Consensus DE modelling (`DESeq2` $\cap$ `edgeR`) isolates robust interferon-stimulated gene induction (`OAS2`, `IFI27`, `CXCL11`). | Only two biological donors ($n = 2$) and near-zero mock counts inflate unshrunken $\log_2\text{FC}$ magnitudes; validation in larger patient cohorts is required. |
+| **Task 2 (gRNA Design)** | Pairing `200forw` (top MIT/Doench) and `248forw` (top RuleSet3/CFD) in *OAS2* exon 1 balances specificity and efficiency. | Efficiency models are trained primarily on Cas9 cleavage rather than dCas9-KRAB repression; empirical knockdown assays are needed to confirm steric TSS repression. |
+| **Task 3 (Personal Genomes)** | Both guides retain 100% on-target conservation on `chr12`; `200forw` is invariant across screened off-targets, while `248forw` loses a canonical off-target PAM on ALT alleles. | VCF files do not verify base-level sequencing depth across reference calls, and reference-based off-target lists do not capture *de novo* variant-created `NGG` PAMs elsewhere in the genome. |
+
+## Overall Conclusion
+
+Across all three analytical stages, **200forw** and **248forw** emerge as well-supported candidate gRNAs for CRISPRi-mediated modulation of **OAS2**. Both guides are 100% conserved at their intended chromosome 12 target sites across all seven evaluated human genomes, with **200forw** offering the highest genome-wide specificity and complete invariance across screened off-target regions, and **248forw** providing a high-efficiency alternative whose single overlapping off-target SNP (`chr1:224,887,199 G>A`) disrupts a canonical `AGG` PAM in four carriers. Together, these findings demonstrate how integrating multi-tool transcriptomics with haplotype-aware genomic screening refines precision CRISPR therapeutics prior to experimental validation.
