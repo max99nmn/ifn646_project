@@ -125,6 +125,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -183,7 +212,7 @@ div.csl-indent {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./Task2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></span></a>
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA Design for OAS2</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -220,9 +249,8 @@ div.csl-indent {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul class="collapse">
-  <li><a href="#findings-across-the-three-tasks" id="toc-findings-across-the-three-tasks" class="nav-link active" data-scroll-target="#findings-across-the-three-tasks"><span class="header-section-number">5.1</span> Findings across the three tasks</a></li>
-  <li><a href="#implications-for-guide-selection" id="toc-implications-for-guide-selection" class="nav-link" data-scroll-target="#implications-for-guide-selection"><span class="header-section-number">5.2</span> Implications for guide selection</a></li>
-  <li><a href="#overall-conclusion" id="toc-overall-conclusion" class="nav-link" data-scroll-target="#overall-conclusion"><span class="header-section-number">5.3</span> Overall conclusion</a></li>
+  <li><a href="#implications-and-methodological-limitations" id="toc-implications-and-methodological-limitations" class="nav-link active" data-scroll-target="#implications-and-methodological-limitations"><span class="header-section-number">5.1</span> Implications and Methodological Limitations</a></li>
+  <li><a href="#overall-conclusion" id="toc-overall-conclusion" class="nav-link" data-scroll-target="#overall-conclusion"><span class="header-section-number">5.2</span> Overall Conclusion</a></li>
   </ul>
 </nav>
     </div>
@@ -248,34 +276,99 @@ div.csl-indent {
 </header>
 
 
-<section id="findings-across-the-three-tasks" class="level2" data-number="5.1">
-<h2 data-number="5.1" class="anchored" data-anchor-id="findings-across-the-three-tasks"><span class="header-section-number">5.1</span> Findings across the three tasks</h2>
-<p>The project connects differential-expression analysis, guide design and individual variant assessment. Task 1 found <strong>68 significant genes with DESeq2</strong> and <strong>7 with edgeR</strong>. Six genes were significant in both tools with the same direction of change: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five were upregulated and SERPINB2 was downregulated. The intersection favours agreement between methods, but may leave out real changes detected by only one tool.</p>
-<p>Task 2 selected <strong>OAS2</strong> because both methods supported increased expression and it has a documented antiviral role. Its log2 fold changes were <strong>9.90</strong> and <strong>10.30</strong>, although low mock counts and two donors limit the interpretation of these large values. CRISPRi was chosen under the project’s working hypothesis; the analysis does not show that reducing OAS2 would improve recovery.</p>
-<p>CRISPOR identified <strong>200forw</strong> and <strong>248forw</strong> as candidates in the first exon. Their MIT specificity scores were <strong>97</strong> and <strong>89</strong>, and both had a CFD specificity score of <strong>96</strong>. Each had 52 reported off-targets, with none at zero, one or two mismatches in that search. 200forw had stronger MIT specificity, while 248forw had the higher RuleSet3 prediction. Neither prediction establishes experimental CRISPRi activity.</p>
-<p>Task 3 refines the reference-based assessment using reported variant and genotype information for seven individuals. One G&gt;A variant at <strong>chr1:224,887,199</strong> overlaps a predicted off-target site for 248forw. The variant changes the PAM from <strong>AGG to AGA</strong>, while the 20-base protospacer remains unchanged at <strong>four mismatches</strong>. This alters the sequence’s suitability under the canonical NGG-PAM framework; it does not provide a measured change in off-target activity.</p>
-<p>The effect differs between individuals. <strong>HG00142, HG03129 and NA19175</strong> are heterozygous and retain the reference PAM on one haplotype. <strong>NA19462</strong> is homozygous for the alternate allele and has the changed PAM on both haplotypes. Thus, one variant is present in four individuals, with different allele-level implications. No overlapping variant was reported for 200forw in the chromosome 1/2 subset assessed.</p>
-<p>The intended OAS2 targets were also checked using <strong>chromosome 12 data</strong>. No overlapping VCF record was found for 200forw, while four were found for 248forw. All seven individuals had the reference genotype <code>0|0</code> at all four sites. Both local copies reconstructed from the supplied calls had <strong>zero protospacer mismatches</strong> and retained <strong>TGG</strong> for both guides in all seven individuals. These results describe the supplied variant calls; sequence coverage was not checked.</p>
+<p>This project integrates transcriptomic differential expression analysis (Task 1), computational CRISPR guide RNA design (Task 2), and personal genome variant screening (Task 3) into a unified, reproducible R workflow.</p>
+<section id="task-1-consensus-differential-expression-analysis" class="level3">
+<h3 class="anchored" data-anchor-id="task-1-consensus-differential-expression-analysis">Task 1: Consensus Differential Expression Analysis</h3>
+<p>To identify genes deregulated during SARS-CoV-2 infection (<code>SARS</code> vs.&nbsp;<code>mock</code> at 5 days post-infection) while controlling for baseline inter-donor variance (<code>~ donor + condition</code>), raw RNA-seq counts were analysed using two complementary Negative Binomial Generalized Linear Model frameworks: <strong>DESeq2</strong> (median-of-ratios normalisation, empirical Bayes dispersion shrinkage, and Wald testing) and <strong>edgeR</strong> (<code>filterByExpr</code> pre-filtering, TMM normalisation, and Likelihood Ratio Testing).</p>
+<p>At a Benjamini-Hochberg adjusted threshold of <span class="math inline">\(0.05\)</span>, <strong>DESeq2 identified 68 significant genes</strong> and <strong>edgeR identified 7 significant genes</strong>. Applying a conservative intersection with strict fold-change sign concordance yielded <strong>six high-confidence consensus genes</strong>: five upregulated (<code>OAS2</code>, <code>GPRASP1</code>, <code>AC026801.2</code>, <code>IFI27</code>, and <code>CXCL11</code>) and one downregulated (<code>SERPINB2</code>). Prioritising method intersection over a union or p-value meta-analysis minimised tool-specific false positives prior to downstream guide design.</p>
 </section>
-<section id="implications-for-guide-selection" class="level2" data-number="5.2">
-<h2 data-number="5.2" class="anchored" data-anchor-id="implications-for-guide-selection"><span class="header-section-number">5.2</span> Implications for guide selection</h2>
-<p>The guides selected in Task 2 remain candidates for further evaluation. The variant finding illustrates why an individual genome can differ from the reference-based prediction <span class="citation" data-cites="lessard2017">(<a href="references.html#ref-lessard2017" role="doc-biblioref">Lessard et al. 2017</a>)</span>. It is not sufficient to rank one guide as safer overall or to confirm either guide for every individual.</p>
-<p>The chromosome 12 check found no called change in either intended target or PAM for the seven individuals. Reliable sequence coverage across those regions still needs to be confirmed. The off-target comparison also cannot identify new sites created by variants outside the original CRISPOR list. A wider variant-aware search is needed to address this limitation.</p>
-<p>The interpretation also needs to match the proposed CRISPRi system. CRISPRi regulates transcription rather than cutting DNA <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>. Cleavage-based prediction scores therefore support candidate assessment but do not directly establish the extent of off-target gene regulation.</p>
+<section id="task-2-target-selection-and-crispri-guide-design" class="level3">
+<h3 class="anchored" data-anchor-id="task-2-target-selection-and-crispri-guide-design">Task 2: Target Selection and CRISPRi Guide Design</h3>
+<p>From the six consensus candidates, <strong>OAS2</strong> (<code>ENSG00000111335</code>) was selected over <code>AC026801.2</code> (non-coding lncRNA), <code>GPRASP1</code> (zero baseline mock counts and no primary antiviral role), <code>SERPINB2</code> (downregulated, modest effect size), and <code>IFI27</code>/<code>CXCL11</code> due to its strong, concordant induction (<span class="math inline">\(\log_2\text{FC} = 9.90\)</span> in <code>DESeq2</code>, <span class="math inline">\(10.30\)</span> in <code>edgeR</code>) and its direct enzymatic role in the 2’-5’-oligoadenylate synthetase/RNase L innate antiviral and hyperinflammatory pathway <span class="citation" data-cites="merold2025 gao2023 hernandezramirez2026">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>; <a href="references.html#ref-gao2023" role="doc-biblioref">Gao et al. 2023</a>; <a href="references.html#ref-hernandezramirez2026" role="doc-biblioref">Hernandez-Ramirez et al. 2026</a>)</span>. Because <em>OAS2</em> is upregulated in SARS-CoV-2 infection, <strong>CRISPR interference (CRISPRi)</strong> using dCas9-KRAB transcriptional repression was selected to restore expression toward baseline without inducing permanent double-stranded DNA breaks <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>.</p>
+<p>Using the canonical <strong>MANE Select transcript (<code>ENST00000392583.7</code>)</strong> on the forward strand of chromosome 12 (GRCh38.p14) <span class="citation" data-cites="morales2022">(<a href="references.html#ref-morales2022" role="doc-biblioref">Morales et al. 2022</a>)</span>, the 267 bp <strong>first exon (<code>ENSE00002421397.2</code>, <code>chr12:112,978,519–112,978,785</code>)</strong> was screened in <strong>CRISPOR</strong> (<code>20bp-NGG</code>, SpCas9) <span class="citation" data-cites="concordet2018 haeussler2016">(<a href="references.html#ref-concordet2018" role="doc-biblioref">Concordet and Haeussler 2018</a>; <a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Two forward-strand guides were selected after excluding any candidates with 0-, 1-, or 2-mismatch off-targets:</p>
+<ul>
+<li><strong><code>200forw</code> (<code>chr12:112,978,698–112,978,720</code>):</strong> Selected for the highest MIT specificity (<strong>97</strong>), high CFD specificity (<strong>96</strong>), strong Doench 2016 (<strong>64</strong>) and Moreno-Mateos (<strong>48</strong>) efficiency scores, and 52 predicted off-targets (<code>0-0-0-4-48</code>).</li>
+<li><strong><code>248forw</code> (<code>chr12:112,978,746–112,978,768</code>):</strong> Selected as a complementary candidate matching the top CFD specificity (<strong>96</strong>) and total off-target count (<strong>52</strong>, <code>0-0-0-5-47</code>), while achieving the highest <strong>RuleSet3 efficiency score (89)</strong> and solid MIT specificity (<strong>89</strong>).</li>
+</ul>
 </section>
-<section id="overall-conclusion" class="level2" data-number="5.3">
-<h2 data-number="5.3" class="anchored" data-anchor-id="overall-conclusion"><span class="header-section-number">5.3</span> Overall conclusion</h2>
-<p>Task 1 identified six consensus candidates, and Task 2 selected two OAS2 guides for further evaluation. Task 3 identified a genotype-dependent PAM change at one predicted 248forw off-target site. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Checking sequence coverage and searching for variant-created off-targets would strengthen individual guide assessment. Experimental work would still be needed to test guide activity and biological effects.</p>
+<section id="task-3-personal-genome-refinement-across-seven-individuals" class="level3">
+<h3 class="anchored" data-anchor-id="task-3-personal-genome-refinement-across-seven-individuals">Task 3: Personal Genome Refinement Across Seven Individuals</h3>
+<p>To evaluate how human genetic variation impacts on-target guide availability and off-target binding risk <span class="citation" data-cites="lessard2017">(<a href="references.html#ref-lessard2017" role="doc-biblioref">Lessard et al. 2017</a>)</span>, both guides were screened in R across seven individuals from the 1000 Genomes Project (<code>HG00142</code>, <code>HG00178</code>, <code>HG00237</code>, <code>HG01521</code>, <code>HG03129</code>, <code>NA19175</code>, and <code>NA19462</code>) <span class="citation" data-cites="danecek2011">(<a href="references.html#ref-danecek2011" role="doc-biblioref">Danecek et al. 2011</a>)</span>:</p>
+<ol type="1">
+<li><strong>On-target conservation in <em>OAS2</em> (Chromosome 12):</strong> Subsetting the IGSR GRCh38 chromosome 12 phased VCF (<code>chr12_OAS2_7samples.vcf</code>) to the seven study individuals and filtering out population-only records (<code>0|0</code> across all seven samples) demonstrated <strong>zero polymorphic variants</strong> in either <strong>200forw</strong> or <strong>248forw</strong>. All seven individuals are homozygous reference (<code>0|0</code>) across both target intervals, retaining <strong>zero protospacer mismatches</strong> and an intact <strong><code>TGG</code> PAM</strong> on both chromosome 12 haplotypes.</li>
+<li><strong>Off-target binding risk (Chromosomes 1 and 2):</strong> Intersecting the exported CRISPOR off-target intervals (<code>offtargetsguide.txt</code>) with the 7-individual chromosome 1 and 2 VCF subsets (<code>sampled_chr1.vcf.zip</code> and <code>sampled_chr2.vcf.zip</code>) identified <strong>zero overlapping variants for <code>200forw</code></strong> and <strong>one overlapping SNP for <code>248forw</code></strong> at <strong>chr1:224,887,199 (<code>G &gt; A</code>)</strong>.</li>
+<li><strong>Haplotype-specific PAM disruption:</strong> Separating the 23-base off-target locus into its 20-base protospacer and 3-base PAM showed that the <code>chr1:224,887,199 G&gt;A</code> substitution leaves the protospacer unchanged at <strong>four mismatches</strong> but mutates the canonical <strong><code>AGG</code> PAM to a non-canonical <code>AGA</code> PAM</strong>, reducing predicted dCas9 binding affinity on alternate haplotypes <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Among the seven genomes, three individuals (<code>HG00178</code>, <code>HG00237</code>, <code>HG01521</code>) are homozygous reference (<code>0|0</code>, retaining <code>AGG / AGG</code>), three (<code>HG00142</code>, <code>HG03129</code>, <code>NA19175</code>) are heterozygous (<code>0|1</code> or <code>1|0</code>, carrying <code>AGG / AGA</code>), and one (<code>NA19462</code>) is homozygous alternate (<code>1|1</code>, carrying <code>AGA / AGA</code>).</li>
+</ol>
+<hr>
+</section>
+<section id="implications-and-methodological-limitations" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="implications-and-methodological-limitations"><span class="header-section-number">5.1</span> Implications and Methodological Limitations</h2>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Stage</th>
+<th style="text-align: left;">Key Takeaway</th>
+<th style="text-align: left;">Primary Limitation &amp; Future Direction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Task 1 (Transcriptomics)</strong></td>
+<td style="text-align: left;">Consensus DE modelling (<code>DESeq2</code> <span class="math inline">\(\cap\)</span> <code>edgeR</code>) isolates robust interferon-stimulated gene induction (<code>OAS2</code>, <code>IFI27</code>, <code>CXCL11</code>).</td>
+<td style="text-align: left;">Only two biological donors (<span class="math inline">\(n = 2\)</span>) and near-zero mock counts inflate unshrunken <span class="math inline">\(\log_2\text{FC}\)</span> magnitudes; validation in larger patient cohorts is required.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Task 2 (gRNA Design)</strong></td>
+<td style="text-align: left;">Pairing <code>200forw</code> (top MIT/Doench) and <code>248forw</code> (top RuleSet3/CFD) in <em>OAS2</em> exon 1 balances specificity and efficiency.</td>
+<td style="text-align: left;">Efficiency models are trained primarily on Cas9 cleavage rather than dCas9-KRAB repression; empirical knockdown assays are needed to confirm steric TSS repression.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Task 3 (Personal Genomes)</strong></td>
+<td style="text-align: left;">Both guides retain 100% on-target conservation on <code>chr12</code>; <code>200forw</code> is invariant across screened off-targets, while <code>248forw</code> loses a canonical off-target PAM on ALT alleles.</td>
+<td style="text-align: left;">VCF files do not verify base-level sequencing depth across reference calls, and reference-based off-target lists do not capture <em>de novo</em> variant-created <code>NGG</code> PAMs elsewhere in the genome.</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="overall-conclusion" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="overall-conclusion"><span class="header-section-number">5.2</span> Overall Conclusion</h2>
+<p>Across all three analytical stages, <strong>200forw</strong> and <strong>248forw</strong> emerge as well-supported candidate gRNAs for CRISPRi-mediated modulation of <strong>OAS2</strong>. Both guides are 100% conserved at their intended chromosome 12 target sites across all seven evaluated human genomes, with <strong>200forw</strong> offering the highest genome-wide specificity and complete invariance across screened off-target regions, and <strong>248forw</strong> providing a high-efficiency alternative whose single overlapping off-target SNP (<code>chr1:224,887,199 G&gt;A</code>) disrupts a canonical <code>AGG</code> PAM in four carriers. Together, these findings demonstrate how integrating multi-tool transcriptomics with haplotype-aware genomic screening refines precision CRISPR therapeutics prior to experimental validation.</p>
 
 
 <!-- -->
 
 <div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list" style="display: none">
+<div id="ref-concordet2018" class="csl-entry" role="listitem">
+Concordet, Jean-Paul, and Maximilian Haeussler. 2018. <span>“<span>CRISPOR</span>: Intuitive Guide Selection for <span>CRISPR/Cas9</span> Genome Editing Experiments and Screens.”</span> <em>Nucleic Acids Research</em> 46 (W1): W242–45. <a href="https://doi.org/10.1093/nar/gky354">https://doi.org/10.1093/nar/gky354</a>.
+</div>
+<div id="ref-danecek2011" class="csl-entry" role="listitem">
+Danecek, Petr, Adam Auton, Goncalo Abecasis, Cornelis A. Albers, Eric Banks, Mark A. DePristo, Robert E. Handsaker, et al. 2011. <span>“The Variant Call Format and <span>VCFtools</span>.”</span> <em>Bioinformatics</em> 27 (15): 2156–58. <a href="https://doi.org/10.1093/bioinformatics/btr330">https://doi.org/10.1093/bioinformatics/btr330</a>.
+</div>
+<div id="ref-gao2023" class="csl-entry" role="listitem">
+Gao, Li-Juan, Zhong-Mei He, Yi-Ying Li, Rui-Rui Yang, Min Yan, Xuan Shang, and Ji-Min Cao. 2023. <span>“Role of <span>OAS</span> Gene Family in <span>COVID-19</span> Induced Heart Failure.”</span> <em>Journal of Translational Medicine</em> 21 (1): 212. <a href="https://doi.org/10.1186/s12967-023-04058-x">https://doi.org/10.1186/s12967-023-04058-x</a>.
+</div>
+<div id="ref-haeussler2016" class="csl-entry" role="listitem">
+Haeussler, Maximilian, Kai Schönig, Hélène Eckert, Alexis Eschstruth, Joffrey Mianné, Jean-Baptiste Renaud, Sylvie Schneider-Maunoury, et al. 2016. <span>“Evaluation of Off-Target and on-Target Scoring Algorithms and Integration into the Guide <span>RNA</span> Selection Tool <span>CRISPOR</span>.”</span> <em>Genome Biology</em> 17: 148. <a href="https://doi.org/10.1186/s13059-016-1012-2">https://doi.org/10.1186/s13059-016-1012-2</a>.
+</div>
+<div id="ref-hernandezramirez2026" class="csl-entry" role="listitem">
+Hernandez-Ramirez, Cristian Oswaldo, Hazael Ramiro Ceja-Galvez, Kevin J. Arellano-Arteaga, Elvira Miramontes-Luna, Jorge Hernandez-Bello, Pablo Michael Navarro-Rodriguez, et al. 2026. <span>“Overexpression of <span>OAS</span> Genes in Severe <span>COVID-19</span>: A Cross-Sectional Study of Hospitalized Patients Infected with Delta and Omicron Variants.”</span> <em>Journal of Clinical Medicine</em> 15 (6): 2189. <a href="https://doi.org/10.3390/jcm15062189">https://doi.org/10.3390/jcm15062189</a>.
+</div>
 <div id="ref-jensen2021" class="csl-entry" role="listitem">
 Jensen, Trine I., Nanna S. Mikkelsen, Zongliang Gao, Johannes Foßelteder, Gabriel Pabst, Esben Axelgaard, Anders Laustsen, Saskia König, Andreas Reinisch, and Rasmus O. Bak. 2021. <span>“Targeted Regulation of Transcription in Primary Cells Using <span>CRISPRa</span> and <span>CRISPRi</span>.”</span> <em>Genome Research</em> 31 (11): 2120–30. <a href="https://doi.org/10.1101/gr.275607.121">https://doi.org/10.1101/gr.275607.121</a>.
 </div>
 <div id="ref-lessard2017" class="csl-entry" role="listitem">
 Lessard, Samuel, Laurent Francioli, Jessica Alföldi, Jean-Claude Tardif, Patrick T. Ellinor, Daniel G. MacArthur, Guillaume Lettre, Stuart H. Orkin, and Matthew C. Canver. 2017. <span>“Human Genetic Variation Alters <span>CRISPR-Cas9</span> on- and Off-Targeting Specificity at Therapeutically Implicated Loci.”</span> <em>Proceedings of the National Academy of Sciences</em> 114 (52): E11257–66. <a href="https://doi.org/10.1073/pnas.1714640114">https://doi.org/10.1073/pnas.1714640114</a>.
+</div>
+<div id="ref-merold2025" class="csl-entry" role="listitem">
+Merold, Veronika, Indra Bekere, Stefanie Kretschmer, Adrian F. Schnell, Dorota Kmiec, Rinu Sivarajan, et al. 2025. <span>“Structural Basis for <span>OAS2</span> Regulation and Its Antiviral Function.”</span> <em>Molecular Cell</em> 85 (11): 2176–2193.e13. <a href="https://doi.org/10.1016/j.molcel.2025.05.001">https://doi.org/10.1016/j.molcel.2025.05.001</a>.
+</div>
+<div id="ref-morales2022" class="csl-entry" role="listitem">
+Morales, Joannella, Shashikant Pujar, Jane E. Loveland, Alex Astashyn, Ruth Bennett, Andrew Berry, et al. 2022. <span>“A Joint <span>NCBI</span> and <span>EMBL-EBI</span> Transcript Set for Clinical Genomics and Research.”</span> <em>Nature</em> 604 (7905): 310–15. <a href="https://doi.org/10.1038/s41586-022-04558-8">https://doi.org/10.1038/s41586-022-04558-8</a>.
 </div>
 </div>
 </section>
@@ -745,49 +838,44 @@ Lessard, Samuel, Laurent Francioli, Jessica Alföldi, Jean-Claude Tardif, Patric
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
 <div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Summary</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## Findings across the three tasks</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>This project integrates transcriptomic differential expression analysis (Task 1), computational CRISPR guide RNA design (Task 2), and personal genome variant screening (Task 3) into a unified, reproducible R workflow.</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>The project connects differential-expression analysis, guide design and individual variant assessment. Task 1 found **68 significant genes with DESeq2** and **7 with edgeR**. Six genes were significant in both tools with the same direction of change: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five were upregulated and SERPINB2 was downregulated. The intersection favours agreement between methods, but may leave out real changes detected by only one tool.</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">### Task 1: Consensus Differential Expression Analysis</span></span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>Task 2 selected **OAS2** because both methods supported increased expression and it has a documented antiviral role. Its log2 fold changes were **9.90** and **10.30**, although low mock counts and two donors limit the interpretation of these large values. CRISPRi was chosen under the project's working hypothesis; the analysis does not show that reducing OAS2 would improve recovery.</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>To identify genes deregulated during SARS-CoV-2 infection (<span class="in">`SARS`</span> vs. <span class="in">`mock`</span> at 5 days post-infection) while controlling for baseline inter-donor variance (<span class="in">`~ donor + condition`</span>), raw RNA-seq counts were analysed using two complementary Negative Binomial Generalized Linear Model frameworks: **DESeq2** (median-of-ratios normalisation, empirical Bayes dispersion shrinkage, and Wald testing) and **edgeR** (<span class="in">`filterByExpr`</span> pre-filtering, TMM normalisation, and Likelihood Ratio Testing).</span>
 <span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>CRISPOR identified **200forw** and **248forw** as candidates in the first exon. Their MIT specificity scores were **97** and **89**, and both had a CFD specificity score of **96**. Each had 52 reported off-targets, with none at zero, one or two mismatches in that search. 200forw had stronger MIT specificity, while 248forw had the higher RuleSet3 prediction. Neither prediction establishes experimental CRISPRi activity.</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>At a Benjamini-Hochberg adjusted threshold of $0.05$, **DESeq2 identified 68 significant genes** and **edgeR identified 7 significant genes**. Applying a conservative intersection with strict fold-change sign concordance yielded **six high-confidence consensus genes**: five upregulated (<span class="in">`OAS2`</span>, <span class="in">`GPRASP1`</span>, <span class="in">`AC026801.2`</span>, <span class="in">`IFI27`</span>, and <span class="in">`CXCL11`</span>) and one downregulated (<span class="in">`SERPINB2`</span>). Prioritising method intersection over a union or p-value meta-analysis minimised tool-specific false positives prior to downstream guide design.</span>
 <span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>Task 3 refines the reference-based assessment using reported variant and</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>genotype information for seven individuals. One G&gt;A variant at</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>**chr1:224,887,199** overlaps a predicted off-target site for 248forw.</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>The variant changes the PAM from **AGG to AGA**, while the 20-base</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>protospacer remains unchanged at **four mismatches**. This alters the</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>sequence's suitability under the canonical NGG-PAM framework; it does not</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>provide a measured change in off-target activity.</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>The effect differs between individuals. **HG00142, HG03129 and NA19175**</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>are heterozygous and retain the reference PAM on one haplotype.</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>**NA19462** is homozygous for the alternate allele and has the changed</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>PAM on both haplotypes. Thus, one variant is present in four individuals,</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>with different allele-level implications. No overlapping variant was</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>reported for 200forw in the chromosome 1/2 subset assessed.</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>The intended OAS2 targets were also checked using **chromosome 12 data**. No overlapping VCF record was found for 200forw, while four were found for 248forw. All seven individuals had the reference genotype `0|0` at all four sites. Both local copies reconstructed from the supplied calls had **zero protospacer mismatches** and retained **TGG** for both guides in all seven individuals. These results describe the supplied variant calls; sequence coverage was not checked.</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">### Task 2: Target Selection and CRISPRi Guide Design</span></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>From the six consensus candidates, **OAS2** (`ENSG00000111335`) was selected over `AC026801.2` (non-coding lncRNA), `GPRASP1` (zero baseline mock counts and no primary antiviral role), `SERPINB2` (downregulated, modest effect size), and `IFI27`/`CXCL11` due to its strong, concordant induction ($\log_2\text{FC} = 9.90$ in `DESeq2`, $10.30$ in `edgeR`) and its direct enzymatic role in the 2'-5'-oligoadenylate synthetase/RNase L innate antiviral and hyperinflammatory pathway [@merold2025; @gao2023; @hernandezramirez2026]. Because *OAS2* is upregulated in SARS-CoV-2 infection, **CRISPR interference (CRISPRi)** using dCas9-KRAB transcriptional repression was selected to restore expression toward baseline without inducing permanent double-stranded DNA breaks <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>.</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>Using the canonical **MANE Select transcript (`ENST00000392583.7`)** on the forward strand of chromosome 12 (GRCh38.p14) [@morales2022], the 267 bp **first exon (`ENSE00002421397.2`, `chr12:112,978,519–112,978,785`)** was screened in **CRISPOR** (<span class="in">`20bp-NGG`</span>, SpCas9) <span class="co">[</span><span class="ot">@concordet2018; @haeussler2016</span><span class="co">]</span>. Two forward-strand guides were selected after excluding any candidates with 0-, 1-, or 2-mismatch off-targets:</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**`200forw` (`chr12:112,978,698–112,978,720`):** Selected for the highest MIT specificity (**97**), high CFD specificity (**96**), strong Doench 2016 (**64**) and Moreno-Mateos (**48**) efficiency scores, and 52 predicted off-targets (<span class="in">`0-0-0-4-48`</span>).</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**`248forw` (`chr12:112,978,746–112,978,768`):** Selected as a complementary candidate matching the top CFD specificity (**96**) and total off-target count (**52**, `0-0-0-5-47`), while achieving the highest **RuleSet3 efficiency score (89)** and solid MIT specificity (**89**).</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">### Task 3: Personal Genome Refinement Across Seven Individuals</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>To evaluate how human genetic variation impacts on-target guide availability and off-target binding risk <span class="co">[</span><span class="ot">@lessard2017</span><span class="co">]</span>, both guides were screened in R across seven individuals from the 1000 Genomes Project (<span class="in">`HG00142`</span>, <span class="in">`HG00178`</span>, <span class="in">`HG00237`</span>, <span class="in">`HG01521`</span>, <span class="in">`HG03129`</span>, <span class="in">`NA19175`</span>, and <span class="in">`NA19462`</span>) <span class="co">[</span><span class="ot">@danecek2011</span><span class="co">]</span>:</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**On-target conservation in *OAS2* (Chromosome 12):** Subsetting the IGSR GRCh38 chromosome 12 phased VCF (`chr12_OAS2_7samples.vcf`) to the seven study individuals and filtering out population-only records (`0|0` across all seven samples) demonstrated **zero polymorphic variants** in either **200forw** or **248forw**. All seven individuals are homozygous reference (`0|0`) across both target intervals, retaining **zero protospacer mismatches** and an intact **`TGG` PAM** on both chromosome 12 haplotypes.</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Off-target binding risk (Chromosomes 1 and 2):** Intersecting the exported CRISPOR off-target intervals (`offtargetsguide.txt`) with the 7-individual chromosome 1 and 2 VCF subsets (`sampled_chr1.vcf.zip` and `sampled_chr2.vcf.zip`) identified **zero overlapping variants for `200forw`** and **one overlapping SNP for `248forw`** at **chr1:224,887,199 (`G &gt; A`)**.</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**Haplotype-specific PAM disruption:** Separating the 23-base off-target locus into its 20-base protospacer and 3-base PAM showed that the `chr1:224,887,199 G&gt;A` substitution leaves the protospacer unchanged at **four mismatches** but mutates the canonical **`AGG` PAM to a non-canonical `AGA` PAM**, reducing predicted dCas9 binding affinity on alternate haplotypes <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>. Among the seven genomes, three individuals (<span class="in">`HG00178`</span>, <span class="in">`HG00237`</span>, <span class="in">`HG01521`</span>) are homozygous reference (<span class="in">`0|0`</span>, retaining <span class="in">`AGG / AGG`</span>), three (<span class="in">`HG00142`</span>, <span class="in">`HG03129`</span>, <span class="in">`NA19175`</span>) are heterozygous (<span class="in">`0|1`</span> or <span class="in">`1|0`</span>, carrying <span class="in">`AGG / AGA`</span>), and one (<span class="in">`NA19462`</span>) is homozygous alternate (<span class="in">`1|1`</span>, carrying <span class="in">`AGA / AGA`</span>).</span>
 <span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="fu">## Implications for guide selection</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>------------------------------------------------------------------------</span>
 <span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>The guides selected in Task 2 remain candidates for further evaluation.</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>The variant finding illustrates why an individual genome can differ from</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>the reference-based prediction <span class="co">[</span><span class="ot">@lessard2017</span><span class="co">]</span>. It is not sufficient to</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>rank one guide as safer overall or to confirm either guide for every</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>individual.</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>The chromosome 12 check found no called change in either intended target or PAM for the seven individuals. Reliable sequence coverage across those regions still needs to be confirmed. The off-target comparison also cannot identify new sites created by variants outside the original CRISPOR list. A wider variant-aware search is needed to address this limitation.</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="fu">## Implications and Methodological Limitations</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> Stage <span class="pp">|</span> Key Takeaway <span class="pp">|</span> Primary Limitation &amp; Future Direction <span class="pp">|</span></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="pp">|:---|:---|:---|</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Task 1 (Transcriptomics)** <span class="pp">|</span> Consensus DE modelling (<span class="in">`DESeq2`</span> $\cap$ <span class="in">`edgeR`</span>) isolates robust interferon-stimulated gene induction (<span class="in">`OAS2`</span>, <span class="in">`IFI27`</span>, <span class="in">`CXCL11`</span>). <span class="pp">|</span> Only two biological donors ($n = 2$) and near-zero mock counts inflate unshrunken $\log_2\text{FC}$ magnitudes; validation in larger patient cohorts is required. <span class="pp">|</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Task 2 (gRNA Design)** <span class="pp">|</span> Pairing <span class="in">`200forw`</span> (top MIT/Doench) and <span class="in">`248forw`</span> (top RuleSet3/CFD) in *OAS2* exon 1 balances specificity and efficiency. <span class="pp">|</span> Efficiency models are trained primarily on Cas9 cleavage rather than dCas9-KRAB repression; empirical knockdown assays are needed to confirm steric TSS repression. <span class="pp">|</span></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="pp">|</span> **Task 3 (Personal Genomes)** <span class="pp">|</span> Both guides retain 100% on-target conservation on <span class="in">`chr12`</span>; <span class="in">`200forw`</span> is invariant across screened off-targets, while <span class="in">`248forw`</span> loses a canonical off-target PAM on ALT alleles. <span class="pp">|</span> VCF files do not verify base-level sequencing depth across reference calls, and reference-based off-target lists do not capture *de novo* variant-created <span class="in">`NGG`</span> PAMs elsewhere in the genome. <span class="pp">|</span></span>
 <span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>The interpretation also needs to match the proposed CRISPRi system.</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>CRISPRi regulates transcription rather than cutting DNA <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>.</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>Cleavage-based prediction scores therefore support candidate assessment</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>but do not directly establish the extent of off-target gene regulation.</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="fu">## Overall conclusion</span></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>Task 1 identified six consensus candidates, and Task 2 selected two OAS2 guides for further evaluation. Task 3 identified a genotype-dependent PAM change at one predicted 248forw off-target site. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Checking sequence coverage and searching for variant-created off-targets would strengthen individual guide assessment. Experimental work would still be needed to test guide activity and biological effects.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a><span class="fu">## Overall Conclusion</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>Across all three analytical stages, **200forw** and **248forw** emerge as well-supported candidate gRNAs for CRISPRi-mediated modulation of **OAS2**. Both guides are 100% conserved at their intended chromosome 12 target sites across all seven evaluated human genomes, with **200forw** offering the highest genome-wide specificity and complete invariance across screened off-target regions, and **248forw** providing a high-efficiency alternative whose single overlapping off-target SNP (<span class="in">`chr1:224,887,199 G&gt;A`</span>) disrupts a canonical <span class="in">`AGG`</span> PAM in four carriers. Together, these findings demonstrate how integrating multi-tool transcriptomics with haplotype-aware genomic screening refines precision CRISPR therapeutics prior to experimental validation.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

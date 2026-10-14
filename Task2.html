@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>3&nbsp; Task 2: gRNA design for OAS2 – Precision CRISPR Guide RNA Design for Differentially Expressed Genes in COVID-19</title>
+<title>3&nbsp; Task 2: gRNA Design for OAS2 – Precision CRISPR Guide RNA Design for Differentially Expressed Genes in COVID-19</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -125,6 +125,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -137,7 +166,7 @@ div.csl-indent {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./Task2.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./Task2.html"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA Design for OAS2</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -183,7 +212,7 @@ div.csl-indent {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./Task2.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></span></a>
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA Design for OAS2</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -220,14 +249,10 @@ div.csl-indent {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul class="collapse">
-  <li><a href="#target-gene-selection" id="toc-target-gene-selection" class="nav-link active" data-scroll-target="#target-gene-selection"><span class="header-section-number">3.1</span> Target gene selection</a></li>
-  <li><a href="#choice-of-crispr-strategy" id="toc-choice-of-crispr-strategy" class="nav-link" data-scroll-target="#choice-of-crispr-strategy"><span class="header-section-number">3.2</span> Choice of CRISPR strategy</a></li>
-  <li><a href="#oas2-transcript-selection" id="toc-oas2-transcript-selection" class="nav-link" data-scroll-target="#oas2-transcript-selection"><span class="header-section-number">3.3</span> OAS2 transcript selection</a></li>
-  <li><a href="#selection-of-the-first-exon" id="toc-selection-of-the-first-exon" class="nav-link" data-scroll-target="#selection-of-the-first-exon"><span class="header-section-number">3.4</span> Selection of the first exon</a></li>
-  <li><a href="#guide-design-with-crispor" id="toc-guide-design-with-crispor" class="nav-link" data-scroll-target="#guide-design-with-crispor"><span class="header-section-number">3.5</span> Guide design with CRISPOR</a></li>
-  <li><a href="#selected-guide-rnas" id="toc-selected-guide-rnas" class="nav-link" data-scroll-target="#selected-guide-rnas"><span class="header-section-number">3.6</span> Selected guide RNAs</a></li>
-  <li><a href="#preparation-for-task-3" id="toc-preparation-for-task-3" class="nav-link" data-scroll-target="#preparation-for-task-3"><span class="header-section-number">3.7</span> Preparation for Task 3</a></li>
-  <li><a href="#task-2-conclusion" id="toc-task-2-conclusion" class="nav-link" data-scroll-target="#task-2-conclusion"><span class="header-section-number">3.8</span> Task 2 conclusion</a></li>
+  <li><a href="#objective" id="toc-objective" class="nav-link active" data-scroll-target="#objective"><span class="header-section-number">3.1</span> Objective</a></li>
+  <li><a href="#approach" id="toc-approach" class="nav-link" data-scroll-target="#approach"><span class="header-section-number">3.2</span> Approach</a></li>
+  <li><a href="#findings" id="toc-findings" class="nav-link" data-scroll-target="#findings"><span class="header-section-number">3.3</span> Findings</a></li>
+  <li><a href="#discussion-conclusion" id="toc-discussion-conclusion" class="nav-link" data-scroll-target="#discussion-conclusion"><span class="header-section-number">3.4</span> Discussion &amp; Conclusion</a></li>
   </ul>
 </nav>
     </div>
@@ -236,7 +261,7 @@ div.csl-indent {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA Design for OAS2</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 
@@ -253,16 +278,26 @@ div.csl-indent {
 </header>
 
 
-<section id="target-gene-selection" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="target-gene-selection"><span class="header-section-number">3.1</span> Target gene selection</h2>
-<p>Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in <a href="Task1.html#tbl-consensus" class="quarto-xref">Table&nbsp;<span>2.1</span></a>.</p>
-<p>For Task 2, we selected <strong>OAS2</strong> (<code>ENSG00000111335</code>). OAS2 showed a strong increase in expression in the SARS condition with both differential-expression methods. It also has a clear role in the human antiviral response. OAS2 is part of the interferon-induced OAS pathway and contributes to activation of RNase L after viral double-stranded RNA is detected <span class="citation" data-cites="merold2025">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>)</span>. OAS family genes have also been linked to severe COVID-19 and COVID-19-related heart failure <span class="citation" data-cites="gao2023 hernandezramirez2026">(<a href="references.html#ref-gao2023" role="doc-biblioref">Gao et al. 2023</a>; <a href="references.html#ref-hernandezramirez2026" role="doc-biblioref">Hernandez-Ramirez et al. 2026</a>)</span>.</p>
-<p>The Task 1 result for OAS2 is summarised in <a href="#tbl-oas2-de" class="quarto-xref">Table&nbsp;<span>3.1</span></a>.</p>
+<section id="objective" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="objective"><span class="header-section-number">3.1</span> Objective</h2>
+<p>Building on the six consensus differentially expressed genes identified in Task 1 (<a href="Task1.html#tbl-consensus" class="quarto-xref">Table&nbsp;<span>2.1</span></a>), Task 2 selects a single biologically justified target gene, determines the appropriate transcriptional modulation strategy (<strong>CRISPRi</strong> vs.&nbsp;<strong>CRISPRa</strong>), extracts the canonical <strong>first exon</strong> sequence relative to gene transcription, and designs candidate SpCas9 single-guide RNAs (gRNAs) balancing on-target efficiency against off-target specificity.</p>
+</section>
+<section id="approach" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="approach"><span class="header-section-number">3.2</span> Approach</h2>
+<section id="rationale-for-selecting-oas2-over-the-other-five-consensus-genes" class="level3">
+<h3 class="anchored" data-anchor-id="rationale-for-selecting-oas2-over-the-other-five-consensus-genes">Rationale for Selecting <em>OAS2</em> Over the Other Five Consensus Genes</h3>
+<p>Rather than selecting a target solely by the largest numerical fold change, all six consensus genes from Task 1 (<code>OAS2</code>, <code>GPRASP1</code>, <code>AC026801.2</code>, <code>IFI27</code>, <code>SERPINB2</code>, and <code>CXCL11</code>) were evaluated against three criteria: protein-coding annotation, statistical robustness across both DE tools, and a direct mechanistic link to SARS-CoV-2 pathogenesis:</p>
+<ul>
+<li><strong>Exclusion of <code>AC026801.2</code> (Biotype):</strong> <code>AC026801.2</code> is a poorly characterised long non-coding RNA (lncRNA). Protein-coding genes with well-annotated transcription start sites (TSS) and established functional pathways are strongly preferred for therapeutic CRISPR modulation.</li>
+<li><strong>Exclusion of <code>GPRASP1</code> (Zero baseline &amp; pathway relevance):</strong> <code>GPRASP1</code> has zero read counts in both <code>mock</code> controls (inflating its <span class="math inline">\(\log_2\text{FC}\)</span>) and encodes a G-protein-coupled receptor sorting protein without a primary role in coronavirus replication or hyperinflammation.</li>
+<li><strong>Exclusion of <code>SERPINB2</code> (Directionality and modest effect size):</strong> <code>SERPINB2</code> is the only downregulated gene (<span class="math inline">\(\log_2\text{FC} \approx -1.68\)</span>), which would require CRISPR activation (CRISPRa), and exhibits the smallest absolute fold change among the six candidates.</li>
+<li><strong>Selection of <code>OAS2</code> over <code>IFI27</code> and <code>CXCL11</code>:</strong> While <code>OAS2</code>, <code>IFI27</code>, and <code>CXCL11</code> are all upregulated interferon-stimulated genes, <strong>OAS2</strong> (<code>ENSG00000111335</code>) combines an exceptionally strong, highly significant induction in both tools (<a href="#tbl-oas2-de" class="quarto-xref">Table&nbsp;<span>3.1</span></a>) with a direct enzymatic role in the innate antiviral response. <em>OAS2</em> encodes 2’-5’-oligoadenylate synthetase 2, which senses viral double-stranded RNA and synthesises 2’-5’-oligoadenylates to activate latent endoribonuclease RNase L <span class="citation" data-cites="merold2025">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>)</span>. Crucially, sustained <em>OAS2</em> overexpression in late-stage SARS-CoV-2 infection is implicated in pathological hyperinflammation, tissue damage, and COVID-19-associated cardiac dysfunction <span class="citation" data-cites="gao2023 hernandezramirez2026">(<a href="references.html#ref-gao2023" role="doc-biblioref">Gao et al. 2023</a>; <a href="references.html#ref-hernandezramirez2026" role="doc-biblioref">Hernandez-Ramirez et al. 2026</a>)</span>, making its controlled downregulation a biologically coherent test case for the project’s expression-restoration hypothesis.</li>
+</ul>
 <div class="cell">
 <div id="tbl-oas2-de" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-oas2-de-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;3.1: Differential-expression results for OAS2 from Task 1.
+Table&nbsp;3.1: Differential expression summary for OAS2 (ENSG00000111335) from Task 1.
 </figcaption>
 <div aria-describedby="tbl-oas2-de-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -270,18 +305,18 @@ Table&nbsp;3.1: Differential-expression results for OAS2 from Task 1.
 <thead>
 <tr class="header">
 <th style="text-align: left;">Method</th>
-<th style="text-align: right;">Fold change</th>
+<th style="text-align: right;">log2 Fold Change</th>
 <th style="text-align: right;">Adjusted p-value / FDR</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">DESeq2</td>
+<td style="text-align: left;">DESeq2 (Wald)</td>
 <td style="text-align: right;">9.9</td>
 <td style="text-align: right;">9.69e-10</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">edgeR-LRT</td>
+<td style="text-align: left;">edgeR (GLM-LRT)</td>
 <td style="text-align: right;">10.3</td>
 <td style="text-align: right;">0.000169</td>
 </tr>
@@ -292,49 +327,42 @@ Table&nbsp;3.1: Differential-expression results for OAS2 from Task 1.
 </figure>
 </div>
 </div>
-<p>OAS2 had a DESeq2 log2 fold change of <strong>9.90</strong> and an edgeR logFC of <strong>10.30</strong>, with adjusted values of <strong>9.69e-10</strong> and <strong>0.000169</strong>, respectively. Both methods support increased expression in SARS compared with mock. The table’s “Fold change” column contains log2 values, not expression ratios. The low mock counts and two-donor design limit the interpretation of the size of this change.</p>
 </section>
-<section id="choice-of-crispr-strategy" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="choice-of-crispr-strategy"><span class="header-section-number">3.2</span> Choice of CRISPR strategy</h2>
-<p>The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was upregulated, we selected <strong>CRISPR interference (CRISPRi)</strong> to reduce transcription. CRISPRi uses catalytically inactive Cas9 with a repressor such as KRAB <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>. This follows the direction-based choice in the project brief. OAS2 also has an antiviral role, so increased expression does not by itself show that repression would be beneficial <span class="citation" data-cites="merold2025">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>)</span>.</p>
-<p>The project asks for guides within the <strong>first exon</strong>. We therefore used the first exon of the OAS2 MANE Select transcript. This meets the project’s target-region requirement; it does not establish that these sites give the strongest CRISPRi repression.</p>
+<section id="choice-of-crispr-modality-why-crispri-instead-of-crispra-or-cas9-nuclease" class="level3">
+<h3 class="anchored" data-anchor-id="choice-of-crispr-modality-why-crispri-instead-of-crispra-or-cas9-nuclease">Choice of CRISPR Modality: Why CRISPRi Instead of CRISPRa or Cas9 Nuclease</h3>
+<p>The overarching project hypothesis states that restoring deregulated gene expression in COVID-19 toward baseline levels will support patient recovery. Because <em>OAS2</em> is strongly <strong>upregulated</strong> in the <code>SARS</code> condition (<span class="math inline">\(\log_2\text{FC} = 9.90\)</span> in <code>DESeq2</code>, <span class="math inline">\(10.30\)</span> in <code>edgeR</code>), <strong>CRISPR interference (CRISPRi)</strong> was selected over CRISPRa (which activates transcription of downregulated genes) and standard wild-type Cas9 nuclease cleavage (which causes permanent, irreversible DNA double-strand breaks and frameshift mutations). CRISPRi pairs a catalytically dead Cas9 (<strong>dCas9</strong>) with a transcriptional repressor domain such as <strong>KRAB</strong> to sterically block RNA polymerase II elongation and induce reversible heterochromatin silencing near the transcription start site (TSS) and first exon <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>.</p>
 </section>
-<section id="oas2-transcript-selection" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="oas2-transcript-selection"><span class="header-section-number">3.3</span> OAS2 transcript selection</h2>
-<p>OAS2 was inspected in Ensembl using the human <strong>GRCh38.p14</strong> reference assembly. The gene is located on chromosome 12 and is on the forward strand.</p>
-<p>The <strong>MANE Select transcript <code>ENST00000392583.7</code></strong> was selected. MANE provides a representative transcript that is matched between NCBI and EMBL-EBI <span class="citation" data-cites="morales2022">(<a href="references.html#ref-morales2022" role="doc-biblioref">Morales et al. 2022</a>)</span>.</p>
+<section id="transcript-strand-directionality-and-first-exon-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="transcript-strand-directionality-and-first-exon-extraction">Transcript, Strand Directionality, and First-Exon Extraction</h3>
+<p>Because eukaryotic genes often produce multiple alternatively spliced isoforms with different 5’ start sites, selecting an arbitrary transcript could target an exon that is spliced out in the primary physiological isoform. We therefore queried <em>OAS2</em> in Ensembl (<strong>GRCh38.p14</strong>) and selected the <strong>MANE Select transcript (<code>ENST00000392583.7</code>)</strong> <span class="citation" data-cites="morales2022">(<a href="references.html#ref-morales2022" role="doc-biblioref">Morales et al. 2022</a>)</span>. MANE (Matched Annotation from NCBI and EMBL-EBI) defines the single, clinically standardised canonical transcript agreed upon by both RefSeq and Ensembl.</p>
 <div id="fig-oas2-ensembl" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-oas2-ensembl-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/task2/OAS2_ensembl.png" class="img-fluid figure-img" style="width:95.0%">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oas2-ensembl-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.1: OAS2 gene view in Ensembl. The MANE Select transcript <code>ENST00000392583.7</code> is shown for the protein-coding OAS2 gene on chromosome 12.
+Figure&nbsp;3.1: OAS2 gene view in Ensembl (GRCh38.p14) showing the canonical MANE Select transcript ENST00000392583.7 on the forward strand of chromosome 12.
 </figcaption>
 </figure>
 </div>
-</section>
-<section id="selection-of-the-first-exon" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="selection-of-the-first-exon"><span class="header-section-number">3.4</span> Selection of the first exon</h2>
-<p>The MANE Select transcript contains 10 exons. The first exon is <strong><code>ENSE00002421397.2</code></strong>. It is located at <code>chr12:112,978,519-112,978,785</code>, is on the forward strand, and has a length of <strong>267 bp</strong>.</p>
+<p>Paying strict attention to genomic directionality as required by the project specification, <em>OAS2</em> is transcribed on the <strong>forward (<code>+</code>) strand</strong> of chromosome 12. Consequently, the <strong>first exon</strong> relative to the 5’ transcription start site is the most upstream exon (<code>ENSE00002421397.2</code>, out of 10 total exons), spanning <strong>chr12:112,978,519–112,978,785</strong> (1-based, 267 bp) (<a href="#fig-oas2-first-exon" class="quarto-xref">Figure&nbsp;<span>3.2</span></a>).</p>
 <div id="fig-oas2-first-exon" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-oas2-first-exon-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/task2/OAS2_Selection of the first exon of OAS2.png" class="img-fluid figure-img" style="width:95.0%">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-oas2-first-exon-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.2: First exon of the OAS2 MANE Select transcript. Exon 1 (<code>ENSE00002421397.2</code>) is 267 bp long and was used for guide design.
+Figure&nbsp;3.2: First exon (ENSE00002421397.2, 267 bp) of the OAS2 MANE Select transcript used as input for gRNA design.
 </figcaption>
 </figure>
 </div>
-<p>The first-exon sequence was copied from Ensembl and used as the input sequence for CRISPOR.</p>
 <div class="callout callout-style-default callout-note callout-titled">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-1-contents" aria-controls="callout-1" aria-expanded="false" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-First exon sequence used for CRISPOR
+First exon FASTA sequence (<code>ENSE00002421397.2</code>, 267 bp) submitted to CRISPOR
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
@@ -350,81 +378,91 @@ CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA</code></pre>
 </div>
 </div>
 </section>
-<section id="guide-design-with-crispor" class="level2" data-number="3.5">
-<h2 data-number="3.5" class="anchored" data-anchor-id="guide-design-with-crispor"><span class="header-section-number">3.5</span> Guide design with CRISPOR</h2>
-<p>Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR <span class="citation" data-cites="li2023 cui2018">(<a href="references.html#ref-li2023" role="doc-biblioref">Li et al. 2023</a>; <a href="references.html#ref-cui2018" role="doc-biblioref">Cui et al. 2018</a>)</span>. Lecture 6 separates guide assessment into efficiency at the intended site and specificity against other sites. We selected <strong>CRISPOR</strong> because it reports both types of prediction and provides downloadable off-target sequences and genomic locations for Task 3 <span class="citation" data-cites="concordet2018">(<a href="references.html#ref-concordet2018" role="doc-biblioref">Concordet and Haeussler 2018</a>)</span>.</p>
-<p>The CRISPOR analysis used the following settings:</p>
-<ul>
-<li><strong>Reference genome:</strong> Homo sapiens GRCh38/hg38</li>
-<li><strong>Target sequence:</strong> first exon of OAS2 (<code>ENSE00002421397.2</code>)</li>
-<li><strong>Nuclease:</strong> SpCas9</li>
-<li><strong>PAM:</strong> NGG</li>
-<li><strong>Guide length:</strong> 20 bp</li>
-</ul>
+<section id="rationale-for-selecting-crispor-over-other-grna-design-tools" class="level3">
+<h3 class="anchored" data-anchor-id="rationale-for-selecting-crispor-over-other-grna-design-tools">Rationale for Selecting CRISPOR Over Other gRNA Design Tools</h3>
+<p>Multiple computational tools exist for CRISPR guide design, including <strong>CHOPCHOP</strong>, <strong>E-CRISP</strong>, <strong>SSC</strong>, and <strong>CRISPOR</strong> <span class="citation" data-cites="li2023 cui2018 concordet2018">(<a href="references.html#ref-li2023" role="doc-biblioref">Li et al. 2023</a>; <a href="references.html#ref-cui2018" role="doc-biblioref">Cui et al. 2018</a>; <a href="references.html#ref-concordet2018" role="doc-biblioref">Concordet and Haeussler 2018</a>)</span>. <strong>CRISPOR</strong> was specifically chosen over these alternatives for three reasons guided by both Task 2 and Task 3 requirements:</p>
+<ol type="1">
+<li><strong>Multi-model efficiency consensus vs.&nbsp;single-score tools:</strong> Unlike tools that report only a single activity metric, CRISPOR simultaneously computes orthogonal on-target efficiency models—including <strong>Doench 2016</strong> (Rule Set 2), <strong>Moreno-Mateos</strong>, and <strong>RuleSet3</strong>—allowing cross-validation of predicted guide activity <span class="citation" data-cites="concordet2018">(<a href="references.html#ref-concordet2018" role="doc-biblioref">Concordet and Haeussler 2018</a>)</span>.</li>
+<li><strong>Position- and nucleotide-aware off-target scoring (MIT and CFD):</strong> CRISPOR reports both the <strong>MIT specificity score</strong> and the <strong>Cutting Frequency Determination (CFD) score</strong> <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Because CFD weights both the <em>position</em> and <em>nucleotide identity</em> of mismatches across the 20-nt protospacer and PAM, it provides a more biologically realistic measure of off-target dCas9 binding affinity than simple mismatch counting.</li>
+<li><strong>Direct compatibility with Task 3 VCF screening:</strong> Crucially for Task 3, CRISPOR allows exporting the complete table of genome-wide off-target intervals (<code>offtargetsguide.txt</code>) with exact 1-based <strong>GRCh38 coordinates, strand orientation, mismatch counts, and 23-bp sequences</strong>. Tools that only return summary off-target counts without genomic coordinates cannot be intersected with personal VCF files in Task 3.</li>
+</ol>
+<p>The 267 bp <em>OAS2</em> exon 1 sequence was analysed in CRISPOR using the <strong>Homo sapiens GRCh38/hg38</strong> assembly, <strong>SpCas9</strong> nuclease, canonical <strong>20bp-NGG</strong> PAM setting (<a href="#fig-crispor-settings" class="quarto-xref">Figure&nbsp;<span>3.3</span></a>).</p>
 <div id="fig-crispor-settings" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-crispor-settings-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/task2/crispr_settings.png" class="img-fluid figure-img" style="width:95.0%">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-crispor-settings-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.3: CRISPOR input settings used for the OAS2 first exon. The human GRCh38/hg38 reference genome and the 20bp-NGG SpCas9 PAM setting were selected.
+Figure&nbsp;3.3: CRISPOR configuration using the human GRCh38/hg38 reference assembly and 20bp-NGG SpCas9 parameters.
 </figcaption>
 </figure>
 </div>
-<p>After submitting the sequence, CRISPOR returned the SpCas9-compatible guides within the first exon. The output includes specificity scores, several predicted efficiency scores and predicted off-target sites.</p>
+<hr>
+</section>
+</section>
+<section id="findings" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="findings"><span class="header-section-number">3.3</span> Findings</h2>
+<section id="evaluation-of-candidate-grnas-in-oas2-exon-1" class="level3">
+<h3 class="anchored" data-anchor-id="evaluation-of-candidate-grnas-in-oas2-exon-1">Evaluation of Candidate gRNAs in <em>OAS2</em> Exon 1</h3>
+<p>CRISPOR identified all candidate 20-nt protospacers adjacent to a canonical <code>NGG</code> PAM across both strands of <em>OAS2</em> exon 1 (<a href="#fig-crispor-results" class="quarto-xref">Figure&nbsp;<span>3.4</span></a>).</p>
 <div id="fig-crispor-results" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-crispor-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/task2/crispr_results_table.png" class="img-fluid figure-img" style="width:100.0%">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-crispor-results-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.4: CRISPOR candidate guides for the first exon of OAS2. The table shows guide position, sequence, specificity scores, predicted efficiency scores and off-target information.
+Figure&nbsp;3.4: CRISPOR output table displaying candidate gRNAs across the first exon of OAS2, ranked by specificity and efficiency metrics.
 </figcaption>
 </figure>
 </div>
-</section>
-<section id="selected-guide-rnas" class="level2" data-number="3.6">
-<h2 data-number="3.6" class="anchored" data-anchor-id="selected-guide-rnas"><span class="header-section-number">3.6</span> Selected guide RNAs</h2>
-<p>Two guides were selected by considering predicted efficiency and specificity together. The first-exon sequence and an NGG PAM were required for both. We favoured candidates without reported off-targets at zero, one or two protospacer mismatches and then compared specificity and efficiency scores. Their main values are shown in <a href="#tbl-selected-guides" class="quarto-xref">Table&nbsp;<span>3.2</span></a>.</p>
+<p>To select the optimal guide pair, we applied a multi-tiered filtering strategy:</p>
+<ol type="1">
+<li><strong>Zero close-match off-targets (<code>0-0-0</code> filter):</strong> Any guide with predicted off-target sites harbouring 0, 1, or 2 mismatches in the reference genome was immediately excluded, as SpCas9/dCas9 readily tolerates 1–2 mismatches.</li>
+<li><strong>High genome-wide specificity (<span class="math inline">\(\text{MIT} \ge 85\)</span> and <span class="math inline">\(\text{CFD} \ge 95\)</span>):</strong> Guides were required to achieve top-tier specificity across both scoring algorithms to minimise unintended transcriptional repression elsewhere in the genome.</li>
+<li><strong>Complementary on-target efficiency across models:</strong> Because empirical efficiency algorithms weight sequence features differently, we selected two high-specificity guides—<strong>200forw</strong> (<code>200/fw</code>) and <strong>248forw</strong> (<code>248/fw</code>)—that excel across complementary efficiency predictors (<a href="#tbl-selected-guides" class="quarto-xref">Table&nbsp;<span>3.2</span></a>).</li>
+</ol>
 <div class="cell">
 <div id="tbl-selected-guides" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-selected-guides-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;3.2: Selected OAS2 guide RNAs and CRISPOR prediction scores.
+Table&nbsp;3.2: Selected OAS2 first-exon CRISPRi candidate guides (200forw and 248forw) and their CRISPOR specificity and efficiency metrics.
 </figcaption>
 <div aria-describedby="tbl-selected-guides-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
 <col style="width: 5%">
-<col style="width: 6%">
-<col style="width: 16%">
+<col style="width: 7%">
+<col style="width: 19%">
+<col style="width: 13%">
 <col style="width: 3%">
-<col style="width: 12%">
-<col style="width: 12%">
-<col style="width: 9%">
-<col style="width: 10%">
 <col style="width: 6%">
-<col style="width: 16%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 8%">
+<col style="width: 5%">
+<col style="width: 17%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Guide</th>
-<th style="text-align: left;">Position</th>
-<th style="text-align: left;">Protospacer</th>
+<th style="text-align: left;">Exon 1 Pos</th>
+<th style="text-align: left;">GRCh38 Coordinates (23 bp)</th>
+<th style="text-align: left;">20-base Protospacer</th>
 <th style="text-align: center;">PAM</th>
-<th style="text-align: right;">MIT specificity</th>
-<th style="text-align: right;">CFD specificity</th>
+<th style="text-align: right;">MIT Spec.</th>
+<th style="text-align: right;">CFD Spec.</th>
 <th style="text-align: right;">Doench 2016</th>
 <th style="text-align: right;">Moreno-Mateos</th>
 <th style="text-align: right;">RuleSet3</th>
-<th style="text-align: right;">Predicted off-targets</th>
+<th style="text-align: right;">Off-Targets (0-1-2-3-4 mm)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">gRNA 1</td>
-<td style="text-align: left;">200/fw</td>
+<td style="text-align: left;">200forw</td>
+<td style="text-align: left;">200 / +</td>
+<td style="text-align: left;">chr12:112,978,698–112,978,720</td>
 <td style="text-align: left;">TCAGACACTGATCGACGAGA</td>
 <td style="text-align: center;">TGG</td>
 <td style="text-align: right;">97</td>
@@ -432,11 +470,12 @@ Table&nbsp;3.2: Selected OAS2 guide RNAs and CRISPOR prediction scores.
 <td style="text-align: right;">64</td>
 <td style="text-align: right;">48</td>
 <td style="text-align: right;">44</td>
-<td style="text-align: right;">52</td>
+<td style="text-align: right;">52 (0-0-0-4-48)</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">gRNA 2</td>
-<td style="text-align: left;">248/fw</td>
+<td style="text-align: left;">248forw</td>
+<td style="text-align: left;">248 / +</td>
+<td style="text-align: left;">chr12:112,978,746–112,978,768</td>
 <td style="text-align: left;">GGAACCCGAACAGTTCCCCC</td>
 <td style="text-align: center;">TGG</td>
 <td style="text-align: right;">89</td>
@@ -444,7 +483,7 @@ Table&nbsp;3.2: Selected OAS2 guide RNAs and CRISPOR prediction scores.
 <td style="text-align: right;">55</td>
 <td style="text-align: right;">27</td>
 <td style="text-align: right;">89</td>
-<td style="text-align: right;">52</td>
+<td style="text-align: right;">52 (0-0-0-5-47)</td>
 </tr>
 </tbody>
 </table>
@@ -453,18 +492,21 @@ Table&nbsp;3.2: Selected OAS2 guide RNAs and CRISPOR prediction scores.
 </figure>
 </div>
 </div>
-<p>gRNA 1 (<strong>200/fw</strong>, called <strong>200forw</strong> in Task 3) had the higher MIT specificity score (<strong>97</strong>) and higher Doench 2016 and Moreno-Mateos scores (<strong>64</strong> and <strong>48</strong>). gRNA 2 (<strong>248/fw</strong>, or <strong>248forw</strong>) had the higher RuleSet3 score (<strong>89</strong>). Both had a CFD specificity score of <strong>96</strong>. We retained gRNA 1 for its stronger MIT score and gRNA 2 as an alternative supported by RuleSet3. The efficiency models disagree, so there is no single guide that is best under every displayed score.</p>
-<p>CRISPOR reported <strong>52 possible off-target sites</strong> for each guide. For gRNA 1, the distribution was <code>0-0-0-4-48</code> for sites with 0, 1, 2, 3 and 4 mismatches; for gRNA 2 it was <code>0-0-0-5-47</code>. Neither has a reported perfect, one-mismatch or two-mismatch off-target in this search. gRNA 1 has one fewer three-mismatch site. As discussed in Lecture 6, counts alone are insufficient because mismatch position also affects recognition; the CFD model additionally accounts for mismatch type <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>.</p>
-<p>The displayed alternatives also support the choice. Compared with 166/rev, 200/fw has higher MIT and CFD specificity (97 versus 90 and 96 versus 92) and fewer reported off-targets (52 versus 79). The 150/rev candidate is marked “Inefficient” and has lower Doench 2016 and RuleSet3 values than 248/fw (31 versus 55 and -77 versus 89). These comparisons support retaining the selected pair for Task 3.</p>
-<p>These scores are predictions, not measured success rates. Values should be compared within the same scoring model rather than averaged across models. CRISPOR’s cleavage-based predictions do not directly measure CRISPRi repression. Both guides therefore remain candidates that require individual sequence checks and experimental validation.</p>
 </section>
-<section id="preparation-for-task-3" class="level2" data-number="3.7">
-<h2 data-number="3.7" class="anchored" data-anchor-id="preparation-for-task-3"><span class="header-section-number">3.7</span> Preparation for Task 3</h2>
-<p>The selected guides and their off-target information are carried forward to Task 3. The reference-genome design does not confirm that each individual’s target and PAM are unchanged. OAS2 is on chromosome 12, whereas the supplied variant subsets cover chromosomes 1 and 2. Task 3 can therefore reassess off-targets on those chromosomes but cannot confirm OAS2 target availability from those files.</p>
+<section id="justification-of-200forw-and-248forw-over-alternative-exon-1-guides" class="level3">
+<h3 class="anchored" data-anchor-id="justification-of-200forw-and-248forw-over-alternative-exon-1-guides">Justification of <code>200forw</code> and <code>248forw</code> Over Alternative Exon 1 Guides</h3>
+<p>Comparing <strong>200forw</strong> and <strong>248forw</strong> against each other and against rejected candidates in <a href="#fig-crispor-results" class="quarto-xref">Figure&nbsp;<span>3.4</span></a> demonstrates why retaining this pair is optimal:</p>
+<ul>
+<li><strong>Strengths of <code>200forw</code>:</strong> Achieves the highest overall <strong>MIT specificity score (97)</strong> and <strong>CFD score (96)</strong>, alongside strong <strong>Doench 2016 (64)</strong> and <strong>Moreno-Mateos (48)</strong> efficiency predictions. Its 52 predicted off-target sites consist of zero 0-, 1-, or 2-mismatch sites, only 4 three-mismatch sites, and 48 four-mismatch sites (<code>0-0-0-4-48</code>).</li>
+<li><strong>Strengths of <code>248forw</code>:</strong> Matches <strong>200forw</strong> in <strong>CFD specificity (96)</strong> and total off-target count (<strong>52</strong>, distributed as <code>0-0-0-5-47</code>), while achieving an outstanding <strong>RuleSet3 efficiency score (89)</strong> and solid <strong>Doench 2016 score (55)</strong>.</li>
+<li><strong>Why other Exon 1 candidates were rejected:</strong> Alternative guides visible in <a href="#fig-crispor-results" class="quarto-xref">Figure&nbsp;<span>3.4</span></a> are inferior on either specificity or efficiency. For example, <code>166/rev</code> has lower specificity (MIT 90, CFD 92) and 50% more off-target sites (79 vs.&nbsp;52), while <code>150/rev</code> is flagged by CRISPOR as <code>"Inefficient"</code> with a strongly negative RuleSet3 score (-77 vs.&nbsp;89) and low Doench 2016 score (31).</li>
+</ul>
 </section>
-<section id="task-2-conclusion" class="level2" data-number="3.8">
-<h2 data-number="3.8" class="anchored" data-anchor-id="task-2-conclusion"><span class="header-section-number">3.8</span> Task 2 conclusion</h2>
-<p>OAS2 was selected from the six consensus genes because both expression methods support upregulation and the gene has a documented antiviral role. CRISPRi was chosen under the project’s expression-restoration hypothesis. The 267 bp first exon of <code>ENST00000392583.7</code> was analysed with GRCh38/hg38 and SpCas9-NGG settings. <strong>200/fw</strong> was retained for its stronger MIT specificity and <strong>248/fw</strong> as a second candidate with a higher RuleSet3 prediction. Their suitability in individual genomes is assessed within the available data in Task 3.</p>
+</section>
+<section id="discussion-conclusion" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="discussion-conclusion"><span class="header-section-number">3.4</span> Discussion &amp; Conclusion</h2>
+<p>Selecting <strong>200forw</strong> and <strong>248forw</strong> provides a well-balanced pair of forward-strand gRNAs targeting the canonical first exon of <em>OAS2</em> (<code>chr12:112,978,698–112,978,720</code> and <code>chr12:112,978,746–112,978,768</code>). Both guides use a canonical <code>TGG</code> PAM, avoid any 0–2 mismatch off-targets in GRCh38, and hedge against single-model bias by combining top-ranked MIT/Doench metrics (<strong>200forw</strong>) with top-ranked RuleSet3/CFD metrics (<strong>248forw</strong>).</p>
+<p>Two biological caveats apply to these computational predictions. First, CRISPOR’s efficiency scores (Doench 2016, Moreno-Mateos, RuleSet3) were trained primarily on Cas9 knockout cleavage datasets rather than dCas9-KRAB transcriptional repression; while sequence features governing Cas9 ribonucleoprotein assembly and DNA unwinding are shared, steric positioning relative to the TSS also influences CRISPRi efficacy <span class="citation" data-cites="jensen2021 haeussler2016">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>; <a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Second, all scores in Task 2 are computed solely against the <strong>GRCh38 reference genome</strong>. Human genetic polymorphisms can alter on-target availability on chromosome 12 or modify off-target binding risk on other chromosomes. Both <strong>200forw</strong> and <strong>248forw</strong>, together with their exported CRISPOR off-target coordinates (<code>offtargetsguide.txt</code>), are therefore carried forward to <strong>Task 3</strong> for personal genome evaluation across the seven 1000 Genomes individuals.</p>
 
 
 <!-- -->
@@ -963,7 +1005,7 @@ Morales, Joannella, Shashikant Pujar, Jane E. Loveland, Alex Astashyn, Ruth Benn
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Task 2: gRNA design for OAS2</span></span>
+<div class="sourceCode" id="cb2" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Task 2: gRNA Design for OAS2</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="in">```{r task2-setup}</span></span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
@@ -973,134 +1015,135 @@ Morales, Joannella, Shashikant Pujar, Jane E. Loveland, Alex Astashyn, Ruth Benn
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/consensus_table.rds"</span>)</span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">## Target gene selection</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="fu">## Objective</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-consensus.</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>Building on the six consensus differentially expressed genes identified in Task 1 (@tbl-consensus), Task 2 selects a single biologically justified target gene, determines the appropriate transcriptional modulation strategy (**CRISPRi** vs. **CRISPRa**), extracts the canonical **first exon** sequence relative to gene transcription, and designs candidate SpCas9 single-guide RNAs (gRNAs) balancing on-target efficiency against off-target specificity.</span>
 <span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>For Task 2, we selected **OAS2** (<span class="in">`ENSG00000111335`</span>). OAS2 showed a strong increase in expression in the SARS condition with both differential-expression methods. It also has a clear role in the human antiviral response. OAS2 is part of the interferon-induced OAS pathway and contributes to activation of RNase L after viral double-stranded RNA is detected <span class="co">[</span><span class="ot">@merold2025</span><span class="co">]</span>. OAS family genes have also been linked to severe COVID-19 and COVID-19-related heart failure <span class="co">[</span><span class="ot">@gao2023; @hernandezramirez2026</span><span class="co">]</span>.</span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="fu">## Approach</span></span>
 <span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>The Task 1 result for OAS2 is summarised in @tbl-oas2-de.</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="fu">### Rationale for Selecting *OAS2* Over the Other Five Consensus Genes</span></span>
 <span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-oas2-de}</span></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Differential-expression results for OAS2 from Task 1."</span></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="sc">|&gt;</span></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(gene_name <span class="sc">==</span> <span class="st">"OAS2"</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(fold_change_deseq, adj_p_value_deseq, fold_change_edger, adj_p_value_edger) <span class="sc">|&gt;</span> </span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">everything</span>(),</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="fu">c</span>(<span class="st">".value"</span>, <span class="st">"Method"</span>),</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_pattern =</span> <span class="st">"(.*)_(deseq|edger)"</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">Method =</span> <span class="fu">recode_values</span>(</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>      Method,</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>      <span class="st">"deseq"</span> <span class="sc">~</span> <span class="st">"DESeq2"</span>,</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>      <span class="st">"edger"</span> <span class="sc">~</span> <span class="st">"edgeR-LRT"</span></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Fold change</span><span class="st">`</span> <span class="ot">=</span> fold_change,</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Adjusted p-value / FDR</span><span class="st">`</span> <span class="ot">=</span> adj_p_value</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>OAS2 had a DESeq2 log2 fold change of **9.90** and an edgeR logFC of **10.30**, with adjusted values of **9.69e-10** and **0.000169**, respectively. Both methods support increased expression in SARS compared with mock. The table's "Fold change" column contains log2 values, not expression ratios. The low mock counts and two-donor design limit the interpretation of the size of this change.</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choice of CRISPR strategy</span></span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was upregulated, we selected **CRISPR interference (CRISPRi)** to reduce transcription. CRISPRi uses catalytically inactive Cas9 with a repressor such as KRAB <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>. This follows the direction-based choice in the project brief. OAS2 also has an antiviral role, so increased expression does not by itself show that repression would be beneficial <span class="co">[</span><span class="ot">@merold2025</span><span class="co">]</span>.</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>The project asks for guides within the **first exon**. We therefore used the first exon of the OAS2 MANE Select transcript. This meets the project's target-region requirement; it does not establish that these sites give the strongest CRISPRi repression.</span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a><span class="fu">## OAS2 transcript selection</span></span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>OAS2 was inspected in Ensembl using the human **GRCh38.p14** reference assembly. The gene is located on chromosome 12 and is on the forward strand.</span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>The **MANE Select transcript `ENST00000392583.7`** was selected. MANE provides a representative transcript that is matched between NCBI and EMBL-EBI <span class="co">[</span><span class="ot">@morales2022</span><span class="co">]</span>.</span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a><span class="al">![OAS2 gene view in Ensembl. The MANE Select transcript `ENST00000392583.7` is shown for the protein-coding OAS2 gene on chromosome 12.](figures/task2/OAS2_ensembl.png)</span>{#fig-oas2-ensembl width="95%"}</span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="fu">## Selection of the first exon</span></span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>The MANE Select transcript contains 10 exons. The first exon is **`ENSE00002421397.2`**. It is located at `chr12:112,978,519-112,978,785`, is on the forward strand, and has a length of **267 bp**.</span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a><span class="al">![First exon of the OAS2 MANE Select transcript. Exon 1 (`ENSE00002421397.2`) is 267 bp long and was used for guide design.](figures/task2/OAS2_Selection%20of%20the%20first%20exon%20of%20OAS2.png)</span>{#fig-oas2-first-exon width="95%"}</span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>The first-exon sequence was copied from Ensembl and used as the input sequence for CRISPOR.</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>Rather than selecting a target solely by the largest numerical fold change, all six consensus genes from Task 1 (<span class="in">`OAS2`</span>, <span class="in">`GPRASP1`</span>, <span class="in">`AC026801.2`</span>, <span class="in">`IFI27`</span>, <span class="in">`SERPINB2`</span>, and <span class="in">`CXCL11`</span>) were evaluated against three criteria: protein-coding annotation, statistical robustness across both DE tools, and a direct mechanistic link to SARS-CoV-2 pathogenesis:</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Exclusion of `AC026801.2` (Biotype):** <span class="in">`AC026801.2`</span> is a poorly characterised long non-coding RNA (lncRNA). Protein-coding genes with well-annotated transcription start sites (TSS) and established functional pathways are strongly preferred for therapeutic CRISPR modulation.</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Exclusion of `GPRASP1` (Zero baseline &amp; pathway relevance):** <span class="in">`GPRASP1`</span> has zero read counts in both <span class="in">`mock`</span> controls (inflating its $\log_2\text{FC}$) and encodes a G-protein-coupled receptor sorting protein without a primary role in coronavirus replication or hyperinflammation.</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Exclusion of `SERPINB2` (Directionality and modest effect size):** <span class="in">`SERPINB2`</span> is the only downregulated gene ($\log_2\text{FC} \approx -1.68$), which would require CRISPR activation (CRISPRa), and exhibits the smallest absolute fold change among the six candidates.</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Selection of `OAS2` over `IFI27` and `CXCL11`:** While `OAS2`, `IFI27`, and `CXCL11` are all upregulated interferon-stimulated genes, **OAS2** (<span class="in">`ENSG00000111335`</span>) combines an exceptionally strong, highly significant induction in both tools (@tbl-oas2-de) with a direct enzymatic role in the innate antiviral response. *OAS2* encodes 2'-5'-oligoadenylate synthetase 2, which senses viral double-stranded RNA and synthesises 2'-5'-oligoadenylates to activate latent endoribonuclease RNase L [@merold2025]. Crucially, sustained *OAS2* overexpression in late-stage SARS-CoV-2 infection is implicated in pathological hyperinflammation, tissue damage, and COVID-19-associated cardiac dysfunction <span class="co">[</span><span class="ot">@gao2023; @hernandezramirez2026</span><span class="co">]</span>, making its controlled downregulation a biologically coherent test case for the project's expression-restoration hypothesis.</span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-oas2-de}</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Differential expression summary for OAS2 (ENSG00000111335) from Task 1."</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="sc">|&gt;</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(gene_name <span class="sc">==</span> <span class="st">"OAS2"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(fold_change_deseq, adj_p_value_deseq, fold_change_edger, adj_p_value_edger) <span class="sc">|&gt;</span></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_longer</span>(</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols =</span> <span class="fu">everything</span>(),</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_to =</span> <span class="fu">c</span>(<span class="st">".value"</span>, <span class="st">"Method"</span>),</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="at">names_pattern =</span> <span class="st">"(.*)_(deseq|edger)"</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">Method =</span> <span class="fu">recode_values</span>(</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>      Method,</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>      <span class="st">"deseq"</span> <span class="sc">~</span> <span class="st">"DESeq2 (Wald)"</span>,</span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>      <span class="st">"edger"</span> <span class="sc">~</span> <span class="st">"edgeR (GLM-LRT)"</span></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">rename</span>(</span>
+<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">log2 Fold Change</span><span class="st">`</span> <span class="ot">=</span> fold_change,</span>
+<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Adjusted p-value / FDR</span><span class="st">`</span> <span class="ot">=</span> adj_p_value</span>
+<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    <span class="at">digits =</span> <span class="dv">3</span>,</span>
+<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
+<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="fu">### Choice of CRISPR Modality: Why CRISPRi Instead of CRISPRa or Cas9 Nuclease</span></span>
+<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>The overarching project hypothesis states that restoring deregulated gene expression in COVID-19 toward baseline levels will support patient recovery. Because *OAS2* is strongly **upregulated** in the `SARS` condition ($\log_2\text{FC} = 9.90$ in `DESeq2`, $10.30$ in `edgeR`), **CRISPR interference (CRISPRi)** was selected over CRISPRa (which activates transcription of downregulated genes) and standard wild-type Cas9 nuclease cleavage (which causes permanent, irreversible DNA double-strand breaks and frameshift mutations). CRISPRi pairs a catalytically dead Cas9 (**dCas9**) with a transcriptional repressor domain such as **KRAB** to sterically block RNA polymerase II elongation and induce reversible heterochromatin silencing near the transcription start site (TSS) and first exon <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>.</span>
+<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a><span class="fu">### Transcript, Strand Directionality, and First-Exon Extraction</span></span>
+<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>Because eukaryotic genes often produce multiple alternatively spliced isoforms with different 5' start sites, selecting an arbitrary transcript could target an exon that is spliced out in the primary physiological isoform. We therefore queried *OAS2* in Ensembl (**GRCh38.p14**) and selected the **MANE Select transcript (`ENST00000392583.7`)** <span class="co">[</span><span class="ot">@morales2022</span><span class="co">]</span>. MANE (Matched Annotation from NCBI and EMBL-EBI) defines the single, clinically standardised canonical transcript agreed upon by both RefSeq and Ensembl.</span>
+<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="al">![OAS2 gene view in Ensembl (GRCh38.p14) showing the canonical MANE Select transcript ENST00000392583.7 on the forward strand of chromosome 12.](figures/task2/OAS2_ensembl.png)</span>{#fig-oas2-ensembl width="95%"}</span>
+<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>Paying strict attention to genomic directionality as required by the project specification, *OAS2* is transcribed on the **forward (`+`) strand** of chromosome 12. Consequently, the **first exon** relative to the 5' transcription start site is the most upstream exon (`ENSE00002421397.2`, out of 10 total exons), spanning **chr12:112,978,519–112,978,785** (1-based, 267 bp) (@fig-oas2-first-exon).</span>
+<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="al">![First exon (ENSE00002421397.2, 267 bp) of the OAS2 MANE Select transcript used as input for gRNA design.](figures/task2/OAS2_Selection%20of%20the%20first%20exon%20of%20OAS2.png)</span>{#fig-oas2-first-exon width="95%"}</span>
+<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
+<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a><span class="fu">## First exon FASTA sequence (`ENSE00002421397.2`, 267 bp) submitted to CRISPOR</span></span>
 <span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true"}</span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a><span class="fu">## First exon sequence used for CRISPOR</span></span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="in">`&gt;ENSE00002421397.2 gene:ENSG00000111335.15 transcript:ENST00000392583.7 exon:1 total_exons:10`</span></span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="in">``` text</span></span>
-<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="in">AGTTTCAGTTTCCTGGCTCTGGGCAGCAGCAAGAATTCCTCTGCCTCCCATCCTACCAT</span></span>
-<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="in">TCACTGTCTTGCCGGCAGCCAGCTGAGAGCAATGGGAAATGGGGAGTCCCAGCTGTC</span></span>
-<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a><span class="in">CTCGGTGCCTGCTCAGAAGCTGGGTTGGTTTATCCAGGAATACCTGAAGCCCTACGAA</span></span>
-<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a><span class="in">GAATGTCAGACACTGATCGACGAGATGGTGAACACCATCTGTGACGTCCTGCAGGAAC</span></span>
-<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a><span class="in">CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA</span></span>
-<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>:::</span>
-<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a><span class="fu">## Guide design with CRISPOR</span></span>
-<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR <span class="co">[</span><span class="ot">@li2023; @cui2018</span><span class="co">]</span>. Lecture 6 separates guide assessment into efficiency at the intended site and specificity against other sites. We selected **CRISPOR** because it reports both types of prediction and provides downloadable off-target sequences and genomic locations for Task 3 <span class="co">[</span><span class="ot">@concordet2018</span><span class="co">]</span>.</span>
-<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a>The CRISPOR analysis used the following settings:</span>
-<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Reference genome:** Homo sapiens GRCh38/hg38</span>
-<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Target sequence:** first exon of OAS2 (<span class="in">`ENSE00002421397.2`</span>)</span>
-<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Nuclease:** SpCas9</span>
-<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**PAM:** NGG</span>
-<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Guide length:** 20 bp</span>
-<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a><span class="al">![CRISPOR input settings used for the OAS2 first exon. The human GRCh38/hg38 reference genome and the 20bp-NGG SpCas9 PAM setting were selected.](figures/task2/crispr_settings.png)</span>{#fig-crispor-settings width="95%"}</span>
-<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a>After submitting the sequence, CRISPOR returned the SpCas9-compatible guides within the first exon. The output includes specificity scores, several predicted efficiency scores and predicted off-target sites.</span>
-<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a><span class="al">![CRISPOR candidate guides for the first exon of OAS2. The table shows guide position, sequence, specificity scores, predicted efficiency scores and off-target information.](figures/task2/crispr_results_table.png)</span>{#fig-crispor-results width="100%"}</span>
-<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a><span class="fu">## Selected guide RNAs</span></span>
-<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a>Two guides were selected by considering predicted efficiency and specificity together. The first-exon sequence and an NGG PAM were required for both. We favoured candidates without reported off-targets at zero, one or two protospacer mismatches and then compared specificity and efficiency scores. Their main values are shown in @tbl-selected-guides.</span>
-<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-selected-guides}</span></span>
-<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Selected OAS2 guide RNAs and CRISPOR prediction scores."</span></span>
-<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a>guide_table <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
-<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>Guide, <span class="sc">~</span>Position, <span class="sc">~</span>Protospacer, <span class="sc">~</span>PAM, <span class="sc">~</span><span class="st">`</span><span class="at">MIT specificity</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">CFD specificity</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Doench 2016</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Moreno-Mateos</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">RuleSet3</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Predicted off-targets</span><span class="st">`</span>,</span>
-<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a>  <span class="st">"gRNA 1"</span>, <span class="st">"200/fw"</span>, <span class="st">"TCAGACACTGATCGACGAGA"</span>, <span class="st">"TGG"</span>, <span class="dv">97</span>, <span class="dv">96</span>, <span class="dv">64</span>, <span class="dv">48</span>, <span class="dv">44</span>, <span class="dv">52</span>,</span>
-<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a>  <span class="st">"gRNA 2"</span>, <span class="st">"248/fw"</span>, <span class="st">"GGAACCCGAACAGTTCCCCC"</span>, <span class="st">"TGG"</span>, <span class="dv">89</span>, <span class="dv">96</span>, <span class="dv">55</span>, <span class="dv">27</span>, <span class="dv">89</span>, <span class="dv">52</span></span>
-<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a>guide_table <span class="sc">|&gt;</span></span>
-<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
-<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"c"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
-<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a>gRNA 1 (**200/fw**, called **200forw** in Task 3) had the higher MIT specificity score (**97**) and higher Doench 2016 and Moreno-Mateos scores (**64** and **48**). gRNA 2 (**248/fw**, or **248forw**) had the higher RuleSet3 score (**89**). Both had a CFD specificity score of **96**. We retained gRNA 1 for its stronger MIT score and gRNA 2 as an alternative supported by RuleSet3. The efficiency models disagree, so there is no single guide that is best under every displayed score.</span>
-<span id="cb2-125"><a href="#cb2-125" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-126"><a href="#cb2-126" aria-hidden="true" tabindex="-1"></a>CRISPOR reported **52 possible off-target sites** for each guide. For gRNA 1, the distribution was <span class="in">`0-0-0-4-48`</span> for sites with 0, 1, 2, 3 and 4 mismatches; for gRNA 2 it was <span class="in">`0-0-0-5-47`</span>. Neither has a reported perfect, one-mismatch or two-mismatch off-target in this search. gRNA 1 has one fewer three-mismatch site. As discussed in Lecture 6, counts alone are insufficient because mismatch position also affects recognition; the CFD model additionally accounts for mismatch type <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>.</span>
-<span id="cb2-127"><a href="#cb2-127" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-128"><a href="#cb2-128" aria-hidden="true" tabindex="-1"></a>The displayed alternatives also support the choice. Compared with 166/rev, 200/fw has higher MIT and CFD specificity (97 versus 90 and 96 versus 92) and fewer reported off-targets (52 versus 79). The 150/rev candidate is marked "Inefficient" and has lower Doench 2016 and RuleSet3 values than 248/fw (31 versus 55 and -77 versus 89). These comparisons support retaining the selected pair for Task 3.</span>
-<span id="cb2-129"><a href="#cb2-129" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-130"><a href="#cb2-130" aria-hidden="true" tabindex="-1"></a>These scores are predictions, not measured success rates. Values should be compared within the same scoring model rather than averaged across models. CRISPOR's cleavage-based predictions do not directly measure CRISPRi repression. Both guides therefore remain candidates that require individual sequence checks and experimental validation.</span>
-<span id="cb2-131"><a href="#cb2-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a><span class="fu">## Preparation for Task 3</span></span>
-<span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a>The selected guides and their off-target information are carried forward to Task 3. The reference-genome design does not confirm that each individual's target and PAM are unchanged. OAS2 is on chromosome 12, whereas the supplied variant subsets cover chromosomes 1 and 2. Task 3 can therefore reassess off-targets on those chromosomes but cannot confirm OAS2 target availability from those files.</span>
-<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Task 2 conclusion</span></span>
-<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-138"><a href="#cb2-138" aria-hidden="true" tabindex="-1"></a>OAS2 was selected from the six consensus genes because both expression methods support upregulation and the gene has a documented antiviral role. CRISPRi was chosen under the project's expression-restoration hypothesis. The 267 bp first exon of <span class="in">`ENST00000392583.7`</span> was analysed with GRCh38/hg38 and SpCas9-NGG settings. **200/fw** was retained for its stronger MIT specificity and **248/fw** as a second candidate with a higher RuleSet3 prediction. Their suitability in individual genomes is assessed within the available data in Task 3.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
+<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a><span class="in">`&gt;ENSE00002421397.2 gene:ENSG00000111335.15 transcript:ENST00000392583.7 exon:1 total_exons:10`</span></span>
+<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a><span class="in">``` text</span></span>
+<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a><span class="in">AGTTTCAGTTTCCTGGCTCTGGGCAGCAGCAAGAATTCCTCTGCCTCCCATCCTACCAT</span></span>
+<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a><span class="in">TCACTGTCTTGCCGGCAGCCAGCTGAGAGCAATGGGAAATGGGGAGTCCCAGCTGTC</span></span>
+<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a><span class="in">CTCGGTGCCTGCTCAGAAGCTGGGTTGGTTTATCCAGGAATACCTGAAGCCCTACGAA</span></span>
+<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="in">GAATGTCAGACACTGATCGACGAGATGGTGAACACCATCTGTGACGTCCTGCAGGAAC</span></span>
+<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a><span class="in">CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA</span></span>
+<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a><span class="fu">### Rationale for Selecting CRISPOR Over Other gRNA Design Tools</span></span>
+<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>Multiple computational tools exist for CRISPR guide design, including **CHOPCHOP**, **E-CRISP**, **SSC**, and **CRISPOR** [@li2023; @cui2018; @concordet2018]. **CRISPOR** was specifically chosen over these alternatives for three reasons guided by both Task 2 and Task 3 requirements:</span>
+<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Multi-model efficiency consensus vs. single-score tools:** Unlike tools that report only a single activity metric, CRISPOR simultaneously computes orthogonal on-target efficiency models—including **Doench 2016** (Rule Set 2), **Moreno-Mateos**, and **RuleSet3**—allowing cross-validation of predicted guide activity <span class="co">[</span><span class="ot">@concordet2018</span><span class="co">]</span>.</span>
+<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Position- and nucleotide-aware off-target scoring (MIT and CFD):** CRISPOR reports both the **MIT specificity score** and the **Cutting Frequency Determination (CFD) score** <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>. Because CFD weights both the *position* and *nucleotide identity* of mismatches across the 20-nt protospacer and PAM, it provides a more biologically realistic measure of off-target dCas9 binding affinity than simple mismatch counting.</span>
+<span id="cb2-89"><a href="#cb2-89" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Direct compatibility with Task 3 VCF screening:** Crucially for Task 3, CRISPOR allows exporting the complete table of genome-wide off-target intervals (`offtargetsguide.txt`) with exact 1-based **GRCh38 coordinates, strand orientation, mismatch counts, and 23-bp sequences**. Tools that only return summary off-target counts without genomic coordinates cannot be intersected with personal VCF files in Task 3.</span>
+<span id="cb2-90"><a href="#cb2-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-91"><a href="#cb2-91" aria-hidden="true" tabindex="-1"></a>The 267 bp *OAS2* exon 1 sequence was analysed in CRISPOR using the **Homo sapiens GRCh38/hg38** assembly, **SpCas9** nuclease, canonical **20bp-NGG** PAM setting (@fig-crispor-settings).</span>
+<span id="cb2-92"><a href="#cb2-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-93"><a href="#cb2-93" aria-hidden="true" tabindex="-1"></a><span class="al">![CRISPOR configuration using the human GRCh38/hg38 reference assembly and 20bp-NGG SpCas9 parameters.](figures/task2/crispr_settings.png)</span>{#fig-crispor-settings width="95%"}</span>
+<span id="cb2-94"><a href="#cb2-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-95"><a href="#cb2-95" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb2-96"><a href="#cb2-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-97"><a href="#cb2-97" aria-hidden="true" tabindex="-1"></a><span class="fu">## Findings</span></span>
+<span id="cb2-98"><a href="#cb2-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-99"><a href="#cb2-99" aria-hidden="true" tabindex="-1"></a><span class="fu">### Evaluation of Candidate gRNAs in *OAS2* Exon 1</span></span>
+<span id="cb2-100"><a href="#cb2-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-101"><a href="#cb2-101" aria-hidden="true" tabindex="-1"></a>CRISPOR identified all candidate 20-nt protospacers adjacent to a canonical <span class="in">`NGG`</span> PAM across both strands of *OAS2* exon 1 (@fig-crispor-results).</span>
+<span id="cb2-102"><a href="#cb2-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-103"><a href="#cb2-103" aria-hidden="true" tabindex="-1"></a><span class="al">![CRISPOR output table displaying candidate gRNAs across the first exon of OAS2, ranked by specificity and efficiency metrics.](figures/task2/crispr_results_table.png)</span>{#fig-crispor-results width="100%"}</span>
+<span id="cb2-104"><a href="#cb2-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-105"><a href="#cb2-105" aria-hidden="true" tabindex="-1"></a>To select the optimal guide pair, we applied a multi-tiered filtering strategy:</span>
+<span id="cb2-106"><a href="#cb2-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-107"><a href="#cb2-107" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Zero close-match off-targets (`0-0-0` filter):** Any guide with predicted off-target sites harbouring 0, 1, or 2 mismatches in the reference genome was immediately excluded, as SpCas9/dCas9 readily tolerates 1–2 mismatches.</span>
+<span id="cb2-108"><a href="#cb2-108" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**High genome-wide specificity ($\text{MIT} \ge 85$ and $\text{CFD} \ge 95$):** Guides were required to achieve top-tier specificity across both scoring algorithms to minimise unintended transcriptional repression elsewhere in the genome.</span>
+<span id="cb2-109"><a href="#cb2-109" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Complementary on-target efficiency across models:** Because empirical efficiency algorithms weight sequence features differently, we selected two high-specificity guides—**200forw** (`200/fw`) and **248forw** (<span class="in">`248/fw`</span>)—that excel across complementary efficiency predictors (@tbl-selected-guides).</span>
+<span id="cb2-110"><a href="#cb2-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-111"><a href="#cb2-111" aria-hidden="true" tabindex="-1"></a><span class="in">```{r tbl-selected-guides}</span></span>
+<span id="cb2-112"><a href="#cb2-112" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb2-113"><a href="#cb2-113" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Selected OAS2 first-exon CRISPRi candidate guides (200forw and 248forw) and their CRISPOR specificity and efficiency metrics."</span></span>
+<span id="cb2-114"><a href="#cb2-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-115"><a href="#cb2-115" aria-hidden="true" tabindex="-1"></a>guide_table <span class="ot">&lt;-</span> <span class="fu">tribble</span>(</span>
+<span id="cb2-116"><a href="#cb2-116" aria-hidden="true" tabindex="-1"></a>  <span class="sc">~</span>Guide, <span class="sc">~</span><span class="st">`</span><span class="at">Exon 1 Pos</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">GRCh38 Coordinates (23 bp)</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">20-base Protospacer</span><span class="st">`</span>, <span class="sc">~</span>PAM, <span class="sc">~</span><span class="st">`</span><span class="at">MIT Spec.</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">CFD Spec.</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Doench 2016</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Moreno-Mateos</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">RuleSet3</span><span class="st">`</span>, <span class="sc">~</span><span class="st">`</span><span class="at">Off-Targets (0-1-2-3-4 mm)</span><span class="st">`</span>,</span>
+<span id="cb2-117"><a href="#cb2-117" aria-hidden="true" tabindex="-1"></a>  <span class="st">"200forw"</span>, <span class="st">"200 / +"</span>, <span class="st">"chr12:112,978,698–112,978,720"</span>, <span class="st">"TCAGACACTGATCGACGAGA"</span>, <span class="st">"TGG"</span>, <span class="dv">97</span>, <span class="dv">96</span>, <span class="dv">64</span>, <span class="dv">48</span>, <span class="dv">44</span>, <span class="st">"52 (0-0-0-4-48)"</span>,</span>
+<span id="cb2-118"><a href="#cb2-118" aria-hidden="true" tabindex="-1"></a>  <span class="st">"248forw"</span>, <span class="st">"248 / +"</span>, <span class="st">"chr12:112,978,746–112,978,768"</span>, <span class="st">"GGAACCCGAACAGTTCCCCC"</span>, <span class="st">"TGG"</span>, <span class="dv">89</span>, <span class="dv">96</span>, <span class="dv">55</span>, <span class="dv">27</span>, <span class="dv">89</span>, <span class="st">"52 (0-0-0-5-47)"</span></span>
+<span id="cb2-119"><a href="#cb2-119" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-120"><a href="#cb2-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-121"><a href="#cb2-121" aria-hidden="true" tabindex="-1"></a>guide_table <span class="sc">|&gt;</span></span>
+<span id="cb2-122"><a href="#cb2-122" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>(</span>
+<span id="cb2-123"><a href="#cb2-123" aria-hidden="true" tabindex="-1"></a>    <span class="at">align =</span> <span class="fu">c</span>(<span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"l"</span>, <span class="st">"c"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>, <span class="st">"r"</span>)</span>
+<span id="cb2-124"><a href="#cb2-124" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb2-125"><a href="#cb2-125" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb2-126"><a href="#cb2-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-127"><a href="#cb2-127" aria-hidden="true" tabindex="-1"></a><span class="fu">### Justification of `200forw` and `248forw` Over Alternative Exon 1 Guides</span></span>
+<span id="cb2-128"><a href="#cb2-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-129"><a href="#cb2-129" aria-hidden="true" tabindex="-1"></a>Comparing **200forw** and **248forw** against each other and against rejected candidates in @fig-crispor-results demonstrates why retaining this pair is optimal:</span>
+<span id="cb2-130"><a href="#cb2-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-131"><a href="#cb2-131" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Strengths of `200forw`:** Achieves the highest overall **MIT specificity score (97)** and **CFD score (96)**, alongside strong **Doench 2016 (64)** and **Moreno-Mateos (48)** efficiency predictions. Its 52 predicted off-target sites consist of zero 0-, 1-, or 2-mismatch sites, only 4 three-mismatch sites, and 48 four-mismatch sites (<span class="in">`0-0-0-4-48`</span>).</span>
+<span id="cb2-132"><a href="#cb2-132" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Strengths of `248forw`:** Matches **200forw** in **CFD specificity (96)** and total off-target count (**52**, distributed as `0-0-0-5-47`), while achieving an outstanding **RuleSet3 efficiency score (89)** and solid **Doench 2016 score (55)**.</span>
+<span id="cb2-133"><a href="#cb2-133" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Why other Exon 1 candidates were rejected:** Alternative guides visible in @fig-crispor-results are inferior on either specificity or efficiency. For example, <span class="in">`166/rev`</span> has lower specificity (MIT 90, CFD 92) and 50% more off-target sites (79 vs. 52), while <span class="in">`150/rev`</span> is flagged by CRISPOR as <span class="in">`"Inefficient"`</span> with a strongly negative RuleSet3 score (-77 vs. 89) and low Doench 2016 score (31).</span>
+<span id="cb2-134"><a href="#cb2-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-135"><a href="#cb2-135" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discussion &amp; Conclusion</span></span>
+<span id="cb2-136"><a href="#cb2-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-137"><a href="#cb2-137" aria-hidden="true" tabindex="-1"></a>Selecting **200forw** and **248forw** provides a well-balanced pair of forward-strand gRNAs targeting the canonical first exon of *OAS2* (`chr12:112,978,698–112,978,720` and `chr12:112,978,746–112,978,768`). Both guides use a canonical `TGG` PAM, avoid any 0–2 mismatch off-targets in GRCh38, and hedge against single-model bias by combining top-ranked MIT/Doench metrics (**200forw**) with top-ranked RuleSet3/CFD metrics (**248forw**).</span>
+<span id="cb2-138"><a href="#cb2-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-139"><a href="#cb2-139" aria-hidden="true" tabindex="-1"></a>Two biological caveats apply to these computational predictions. First, CRISPOR's efficiency scores (Doench 2016, Moreno-Mateos, RuleSet3) were trained primarily on Cas9 knockout cleavage datasets rather than dCas9-KRAB transcriptional repression; while sequence features governing Cas9 ribonucleoprotein assembly and DNA unwinding are shared, steric positioning relative to the TSS also influences CRISPRi efficacy <span class="co">[</span><span class="ot">@jensen2021; @haeussler2016</span><span class="co">]</span>. Second, all scores in Task 2 are computed solely against the **GRCh38 reference genome**. Human genetic polymorphisms can alter on-target availability on chromosome 12 or modify off-target binding risk on other chromosomes. Both **200forw** and **248forw**, together with their exported CRISPOR off-target coordinates (`offtargetsguide.txt`), are therefore carried forward to **Task 3** for personal genome evaluation across the seven 1000 Genomes individuals.</span></code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 

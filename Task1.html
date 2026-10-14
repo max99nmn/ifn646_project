@@ -125,6 +125,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -183,7 +212,7 @@ div.csl-indent {
         <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./Task2.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></span></a>
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA Design for OAS2</span></span></a>
   </div>
 </li>
         <li class="sidebar-item">
@@ -220,9 +249,10 @@ div.csl-indent {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul class="collapse">
-  <li><a href="#tool-selection-and-preprocessing" id="toc-tool-selection-and-preprocessing" class="nav-link active" data-scroll-target="#tool-selection-and-preprocessing"><span class="header-section-number">2.1</span> Tool Selection and Preprocessing</a></li>
-  <li><a href="#quality-control-and-individual-tool-results" id="toc-quality-control-and-individual-tool-results" class="nav-link" data-scroll-target="#quality-control-and-individual-tool-results"><span class="header-section-number">2.2</span> Quality Control and Individual Tool Results</a></li>
-  <li><a href="#consensus-strategy" id="toc-consensus-strategy" class="nav-link" data-scroll-target="#consensus-strategy"><span class="header-section-number">2.3</span> Consensus Strategy</a></li>
+  <li><a href="#objective" id="toc-objective" class="nav-link active" data-scroll-target="#objective"><span class="header-section-number">2.1</span> Objective</a></li>
+  <li><a href="#approach" id="toc-approach" class="nav-link" data-scroll-target="#approach"><span class="header-section-number">2.2</span> Approach</a></li>
+  <li><a href="#findings" id="toc-findings" class="nav-link" data-scroll-target="#findings"><span class="header-section-number">2.3</span> Findings</a></li>
+  <li><a href="#discussion-conclusion" id="toc-discussion-conclusion" class="nav-link" data-scroll-target="#discussion-conclusion"><span class="header-section-number">2.4</span> Discussion &amp; Conclusion</a></li>
   </ul>
 </nav>
     </div>
@@ -248,7 +278,15 @@ div.csl-indent {
 </header>
 
 
-<p>An RNA-seq differential-expression analysis compared the SARS condition with the mock control. The six count columns represent two donors, each with one sample in the Rem, SARS and mock conditions at 5 days after infection. Metadata was extracted from names such as <code>S_2_SARS_5dpi_S70003</code> using the pattern <code>S_{donor}_{condition}_{time}_{sample_id}</code>. All six samples were included in the models, but the reported contrast tests SARS against mock, not Rem against mock.</p>
+<section id="objective" class="level2" data-number="2.1">
+<h2 data-number="2.1" class="anchored" data-anchor-id="objective"><span class="header-section-number">2.1</span> Objective</h2>
+<p>The first stage of this study aims to identify human genes that are significantly deregulated during SARS-CoV-2 infection compared with uninfected (<code>mock</code>) controls. Because individual differential expression (DE) algorithms rely on different normalisation, dispersion-estimation, and hypothesis-testing assumptions, relying on a single tool can introduce method-specific false positives—especially in small-sample transcriptomic datasets. Task 1 therefore establishes a rigorous preprocessing workflow, evaluates differential expression independently using two complementary statistical frameworks (<strong>DESeq2</strong> and <strong>edgeR</strong>), and applies a conservative consensus strategy to select a high-confidence candidate gene for CRISPR guide design in Task 2.</p>
+</section>
+<section id="approach" class="level2" data-number="2.2">
+<h2 data-number="2.2" class="anchored" data-anchor-id="approach"><span class="header-section-number">2.2</span> Approach</h2>
+<section id="experimental-design-and-metadata-extraction" class="level3">
+<h3 class="anchored" data-anchor-id="experimental-design-and-metadata-extraction">Experimental Design and Metadata Extraction</h3>
+<p>The raw RNA-seq dataset (<code>gse159717_rnaseq_deseq_5dpi_counts_raw.tsv</code>) comprises 60,683 genomic features across six samples collected at 5 days post-infection (<code>5dpi</code>) from two biological donors (Donor 2 and Donor 3) under three conditions: uninfected control (<code>mock</code>), SARS-CoV-2 infected (<code>SARS</code>), and remdesivir-treated (<code>Rem</code>). Sample metadata were parsed directly from the column headers (<code>S_{donor}_{condition}_{time}_{sample_id}</code>), and <code>mock</code> was set as the reference factor level.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
@@ -273,30 +311,28 @@ div.csl-indent {
 <span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">condition =</span> <span class="fu">fct_relevel</span>(condition, <span class="st">"mock"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<p>The count matrix contained 60,683 genes. Removing 27,356 genes with zero counts in all six samples left 33,327 genes before tool-specific filtering. This follows the gene-level filtering step discussed in Lecture 4: genes without counts cannot provide evidence of an expression change.</p>
-<p>Both tools used the design <code>~ donor + condition</code>. This accounts for differences between donors while estimating the condition effect. The pairing of the samples supports this design, and the PCA provides a visual check of donor-related variation (<a href="#fig-pca" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>).</p>
-<div class="cell">
-<div class="cell-output-display">
-<div id="fig-pca" class="quarto-float quarto-figure quarto-figure-center anchored" alt="PCA result">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-pca-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="Task1_files/figure-html/fig-pca-1.png" class="img-fluid figure-img" alt="PCA result" width="672">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pca-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2.1: PCA result
-</figcaption>
-</figure>
-</div>
-</div>
-</div>
-<p>PC1 explains 53% of the variation and separates the two donor groups. Donor 2 samples cluster together, while donor 3 samples are more spread out. This supports including donor in the model. As discussed in Lecture 4, PCA helps identify sample structure; it does not prove which factor causes all variation. With only two donors, the expression results remain evidence for this experiment rather than a general estimate for all COVID-19 patients.</p>
-<section id="tool-selection-and-preprocessing" class="level2" data-number="2.1">
-<h2 data-number="2.1" class="anchored" data-anchor-id="tool-selection-and-preprocessing"><span class="header-section-number">2.1</span> Tool Selection and Preprocessing</h2>
-<p>DESeq2 <span class="citation" data-cites="Loveetal2014">(<a href="references.html#ref-Loveetal2014" role="doc-biblioref">Love, Huber, and Anders 2014</a>)</span> and edgeR <span class="citation" data-cites="Robinsonetal2009">(<a href="references.html#ref-Robinsonetal2009" role="doc-biblioref">Robinson, McCarthy, and Smyth 2009</a>)</span> were selected because both model RNA-seq counts with a negative binomial distribution. This allows the variance to be larger than the mean, as often occurs in these data. Lecture 4 also presents these tools as suitable choices, while noting that no method performs best in every dataset. Their different normalisation, filtering and dispersion procedures allow us to check whether a result depends on one analysis method. Data preparation used tidyverse <span class="citation" data-cites="Wickhametal2019">(<a href="references.html#ref-Wickhametal2019" role="doc-biblioref">Wickham et al. 2019</a>)</span>.</p>
-<p>Data preprocessing was tailored to the requirements of each tool:</p>
+<p>Two deliberate modelling choices were made before fitting the statistical models:</p>
+<ol type="1">
+<li><strong>Retaining all six samples (<code>mock</code>, <code>SARS</code>, and <code>Rem</code>) during model fitting:</strong> Although our biological contrast of interest compares <code>SARS</code> against <code>mock</code>, dropping the two <code>Rem</code> samples prior to model fitting would reduce the residual degrees of freedom from 3 to 1. Retaining all six samples allows both tools to leverage the <code>Rem</code> observations when estimating baseline inter-donor differences and gene-wise dispersion parameters, improving statistical stability before extracting the targeted <code>SARS vs. mock</code> contrast.</li>
+<li><strong>Additive paired model design (<code>~ donor + condition</code>):</strong> Because each donor was sampled across all conditions, an additive blocking factor for <code>donor</code> was included rather than a simple <code>~ condition</code> design. Accounting for baseline donor-to-donor transcriptome differences prevents donor variance from inflating the residual error term, thereby increasing statistical power to detect the true <code>condition</code> effect.</li>
+</ol>
+</section>
+<section id="rationale-for-selecting-deseq2-and-edger-over-alternative-algorithms" class="level3">
+<h3 class="anchored" data-anchor-id="rationale-for-selecting-deseq2-and-edger-over-alternative-algorithms">Rationale for Selecting DESeq2 and edgeR Over Alternative Algorithms</h3>
+<p>Several classes of differential expression algorithms exist for RNA-seq data. <strong>DESeq2</strong> <span class="citation" data-cites="Loveetal2014">(<a href="references.html#ref-Loveetal2014" role="doc-biblioref">Love, Huber, and Anders 2014</a>)</span> and <strong>edgeR</strong> <span class="citation" data-cites="Robinsonetal2009">(<a href="references.html#ref-Robinsonetal2009" role="doc-biblioref">Robinson, McCarthy, and Smyth 2009</a>)</span> were specifically selected over alternative frameworks for three methodological reasons:</p>
 <ul>
-<li><p>For DESeq2: Counts were normalised with the median-of-ratios method. During results generation, independent filtering was used to exclude low-information genes from multiple-testing adjustment. Genes without an adjusted p-value were excluded from the significant list.</p></li>
-<li><p>For edgeR: <code>filterByExpr</code> removed genes with insufficient expression for the design. Library sizes were then recalculated and TMM normalisation was applied. Both normalisation methods account for differences in sequencing depth and RNA composition; the models use counts rather than TPM or FPKM.</p></li>
+<li><strong>Discrete Negative Binomial modelling vs.&nbsp;normal-approximation transformations (<code>limma-voom</code>):</strong> RNA-seq read counts are discrete, non-negative integers that exhibit strong overdispersion (variance exceeding the mean). While <code>limma-voom</code> models log-counts-per-million using precision weights and linear models, benchmark studies show that <code>voom</code> requires larger sample sizes to reliably estimate empirical Bayes variance weights and can lose power or control of the false discovery rate (FDR) when biological replicates are very small (<span class="math inline">\(n = 2\)</span> donors per group). In contrast, both <code>DESeq2</code> and <code>edgeR</code> directly model raw counts using a Negative Binomial Generalized Linear Model (GLM), which is mathematically suited to low-replicate count data.</li>
+<li><strong>Parametric empirical Bayes shrinkage vs.&nbsp;non-parametric rank methods (<code>NOIseq</code>, <code>SAMseq</code>, <code>Wilcoxon</code>):</strong> Non-parametric permutation or rank-based methods avoid distributional assumptions but lack statistical power at <span class="math inline">\(n = 2\)</span> per group because the minimum achievable p-value from rank permutations is bounded by sample size. <code>DESeq2</code> and <code>edgeR</code> overcome the small-sample limitation by borrowing information across all genes via empirical Bayes dispersion shrinkage.</li>
+<li><strong>Methodological complementarity between <code>DESeq2</code> and <code>edgeR</code>:</strong> Despite sharing a Negative Binomial GLM foundation, <code>DESeq2</code> and <code>edgeR</code> differ in their normalisation strategies (median-of-ratios vs.&nbsp;Trimmed Mean of M-values [TMM]), low-count filtering (<code>results()</code> independent filtering vs.&nbsp;<code>filterByExpr()</code>), dispersion shrinkage (local regression/MAP shrinkage vs.&nbsp;weighted likelihood empirical Bayes), and hypothesis tests (Wald test vs.&nbsp;Likelihood Ratio Test [LRT]). Combining them tests whether candidate genes are robust to distinct statistical assumptions.</li>
+</ul>
+</section>
+<section id="pre-filtering-and-tool-specific-normalisation" class="level3">
+<h3 class="anchored" data-anchor-id="pre-filtering-and-tool-specific-normalisation">Pre-Filtering and Tool-Specific Normalisation</h3>
+<p>Of the 60,683 initial genes, 27,356 genes with zero reads across all six samples were removed first, leaving 33,327 expressed genes. Unexpressed genes contain no information on fold change or dispersion, and removing them reduces computational overhead.</p>
+<p>Subsequent pre-filtering and normalisation followed each package’s recommended best practices rather than forcing a single identical pre-filter onto both tools, which could bias one model’s dispersion trend:</p>
+<ul>
+<li><strong>DESeq2 workflow:</strong> Raw counts were normalised using the <strong>median-of-ratios</strong> method, which scales counts by sample-specific size factors resistant to a small number of highly expressed viral-response genes. Rather than hard-filtering low-count genes prior to dispersion estimation, <code>DESeq2</code> retains all expressed genes to model the mean-dispersion trend accurately and applies automated <strong>independent filtering</strong> at the <code>results()</code> stage, using the mean normalised count as a filter statistic to maximise the number of discoveries at <span class="math inline">\(\alpha = 0.05\)</span>.</li>
+<li><strong>edgeR workflow:</strong> Because <code>edgeR</code>’s TMM normalisation and dispersion estimation are sensitive to sparse low-count features, <code>filterByExpr()</code> was applied first using the <code>~ donor + condition</code> design matrix to retain only genes with sufficient counts across biological groups. Library sizes were then recalculated (<code>keep.lib.sizes = FALSE</code>) and normalised via <strong>Trimmed Mean of M-values (TMM)</strong> to correct for sequencing depth and RNA composition bias. Both workflows operate on raw integer counts rather than length-normalised metrics (TPM or FPKM), preserving the count-variance relationship required by the Negative Binomial distribution.</li>
 </ul>
 <div class="cell">
 <details class="code-fold">
@@ -313,10 +349,37 @@ Figure&nbsp;2.1: PCA result
 </details>
 </div>
 </section>
-<section id="quality-control-and-individual-tool-results" class="level2" data-number="2.2">
-<h2 data-number="2.2" class="anchored" data-anchor-id="quality-control-and-individual-tool-results"><span class="header-section-number">2.2</span> Quality Control and Individual Tool Results</h2>
-<p>The dispersion plots show how both tools estimate variation between samples (<a href="#fig-dispersionestimates" class="quarto-xref">Figure&nbsp;<span>2.2</span></a> and <a href="#fig-dispersionestimates2" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>). Low-count genes show a wider spread of estimates, while the fitted trends decline as expression increases.</p>
-<p>For DESeq2, the black points are gene-wise dispersion estimates, the red line is the fitted trend and the blue points are the final estimates after shrinkage. The edgeR plot shows the biological coefficient of variation, the square root of dispersion, with gene-specific points and common and trend estimates. Sharing information across genes helps estimate variation with few replicates. These plots are useful checks, but they do not prove that every gene fits the model or that all significant results are true positives.</p>
+<section id="consensus-strategy-justification" class="level3">
+<h3 class="anchored" data-anchor-id="consensus-strategy-justification">Consensus Strategy Justification</h3>
+<p>To combine the outputs of <code>DESeq2</code> and <code>edgeR</code>, each tool’s raw p-values were first adjusted for multiple hypothesis testing using the Benjamini-Hochberg procedure (<span class="math inline">\(\text{FDR} / p_{\text{adj}} &lt; 0.05\)</span>) to control the expected proportion of false discoveries across thousands of simultaneous gene tests.</p>
+<p>A <strong>strict intersection with directional concordance</strong> was chosen over alternative combination methods (such as taking the union of significant genes, or combining p-values via Fisher’s method):</p>
+<ol type="1">
+<li><strong>Intersection vs.&nbsp;Union:</strong> A union maximises sensitivity (recall) but retains genes that pass significance in only one algorithm due to tool-specific dispersion or filtering artefacts. Because Task 2 requires selecting a <em>single</em> high-confidence gene for therapeutic CRISPR targeting, minimising false positives (high precision/specificity) is far more important than maximising gene count.</li>
+<li><strong>Directional concordance (<code>sign(log2FC_DESeq2) == sign(logFC_edgeR)</code>):</strong> Requiring identical fold-change signs ensures that both models agree on whether transcription is upregulated or downregulated—a critical requirement because the direction of deregulation directly dictates whether <strong>CRISPRi</strong> (repression) or <strong>CRISPRa</strong> (activation) is deployed in Task 2.</li>
+</ol>
+<hr>
+</section>
+</section>
+<section id="findings" class="level2" data-number="2.3">
+<h2 data-number="2.3" class="anchored" data-anchor-id="findings"><span class="header-section-number">2.3</span> Findings</h2>
+<section id="exploratory-quality-control-and-dispersion-modelling" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-quality-control-and-dispersion-modelling">Exploratory Quality Control and Dispersion Modelling</h3>
+<p>Principal Component Analysis (PCA) on regularised log-transformed (<code>rlog</code>) counts confirmed the necessity of the paired <code>~ donor + condition</code> design (<a href="#fig-pca" class="quarto-xref">Figure&nbsp;<span>2.1</span></a>). The first principal component (PC1) captures <strong>53% of total transcriptomic variance</strong> and primarily separates Donor 2 from Donor 3, demonstrating substantial baseline inter-donor variability that would confound an unpaired analysis.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div id="fig-pca" class="quarto-float quarto-figure quarto-figure-center anchored" alt="PCA result">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pca-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="Task1_files/figure-html/fig-pca-1.png" class="img-fluid figure-img" alt="PCA result" width="672">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pca-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Principal Component Analysis (PCA) of rlog-transformed counts across the six samples, coloured by donor.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>The mean-dispersion relationship for <code>DESeq2</code> (<a href="#fig-dispersionestimates" class="quarto-xref">Figure&nbsp;<span>2.2</span></a>) and the Biological Coefficient of Variation (BCV) for <code>edgeR</code> (<a href="#fig-dispersionestimates2" class="quarto-xref">Figure&nbsp;<span>2.3</span></a>) follow the expected Negative Binomial behaviour: dispersion is highest among low-count genes and decreases smoothly as mean expression rises. Both plots confirm successful empirical Bayes shrinkage toward the fitted trend, stabilising variance estimates despite the two-donor sample size.</p>
 <div class="cell">
 <div class="cell-output-display">
 <div id="fig-dispersionestimates" class="quarto-float quarto-figure quarto-figure-center anchored">
@@ -325,7 +388,7 @@ Figure&nbsp;2.1: PCA result
 <img src="Task1_files/figure-html/fig-dispersionestimates-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dispersionestimates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2.2: Dispersion Estimates (DESeq2)
+Figure&nbsp;2.2: Gene-wise, fitted, and final shrunken dispersion estimates in DESeq2.
 </figcaption>
 </figure>
 </div>
@@ -339,65 +402,48 @@ Figure&nbsp;2.2: Dispersion Estimates (DESeq2)
 <img src="Task1_files/figure-html/fig-dispersionestimates2-1.png" class="img-fluid figure-img" width="672">
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-dispersionestimates2-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2.3: Biological Coefficient of Variation (edgeR)
+Figure&nbsp;2.3: Biological Coefficient of Variation (BCV) relative to average log CPM in edgeR.
 </figcaption>
 </figure>
 </div>
 </div>
 </div>
-<p>Both models tested the SARS condition against mock while accounting for donor. DESeq2 used its default Wald test, and edgeR used a GLM likelihood ratio test. Positive log2 fold changes indicate higher expression in SARS; negative values indicate lower expression.</p>
+</section>
+<section id="individual-tool-results-sars-vs.-mock" class="level3">
+<h3 class="anchored" data-anchor-id="individual-tool-results-sars-vs.-mock">Individual Tool Results (<code>SARS</code> vs.&nbsp;<code>mock</code>)</h3>
+<p>Testing the <code>SARS</code> vs.&nbsp;<code>mock</code> contrast at a Benjamini-Hochberg adjusted threshold of <span class="math inline">\(0.05\)</span> yielded <strong>68 significant differentially expressed genes in DESeq2</strong> (via the Wald test) and <strong>7 significant genes in edgeR</strong> (via the GLM Likelihood Ratio Test).</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#DESeq2 results</span></span>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># DESeq2 Wald test for SARS vs mock</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>res_deseq <span class="ot">&lt;-</span> <span class="fu">results</span>(</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  dds,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrast =</span> <span class="fu">c</span>(</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"condition"</span>,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SARS"</span>,</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mock"</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#EdgeR results</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>fit_edger <span class="ot">&lt;-</span> <span class="fu">glmFit</span>(y_dispersion, design_matrix)</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>lrt <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>  fit_edger,</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">coef =</span> <span class="st">"conditionSARS"</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrast =</span> <span class="fu">c</span>(<span class="st">"condition"</span>, <span class="st">"SARS"</span>, <span class="st">"mock"</span>),</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># edgeR GLM Likelihood Ratio Test for SARS vs mock</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>fit_edger <span class="ot">&lt;-</span> <span class="fu">glmFit</span>(y_dispersion, design_matrix)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>lrt <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(fit_edger, <span class="at">coef =</span> <span class="st">"conditionSARS"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
-<ul>
-<li><p>DESeq2 results were filtered using a Benjamini-Hochberg adjusted p-value (<code>padj</code>) &lt; 0.05.</p></li>
-<li><p>edgeR results were filtered using a Benjamini-Hochberg false discovery rate (<code>FDR</code>) &lt; 0.05. As discussed in Lecture 4, this addresses the many gene-level tests rather than applying an unadjusted p-value threshold.</p></li>
-</ul>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sig_deseq <span class="ot">&lt;-</span> deseq_results <span class="sc">|&gt;</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    padj <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>sig_edger <span class="ot">&lt;-</span> edger_results <span class="sc">|&gt;</span></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    FDR <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Significant genes: "</span>, <span class="fu">nrow</span>(sig_deseq), <span class="st">" found by DESeq2 and "</span>, <span class="fu">nrow</span>(sig_edger), <span class="st">" found by EdgeR"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sig_deseq <span class="ot">&lt;-</span> deseq_results <span class="sc">|&gt;</span> <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>sig_edger <span class="ot">&lt;-</span> edger_results <span class="sc">|&gt;</span> <span class="fu">filter</span>(FDR <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Significant genes: "</span>, <span class="fu">nrow</span>(sig_deseq), <span class="st">" found by DESeq2 and "</span>, <span class="fu">nrow</span>(sig_edger), <span class="st">" found by edgeR"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] "Significant genes: 68 found by DESeq2 and 7 found by EdgeR"</code></pre>
+<pre><code>[1] "Significant genes: 68 found by DESeq2 and 7 found by edgeR"</code></pre>
 </div>
 </div>
-<p>DESeq2 identified <strong>68 significant genes</strong>, while edgeR identified <strong>7</strong>. The lists differ even though both use a 0.05 adjusted threshold. Their filtering, normalisation, dispersion estimates and statistical tests differ, and these can affect which genes pass the threshold. The counts alone do not show that one method is more accurate. The consensus below checks which results remain significant under both methods.</p>
+<p>The discrepancy in total hit counts (68 vs.&nbsp;7) reflects <code>edgeR</code>’s stricter upfront <code>filterByExpr()</code> step and conservative robust dispersion estimation with <code>glmLRT</code> on two replicates, whereas <code>DESeq2</code>’s Wald test is more permissive for genes with near-zero baseline counts in the <code>mock</code> group.</p>
 </section>
-<section id="consensus-strategy" class="level2" data-number="2.3">
-<h2 data-number="2.3" class="anchored" data-anchor-id="consensus-strategy"><span class="header-section-number">2.3</span> Consensus Strategy</h2>
-<p>The significant lists were joined by gene identifier, retaining only genes significant in both tools. This intersection gives priority to results supported by both methods. It is conservative: a real expression change may be excluded if only one tool detects it. The tools also use the same samples, so their agreement is a sensitivity check rather than independent experimental confirmation.</p>
-<p>A second filter required the DESeq2 log2 fold change and edgeR logFC to have the same sign. This avoids selecting a gene when the tools disagree on whether expression increased or decreased. The consensus table (<a href="#tbl-consensus" class="quarto-xref">Table&nbsp;<span>2.1</span></a>) reports gene identifiers, annotations, effect sizes and adjusted significance values, and provides the candidates for Task 2.</p>
+<section id="consensus-differentially-expressed-genes" class="level3">
+<h3 class="anchored" data-anchor-id="consensus-differentially-expressed-genes">Consensus Differentially Expressed Genes</h3>
+<p>Intersecting the two significant gene lists and enforcing fold-change sign agreement yielded <strong>6 high-confidence consensus genes</strong> (<a href="#tbl-consensus" class="quarto-xref">Table&nbsp;<span>2.1</span></a>), representing 6 of the 7 <code>edgeR</code> hits (85.7%) and 6 of the 68 <code>DESeq2</code> hits.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
@@ -411,21 +457,20 @@ Figure&nbsp;2.3: Biological Coefficient of Variation (edgeR)
 <span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    sig_edger <span class="sc">|&gt;</span></span>
 <span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(gene_id, <span class="at">fold_change_edger =</span> logFC, <span class="at">adj_p_value_edger =</span> FDR),</span>
 <span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">"gene_id"</span></span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">sign</span>(fold_change_deseq) <span class="sc">==</span> <span class="fu">sign</span>(fold_change_edger)) <span class="sc">|&gt;</span> </span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">sign</span>(fold_change_deseq) <span class="sc">==</span> <span class="fu">sign</span>(fold_change_edger)) <span class="sc">|&gt;</span></span>
 <span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    raw_counts_data <span class="sc">|&gt;</span> </span>
-<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
-<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">join_by</span>(gene_id)</span>
-<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">as.character</span>(<span class="fu">signif</span>(.x, <span class="dv">3</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>    raw_counts_data <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">join_by</span>(gene_id)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">as.character</span>(<span class="fu">signif</span>(.x, <span class="dv">3</span>))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <div class="cell">
 <div id="tbl-consensus" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-consensus-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;2.1: Consensus between significant genes found by DESeq2 and EdgeR
+Table&nbsp;2.1: Consensus differentially expressed genes (SARS vs.&nbsp;mock, padj/FDR &lt; 0.05) supported by both DESeq2 and edgeR.
 </figcaption>
 <div aria-describedby="tbl-consensus-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -536,10 +581,18 @@ Table&nbsp;2.1: Consensus between significant genes found by DESeq2 and EdgeR
 </figure>
 </div>
 </div>
-<p>The consensus contains <strong>six genes</strong>: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five are upregulated; SERPINB2 is downregulated. This corresponds to 6 of the 7 edgeR hits and 6 of the 68 DESeq2 hits. The final rule did not retain 62 DESeq2 hits and 1 edgeR hit.</p>
-<p>OAS2, GPRASP1 and AC026801.2 have the largest positive log2 fold changes, close to 10 or higher. IFI27 and CXCL11 show smaller positive changes, while SERPINB2 has similar negative estimates in both tools (-1.69 and -1.67). The annotation identifies AC026801.2 as a long non-coding RNA and the other five as protein-coding genes. Thus, the consensus includes both increased and decreased expression and more than one gene type.</p>
-<p>Large effect estimates need care. GPRASP1 and AC026801.2 have zero counts in both mock samples, and OAS2 has only 0 and 2. The reported fold changes are model estimates without additional fold-change shrinkage. Low baseline expression and the small number of donors limit how precisely these large changes can be interpreted.</p>
-<p>OAS2 was selected for Task 2 because both methods support increased expression and its role in the antiviral OAS pathway is described in the available literature <span class="citation" data-cites="merold2025">(<a href="references.html#ref-merold2025" role="doc-biblioref">Merold et al. 2025</a>)</span>. The largest fold change alone would not be enough to justify this choice. These results identify candidates for the project; they do not show that reducing any of these genes would improve recovery.</p>
+<p>Among the six consensus hits:</p>
+<ul>
+<li><strong>Five genes are strongly upregulated in SARS-CoV-2 infection:</strong> <code>OAS2</code>, <code>GPRASP1</code>, <code>AC026801.2</code>, <code>IFI27</code>, and <code>CXCL11</code>.</li>
+<li><strong>One gene is downregulated:</strong> <code>SERPINB2</code> (<span class="math inline">\(\log_2\text{FC} = -1.69\)</span> in <code>DESeq2</code>; <span class="math inline">\(-1.67\)</span> in <code>edgeR</code>).</li>
+<li><strong>Biotype diversity:</strong> Five genes (<code>OAS2</code>, <code>GPRASP1</code>, <code>IFI27</code>, <code>SERPINB2</code>, <code>CXCL11</code>) are protein-coding, whereas <code>AC026801.2</code> is a long non-coding RNA (lncRNA).</li>
+</ul>
+</section>
+</section>
+<section id="discussion-conclusion" class="level2" data-number="2.4">
+<h2 data-number="2.4" class="anchored" data-anchor-id="discussion-conclusion"><span class="header-section-number">2.4</span> Discussion &amp; Conclusion</h2>
+<p>While <code>OAS2</code>, <code>GPRASP1</code>, and <code>AC026801.2</code> exhibit extreme positive <span class="math inline">\(\log_2\)</span> fold changes (<span class="math inline">\(\approx 9.9\text{ to }10.9\)</span>), these magnitudes must be interpreted with statistical caution: <code>GPRASP1</code> and <code>AC026801.2</code> have zero raw counts in both <code>mock</code> samples, and <code>OAS2</code> has almost zero baseline expression (0 and 2 counts). Because unshrunken maximum-likelihood fold-change estimates are reported, near-zero denominators inflate the <span class="math inline">\(\log_2\)</span> ratio. Furthermore, with only two biological donors, these results establish transcriptomic deregulation within this specific experimental cohort rather than a population-wide clinical estimate.</p>
+<p>Nevertheless, the consensus intersection confirms that <strong>OAS2</strong>, <strong>IFI27</strong>, and <strong>CXCL11</strong>—hallmark interferon-stimulated innate immune genes—are robustly induced across both statistical models. From this six-gene consensus set (<code>data/consensus_table.rds</code>), <strong>OAS2</strong> is carried forward to Task 2 for systematic evaluation as a CRISPR therapeutic target.</p>
 
 
 <!-- -->
@@ -548,14 +601,8 @@ Table&nbsp;2.1: Consensus between significant genes found by DESeq2 and EdgeR
 <div id="ref-Loveetal2014" class="csl-entry" role="listitem">
 Love, Michael I, Wolfgang Huber, and Simon Anders. 2014. <span>“Moderated Estimation of Fold Change and Dispersion for RNA-Seq Data with DESeq2.”</span> <em>Genome Biology</em> 15. <a href="https://doi.org/10.1186/s13059-014-0550-8">https://doi.org/10.1186/s13059-014-0550-8</a>.
 </div>
-<div id="ref-merold2025" class="csl-entry" role="listitem">
-Merold, Veronika, Indra Bekere, Stefanie Kretschmer, Adrian F. Schnell, Dorota Kmiec, Rinu Sivarajan, et al. 2025. <span>“Structural Basis for <span>OAS2</span> Regulation and Its Antiviral Function.”</span> <em>Molecular Cell</em> 85 (11): 2176–2193.e13. <a href="https://doi.org/10.1016/j.molcel.2025.05.001">https://doi.org/10.1016/j.molcel.2025.05.001</a>.
-</div>
 <div id="ref-Robinsonetal2009" class="csl-entry" role="listitem">
 Robinson, Mark D., Davis J. McCarthy, and Gordon K. Smyth. 2009. <span>“&lt;Tt&gt;edgeR&lt;/Tt&gt;: A Bioconductor Package for Differential Expression Analysis of Digital Gene Expression Data.”</span> <em>Bioinformatics</em> 26: 139–40. <a href="https://doi.org/10.1093/bioinformatics/btp616">https://doi.org/10.1093/bioinformatics/btp616</a>.
-</div>
-<div id="ref-Wickhametal2019" class="csl-entry" role="listitem">
-Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy McGowan, Romain François, Garrett Grolemund, et al. 2019. <span>“Welcome to the Tidyverse.”</span> <em>Journal of Open Source Software</em> 4: 1686. <a href="https://doi.org/10.21105/joss.01686">https://doi.org/10.21105/joss.01686</a>.
 </div>
 </div>
 </section>
@@ -1018,8 +1065,8 @@ Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy McGowan, Roma
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="./Task2.html" class="pagination-link" aria-label="Task 2: gRNA design for OAS2">
-        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA design for OAS2</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="./Task2.html" class="pagination-link" aria-label="Task 2: gRNA Design for OAS2">
+        <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Task 2: gRNA Design for OAS2</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
@@ -1039,246 +1086,238 @@ Wickham, Hadley, Mara Averick, Jennifer Bryan, Winston Chang, Lucy McGowan, Roma
 <span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>An RNA-seq differential-expression analysis compared the SARS condition with the mock control. The six count columns represent two donors, each with one sample in the Rem, SARS and mock conditions at 5 days after infection. Metadata was extracted from names such as <span class="in">`S_2_SARS_5dpi_S70003`</span> using the pattern <span class="in">`S_{donor}_{condition}_{time}_{sample_id}`</span>. All six samples were included in the models, but the reported contrast tests SARS against mock, not Rem against mock.</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a><span class="fu">## Objective</span></span>
 <span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a><span class="in">```{r creating_metadata}</span></span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">colnames</span>(raw_counts_data[<span class="dv">7</span><span class="sc">:</span><span class="dv">12</span>])</span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>col_data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">row_name =</span> col_names) <span class="sc">|&gt;</span></span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_wider_delim</span>(</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>    row_name,</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>    <span class="at">names =</span> <span class="fu">c</span>(<span class="st">"prefix"</span>, <span class="st">"donor"</span>, <span class="st">"condition"</span>, <span class="st">"time"</span>, <span class="st">"id"</span>),</span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>    <span class="at">delim =</span> <span class="st">"_"</span>,</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols_remove =</span> <span class="cn">FALSE</span></span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(row_name, donor, condition, id) <span class="sc">|&gt;</span></span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">donor =</span> <span class="fu">factor</span>(donor, <span class="at">levels =</span> <span class="fu">unique</span>(donor)),</span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    <span class="at">condition =</span> <span class="fu">factor</span>(condition, <span class="at">levels =</span> <span class="fu">unique</span>(condition))</span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var =</span> <span class="st">"row_name"</span>)</span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>col_data <span class="ot">&lt;-</span> col_data <span class="sc">|&gt;</span></span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">condition =</span> <span class="fu">fct_relevel</span>(condition, <span class="st">"mock"</span>))</span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup_counts_data}</span></span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>counts_data <span class="ot">&lt;-</span> raw_counts_data <span class="sc">|&gt;</span></span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span>, <span class="dv">7</span><span class="sc">:</span><span class="dv">12</span>) <span class="sc">|&gt;</span></span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var =</span> <span class="st">"gene_id"</span>)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>The first stage of this study aims to identify human genes that are significantly deregulated during SARS-CoV-2 infection compared with uninfected (<span class="in">`mock`</span>) controls. Because individual differential expression (DE) algorithms rely on different normalisation, dispersion-estimation, and hypothesis-testing assumptions, relying on a single tool can introduce method-specific false positives—especially in small-sample transcriptomic datasets. Task 1 therefore establishes a rigorous preprocessing workflow, evaluates differential expression independently using two complementary statistical frameworks (**DESeq2** and **edgeR**), and applies a conservative consensus strategy to select a high-confidence candidate gene for CRISPR guide design in Task 2.</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a><span class="fu">## Approach</span></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a><span class="fu">### Experimental Design and Metadata Extraction</span></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>The raw RNA-seq dataset (<span class="in">`gse159717_rnaseq_deseq_5dpi_counts_raw.tsv`</span>) comprises 60,683 genomic features across six samples collected at 5 days post-infection (<span class="in">`5dpi`</span>) from two biological donors (Donor 2 and Donor 3) under three conditions: uninfected control (<span class="in">`mock`</span>), SARS-CoV-2 infected (<span class="in">`SARS`</span>), and remdesivir-treated (<span class="in">`Rem`</span>). Sample metadata were parsed directly from the column headers (<span class="in">`S_{donor}_{condition}_{time}_{sample_id}`</span>), and <span class="in">`mock`</span> was set as the reference factor level.</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="in">```{r creating_metadata}</span></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>col_names <span class="ot">&lt;-</span> <span class="fu">colnames</span>(raw_counts_data[<span class="dv">7</span><span class="sc">:</span><span class="dv">12</span>])</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>col_data <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">row_name =</span> col_names) <span class="sc">|&gt;</span></span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate_wider_delim</span>(</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>    row_name,</span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">names =</span> <span class="fu">c</span>(<span class="st">"prefix"</span>, <span class="st">"donor"</span>, <span class="st">"condition"</span>, <span class="st">"time"</span>, <span class="st">"id"</span>),</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">delim =</span> <span class="st">"_"</span>,</span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">cols_remove =</span> <span class="cn">FALSE</span></span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(row_name, donor, condition, id) <span class="sc">|&gt;</span></span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>    <span class="at">donor =</span> <span class="fu">factor</span>(donor, <span class="at">levels =</span> <span class="fu">unique</span>(donor)),</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>    <span class="at">condition =</span> <span class="fu">factor</span>(condition, <span class="at">levels =</span> <span class="fu">unique</span>(condition))</span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var =</span> <span class="st">"row_name"</span>)</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>col_data <span class="ot">&lt;-</span> col_data <span class="sc">|&gt;</span></span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">condition =</span> <span class="fu">fct_relevel</span>(condition, <span class="st">"mock"</span>))</span>
 <span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>The count matrix contained 60,683 genes. Removing 27,356 genes with zero counts in all six samples left 33,327 genes before tool-specific filtering. This follows the gene-level filtering step discussed in Lecture 4: genes without counts cannot provide evidence of an expression change.</span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>genes_to_remove <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(counts_data) <span class="sc">==</span> <span class="dv">0</span></span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>counts_data <span class="ot">&lt;-</span> counts_data[<span class="sc">!</span>genes_to_remove, ]</span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a><span class="in">```{r setup_counts_data}</span></span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>counts_data <span class="ot">&lt;-</span> raw_counts_data <span class="sc">|&gt;</span></span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span>, <span class="dv">7</span><span class="sc">:</span><span class="dv">12</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>  <span class="fu">column_to_rownames</span>(<span class="at">var =</span> <span class="st">"gene_id"</span>)</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>Two deliberate modelling choices were made before fitting the statistical models:</span>
 <span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>Both tools used the design <span class="in">`~ donor + condition`</span>. This accounts for differences between donors while estimating the condition effect. The pairing of the samples supports this design, and the PCA provides a visual check of donor-related variation (@fig-pca).</span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="er">~</span> donor <span class="sc">+</span> condition</span>
-<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> <span class="fu">DESeqDataSetFromMatrix</span>(</span>
-<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>  <span class="at">countData =</span> counts_data,</span>
-<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>  <span class="at">colData =</span> col_data,</span>
-<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>  <span class="at">design =</span> design</span>
-<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> <span class="fu">DESeq</span>(</span>
-<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>  dds</span>
-<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
-<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-pca</span></span>
-<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "PCA result"</span></span>
-<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "PCA result"</span></span>
-<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>rld <span class="ot">&lt;-</span> <span class="fu">rlog</span>(dds, <span class="at">blind =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a><span class="fu">plotPCA</span>(rld, <span class="at">intgroup =</span> <span class="st">"donor"</span>) <span class="sc">+</span></span>
-<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"PC2 vs. PC1 colored by Donor (1 point per condition)"</span>)</span>
-<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a>PC1 explains 53% of the variation and separates the two donor groups. Donor 2 samples cluster together, while donor 3 samples are more spread out. This supports including donor in the model. As discussed in Lecture 4, PCA helps identify sample structure; it does not prove which factor causes all variation. With only two donors, the expression results remain evidence for this experiment rather than a general estimate for all COVID-19 patients.</span>
-<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a><span class="fu">## Tool Selection and Preprocessing</span></span>
-<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>DESeq2 <span class="co">[</span><span class="ot">@Loveetal2014</span><span class="co">]</span> and edgeR <span class="co">[</span><span class="ot">@Robinsonetal2009</span><span class="co">]</span> were selected because both model RNA-seq counts with a negative binomial distribution. This allows the variance to be larger than the mean, as often occurs in these data. Lecture 4 also presents these tools as suitable choices, while noting that no method performs best in every dataset. Their different normalisation, filtering and dispersion procedures allow us to check whether a result depends on one analysis method. Data preparation used tidyverse <span class="co">[</span><span class="ot">@Wickhametal2019</span><span class="co">]</span>.</span>
-<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a>Data preprocessing was tailored to the requirements of each tool:</span>
-<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>For DESeq2: Counts were normalised with the median-of-ratios method. During results generation, independent filtering was used to exclude low-information genes from multiple-testing adjustment. Genes without an adjusted p-value were excluded from the significant list.</span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Retaining all six samples (`mock`, `SARS`, and `Rem`) during model fitting:** Although our biological contrast of interest compares <span class="in">`SARS`</span> against <span class="in">`mock`</span>, dropping the two <span class="in">`Rem`</span> samples prior to model fitting would reduce the residual degrees of freedom from 3 to 1. Retaining all six samples allows both tools to leverage the <span class="in">`Rem`</span> observations when estimating baseline inter-donor differences and gene-wise dispersion parameters, improving statistical stability before extracting the targeted <span class="in">`SARS vs. mock`</span> contrast.</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Additive paired model design (`~ donor + condition`):** Because each donor was sampled across all conditions, an additive blocking factor for <span class="in">`donor`</span> was included rather than a simple <span class="in">`~ condition`</span> design. Accounting for baseline donor-to-donor transcriptome differences prevents donor variance from inflating the residual error term, thereby increasing statistical power to detect the true <span class="in">`condition`</span> effect.</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a><span class="fu">### Rationale for Selecting DESeq2 and edgeR Over Alternative Algorithms</span></span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>Several classes of differential expression algorithms exist for RNA-seq data. **DESeq2** [@Loveetal2014] and **edgeR** <span class="co">[</span><span class="ot">@Robinsonetal2009</span><span class="co">]</span> were specifically selected over alternative frameworks for three methodological reasons:</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Discrete Negative Binomial modelling vs. normal-approximation transformations (`limma-voom`):** RNA-seq read counts are discrete, non-negative integers that exhibit strong overdispersion (variance exceeding the mean). While <span class="in">`limma-voom`</span> models log-counts-per-million using precision weights and linear models, benchmark studies show that <span class="in">`voom`</span> requires larger sample sizes to reliably estimate empirical Bayes variance weights and can lose power or control of the false discovery rate (FDR) when biological replicates are very small ($n = 2$ donors per group). In contrast, both <span class="in">`DESeq2`</span> and <span class="in">`edgeR`</span> directly model raw counts using a Negative Binomial Generalized Linear Model (GLM), which is mathematically suited to low-replicate count data.</span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Parametric empirical Bayes shrinkage vs. non-parametric rank methods (`NOIseq`, `SAMseq`, `Wilcoxon`):** Non-parametric permutation or rank-based methods avoid distributional assumptions but lack statistical power at $n = 2$ per group because the minimum achievable p-value from rank permutations is bounded by sample size. <span class="in">`DESeq2`</span> and <span class="in">`edgeR`</span> overcome the small-sample limitation by borrowing information across all genes via empirical Bayes dispersion shrinkage.</span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Methodological complementarity between `DESeq2` and `edgeR`:** Despite sharing a Negative Binomial GLM foundation, <span class="in">`DESeq2`</span> and <span class="in">`edgeR`</span> differ in their normalisation strategies (median-of-ratios vs. Trimmed Mean of M-values <span class="co">[</span><span class="ot">TMM</span><span class="co">]</span>), low-count filtering (<span class="in">`results()`</span> independent filtering vs. <span class="in">`filterByExpr()`</span>), dispersion shrinkage (local regression/MAP shrinkage vs. weighted likelihood empirical Bayes), and hypothesis tests (Wald test vs. Likelihood Ratio Test <span class="co">[</span><span class="ot">LRT</span><span class="co">]</span>). Combining them tests whether candidate genes are robust to distinct statistical assumptions.</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="fu">### Pre-Filtering and Tool-Specific Normalisation</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>Of the 60,683 initial genes, 27,356 genes with zero reads across all six samples were removed first, leaving 33,327 expressed genes. Unexpressed genes contain no information on fold change or dispersion, and removing them reduces computational overhead.</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>genes_to_remove <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(counts_data) <span class="sc">==</span> <span class="dv">0</span></span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>counts_data <span class="ot">&lt;-</span> counts_data[<span class="sc">!</span>genes_to_remove, ]</span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>Subsequent pre-filtering and normalisation followed each package's recommended best practices rather than forcing a single identical pre-filter onto both tools, which could bias one model's dispersion trend:</span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**DESeq2 workflow:** Raw counts were normalised using the **median-of-ratios** method, which scales counts by sample-specific size factors resistant to a small number of highly expressed viral-response genes. Rather than hard-filtering low-count genes prior to dispersion estimation, `DESeq2` retains all expressed genes to model the mean-dispersion trend accurately and applies automated **independent filtering** at the <span class="in">`results()`</span> stage, using the mean normalised count as a filter statistic to maximise the number of discoveries at $\alpha = 0.05$.</span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**edgeR workflow:** Because `edgeR`'s TMM normalisation and dispersion estimation are sensitive to sparse low-count features, `filterByExpr()` was applied first using the `~ donor + condition` design matrix to retain only genes with sufficient counts across biological groups. Library sizes were then recalculated (`keep.lib.sizes = FALSE`) and normalised via **Trimmed Mean of M-values (TMM)** to correct for sequencing depth and RNA composition bias. Both workflows operate on raw integer counts rather than length-normalised metrics (TPM or FPKM), preserving the count-variance relationship required by the Negative Binomial distribution.</span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>design <span class="ot">&lt;-</span> <span class="er">~</span> donor <span class="sc">+</span> condition</span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> <span class="fu">DESeqDataSetFromMatrix</span>(</span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a>  <span class="at">countData =</span> counts_data,</span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>  <span class="at">colData =</span> col_data,</span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>  <span class="at">design =</span> design</span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a>dds <span class="ot">&lt;-</span> <span class="fu">DESeq</span>(dds)</span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>For edgeR: <span class="in">`filterByExpr`</span> removed genes with insufficient expression for the design. Library sizes were then recalculated and TMM normalisation was applied. Both normalisation methods account for differences in sequencing depth and RNA composition; the models use counts rather than TPM or FPKM.</span>
-<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a><span class="in">```{r edger-preprocessing}</span></span>
-<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a><span class="co">#| output: false</span></span>
-<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>design_matrix <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
-<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>  design,</span>
-<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> col_data</span>
-<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">DGEList</span>(<span class="at">counts =</span> counts_data, <span class="at">sample =</span> col_data)</span>
-<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">filterByExpr</span>(y, <span class="at">design =</span> design_matrix)</span>
-<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> y[keep, , keep.lib.sizes <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
-<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(y)</span>
-<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a><span class="fu">## Quality Control and Individual Tool Results</span></span>
-<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>The dispersion plots show how both tools estimate variation between samples (@fig-dispersionestimates and @fig-dispersionestimates2). Low-count genes show a wider spread of estimates, while the fitted trends decline as expression increases.</span>
-<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>For DESeq2, the black points are gene-wise dispersion estimates, the red line is the fitted trend and the blue points are the final estimates after shrinkage. The edgeR plot shows the biological coefficient of variation, the square root of dispersion, with gene-specific points and common and trend estimates. Sharing information across genes helps estimate variation with few replicates. These plots are useful checks, but they do not prove that every gene fits the model or that all significant results are true positives.</span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a><span class="in">```{r edger-preprocessing}</span></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a><span class="co">#| output: false</span></span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>design_matrix <span class="ot">&lt;-</span> <span class="fu">model.matrix</span>(</span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>  design,</span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>  <span class="at">data =</span> col_data</span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">DGEList</span>(<span class="at">counts =</span> counts_data, <span class="at">sample =</span> col_data)</span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a>keep <span class="ot">&lt;-</span> <span class="fu">filterByExpr</span>(y, <span class="at">design =</span> design_matrix)</span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> y[keep, , keep.lib.sizes <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">calcNormFactors</span>(y)</span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a><span class="fu">### Consensus Strategy Justification</span></span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a>To combine the outputs of <span class="in">`DESeq2`</span> and <span class="in">`edgeR`</span>, each tool's raw p-values were first adjusted for multiple hypothesis testing using the Benjamini-Hochberg procedure ($\text{FDR} / p_{\text{adj}} &lt; 0.05$) to control the expected proportion of false discoveries across thousands of simultaneous gene tests. </span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>A **strict intersection with directional concordance** was chosen over alternative combination methods (such as taking the union of significant genes, or combining p-values via Fisher's method):</span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Intersection vs. Union:** A union maximises sensitivity (recall) but retains genes that pass significance in only one algorithm due to tool-specific dispersion or filtering artefacts. Because Task 2 requires selecting a *single* high-confidence gene for therapeutic CRISPR targeting, minimising false positives (high precision/specificity) is far more important than maximising gene count.</span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Directional concordance (`sign(log2FC_DESeq2) == sign(logFC_edgeR)`):** Requiring identical fold-change signs ensures that both models agree on whether transcription is upregulated or downregulated—a critical requirement because the direction of deregulation directly dictates whether **CRISPRi** (repression) or **CRISPRa** (activation) is deployed in Task 2.</span>
 <span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-dispersionestimates</span></span>
-<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Dispersion Estimates (DESeq2)"</span></span>
-<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a><span class="fu">plotDispEsts</span>(dds, <span class="at">main =</span> <span class="st">"DESeq2 Dispersion Estimates"</span>)</span>
-<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-dispersionestimates2</span></span>
-<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Biological Coefficient of Variation (edgeR)"</span></span>
-<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a>y_dispersion <span class="ot">&lt;-</span> <span class="fu">estimateDisp</span>(</span>
-<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a>  y,</span>
-<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>  design_matrix,</span>
-<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust =</span> <span class="cn">TRUE</span></span>
-<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a><span class="fu">plotBCV</span>(y_dispersion, <span class="at">main =</span> <span class="st">"EdgeR Biological Coeficient of Variation"</span>)</span>
-<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a>Both models tested the SARS condition against mock while accounting for donor. DESeq2 used its default Wald test, and edgeR used a GLM likelihood ratio test. Positive log2 fold changes indicate higher expression in SARS; negative values indicate lower expression.</span>
-<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a><span class="in">```{r calc-deseq-results}</span></span>
-<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a><span class="co">#DESeq2 results</span></span>
-<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a>res_deseq <span class="ot">&lt;-</span> <span class="fu">results</span>(</span>
-<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a>  dds,</span>
-<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrast =</span> <span class="fu">c</span>(</span>
-<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a>    <span class="st">"condition"</span>,</span>
-<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SARS"</span>,</span>
-<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mock"</span></span>
-<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a>  ),</span>
-<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span></span>
-<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a><span class="co">#EdgeR results</span></span>
-<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a>fit_edger <span class="ot">&lt;-</span> <span class="fu">glmFit</span>(y_dispersion, design_matrix)</span>
-<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>lrt <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(</span>
-<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>  fit_edger,</span>
-<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a>  <span class="at">coef =</span> <span class="st">"conditionSARS"</span></span>
-<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a><span class="in">```{r calc-deseq-results-contd}</span></span>
-<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a>deseq_results <span class="ot">&lt;-</span> res_deseq <span class="sc">|&gt;</span></span>
-<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(</span>
-<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a>    <span class="at">var =</span> <span class="st">"gene_id"</span></span>
-<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
-<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a>    <span class="sc">!</span><span class="fu">is.na</span>(padj)</span>
-<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(</span>
-<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a>    padj</span>
-<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>edger_results <span class="ot">&lt;-</span> <span class="fu">topTags</span>(</span>
-<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>  lrt,</span>
-<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a>  <span class="at">n =</span> <span class="cn">Inf</span></span>
-<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a>)<span class="sc">$</span>table <span class="sc">|&gt;</span></span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>---</span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a><span class="fu">## Findings</span></span>
+<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a><span class="fu">### Exploratory Quality Control and Dispersion Modelling</span></span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>Principal Component Analysis (PCA) on regularised log-transformed (<span class="in">`rlog`</span>) counts confirmed the necessity of the paired <span class="in">`~ donor + condition`</span> design (@fig-pca). The first principal component (PC1) captures **53% of total transcriptomic variance** and primarily separates Donor 2 from Donor 3, demonstrating substantial baseline inter-donor variability that would confound an unpaired analysis.</span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a><span class="co">#| warning: false</span></span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-pca</span></span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Principal Component Analysis (PCA) of rlog-transformed counts across the six samples, coloured by donor."</span></span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-alt: "PCA result"</span></span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a>rld <span class="ot">&lt;-</span> <span class="fu">rlog</span>(dds, <span class="at">blind =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a><span class="fu">plotPCA</span>(rld, <span class="at">intgroup =</span> <span class="st">"donor"</span>) <span class="sc">+</span></span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"PC2 vs. PC1 colored by Donor (1 point per condition)"</span>)</span>
+<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a>The mean-dispersion relationship for <span class="in">`DESeq2`</span> (@fig-dispersionestimates) and the Biological Coefficient of Variation (BCV) for <span class="in">`edgeR`</span> (@fig-dispersionestimates2) follow the expected Negative Binomial behaviour: dispersion is highest among low-count genes and decreases smoothly as mean expression rises. Both plots confirm successful empirical Bayes shrinkage toward the fitted trend, stabilising variance estimates despite the two-donor sample size.</span>
+<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-dispersionestimates</span></span>
+<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Gene-wise, fitted, and final shrunken dispersion estimates in DESeq2."</span></span>
+<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a><span class="fu">plotDispEsts</span>(dds, <span class="at">main =</span> <span class="st">"DESeq2 Dispersion Estimates"</span>)</span>
+<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-dispersionestimates2</span></span>
+<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Biological Coefficient of Variation (BCV) relative to average log CPM in edgeR."</span></span>
+<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>y_dispersion <span class="ot">&lt;-</span> <span class="fu">estimateDisp</span>(</span>
+<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a>  y,</span>
+<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a>  design_matrix,</span>
+<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>  <span class="at">robust =</span> <span class="cn">TRUE</span></span>
+<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a><span class="fu">plotBCV</span>(y_dispersion, <span class="at">main =</span> <span class="st">"edgeR Biological Coefficient of Variation"</span>)</span>
+<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a><span class="fu">### Individual Tool Results (`SARS` vs. `mock`)</span></span>
+<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a>Testing the <span class="in">`SARS`</span> vs. <span class="in">`mock`</span> contrast at a Benjamini-Hochberg adjusted threshold of $0.05$ yielded **68 significant differentially expressed genes in DESeq2** (via the Wald test) and **7 significant genes in edgeR** (via the GLM Likelihood Ratio Test).</span>
+<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a><span class="in">```{r calc-deseq-results}</span></span>
+<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a><span class="co"># DESeq2 Wald test for SARS vs mock</span></span>
+<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a>res_deseq <span class="ot">&lt;-</span> <span class="fu">results</span>(</span>
+<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a>  dds,</span>
+<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>  <span class="at">contrast =</span> <span class="fu">c</span>(<span class="st">"condition"</span>, <span class="st">"SARS"</span>, <span class="st">"mock"</span>),</span>
+<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a>  <span class="at">alpha =</span> <span class="fl">0.05</span></span>
+<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a><span class="co"># edgeR GLM Likelihood Ratio Test for SARS vs mock</span></span>
+<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a>fit_edger <span class="ot">&lt;-</span> <span class="fu">glmFit</span>(y_dispersion, design_matrix)</span>
+<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>lrt <span class="ot">&lt;-</span> <span class="fu">glmLRT</span>(fit_edger, <span class="at">coef =</span> <span class="st">"conditionSARS"</span>)</span>
+<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a><span class="in">```{r calc-deseq-results-contd}</span></span>
+<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a>deseq_results <span class="ot">&lt;-</span> res_deseq <span class="sc">|&gt;</span></span>
 <span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(</span>
-<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a>    <span class="at">var =</span> <span class="st">"gene_id"</span></span>
-<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
-<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(</span>
-<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>    FDR</span>
-<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>DESeq2 results were filtered using a Benjamini-Hochberg adjusted p-value (<span class="in">`padj`</span>) &lt; 0.05.</span>
-<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>edgeR results were filtered using a Benjamini-Hochberg false discovery rate (<span class="in">`FDR`</span>) &lt; 0.05. As discussed in Lecture 4, this addresses the many gene-level tests rather than applying an unadjusted p-value threshold.</span>
-<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a><span class="in">```{r get-sig-results}</span></span>
-<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a>sig_deseq <span class="ot">&lt;-</span> deseq_results <span class="sc">|&gt;</span></span>
-<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
-<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a>    padj <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
-<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"gene_id"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(padj)) <span class="sc">|&gt;</span></span>
+<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(padj)</span>
+<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>edger_results <span class="ot">&lt;-</span> <span class="fu">topTags</span>(lrt, <span class="at">n =</span> <span class="cn">Inf</span>)<span class="sc">$</span>table <span class="sc">|&gt;</span></span>
+<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.data.frame</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rownames_to_column</span>(<span class="at">var =</span> <span class="st">"gene_id"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>() <span class="sc">|&gt;</span></span>
+<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(FDR)</span>
+<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a><span class="in">```{r get-sig-results}</span></span>
+<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a>sig_deseq <span class="ot">&lt;-</span> deseq_results <span class="sc">|&gt;</span> <span class="fu">filter</span>(padj <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span>
+<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a>sig_edger <span class="ot">&lt;-</span> edger_results <span class="sc">|&gt;</span> <span class="fu">filter</span>(FDR <span class="sc">&lt;</span> <span class="fl">0.05</span>)</span>
+<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Significant genes: "</span>, <span class="fu">nrow</span>(sig_deseq), <span class="st">" found by DESeq2 and "</span>, <span class="fu">nrow</span>(sig_edger), <span class="st">" found by edgeR"</span>))</span>
+<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb7-209"><a href="#cb7-209" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a>sig_edger <span class="ot">&lt;-</span> edger_results <span class="sc">|&gt;</span></span>
-<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(</span>
-<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a>    FDR <span class="sc">&lt;</span> <span class="fl">0.05</span></span>
-<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">paste0</span>(<span class="st">"Significant genes: "</span>, <span class="fu">nrow</span>(sig_deseq), <span class="st">" found by DESeq2 and "</span>, <span class="fu">nrow</span>(sig_edger), <span class="st">" found by EdgeR"</span>))</span>
-<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>DESeq2 identified **68 significant genes**, while edgeR identified **7**. The lists differ even though both use a 0.05 adjusted threshold. Their filtering, normalisation, dispersion estimates and statistical tests differ, and these can affect which genes pass the threshold. The counts alone do not show that one method is more accurate. The consensus below checks which results remain significant under both methods.</span>
-<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a><span class="fu">## Consensus Strategy</span></span>
-<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a>The significant lists were joined by gene identifier, retaining only genes significant in both tools. This intersection gives priority to results supported by both methods. It is conservative: a real expression change may be excluded if only one tool detects it. The tools also use the same samples, so their agreement is a sensitivity check rather than independent experimental confirmation.</span>
-<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>A second filter required the DESeq2 log2 fold change and edgeR logFC to have the same sign. This avoids selecting a gene when the tools disagree on whether expression increased or decreased. The consensus table (@tbl-consensus) reports gene identifiers, annotations, effect sizes and adjusted significance values, and provides the candidates for Task 2.</span>
-<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a><span class="in">```{r generate-consensus-table}</span></span>
-<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="ot">&lt;-</span> sig_deseq <span class="sc">|&gt;</span></span>
-<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
-<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a>    gene_id,</span>
-<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a>    <span class="at">fold_change_deseq =</span> log2FoldChange,</span>
-<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a>    <span class="at">adj_p_value_deseq =</span> padj</span>
+<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a>The discrepancy in total hit counts (68 vs. 7) reflects <span class="in">`edgeR`</span>'s stricter upfront <span class="in">`filterByExpr()`</span> step and conservative robust dispersion estimation with <span class="in">`glmLRT`</span> on two replicates, whereas <span class="in">`DESeq2`</span>'s Wald test is more permissive for genes with near-zero baseline counts in the <span class="in">`mock`</span> group.</span>
+<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a><span class="fu">### Consensus Differentially Expressed Genes</span></span>
+<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a>Intersecting the two significant gene lists and enforcing fold-change sign agreement yielded **6 high-confidence consensus genes** (@tbl-consensus), representing 6 of the 7 <span class="in">`edgeR`</span> hits (85.7%) and 6 of the 68 <span class="in">`DESeq2`</span> hits.</span>
+<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a><span class="in">```{r generate-consensus-table}</span></span>
+<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="ot">&lt;-</span> sig_deseq <span class="sc">|&gt;</span></span>
+<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a>    gene_id,</span>
+<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a>    <span class="at">fold_change_deseq =</span> log2FoldChange,</span>
+<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>    <span class="at">adj_p_value_deseq =</span> padj</span>
+<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(</span>
+<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>    sig_edger <span class="sc">|&gt;</span></span>
+<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(gene_id, <span class="at">fold_change_edger =</span> logFC, <span class="at">adj_p_value_edger =</span> FDR),</span>
+<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">"gene_id"</span></span>
+<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">sign</span>(fold_change_deseq) <span class="sc">==</span> <span class="fu">sign</span>(fold_change_edger)) <span class="sc">|&gt;</span></span>
+<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(</span>
+<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a>    raw_counts_data <span class="sc">|&gt;</span> <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
+<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">join_by</span>(gene_id)</span>
 <span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
-<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>  <span class="fu">inner_join</span>(</span>
-<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a>    sig_edger <span class="sc">|&gt;</span></span>
-<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(gene_id, <span class="at">fold_change_edger =</span> logFC, <span class="at">adj_p_value_edger =</span> FDR),</span>
-<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="st">"gene_id"</span></span>
-<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">sign</span>(fold_change_deseq) <span class="sc">==</span> <span class="fu">sign</span>(fold_change_edger)) <span class="sc">|&gt;</span> </span>
-<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(</span>
-<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a>    raw_counts_data <span class="sc">|&gt;</span> </span>
-<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a>      <span class="fu">select</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">6</span>),</span>
-<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a>    <span class="at">by =</span> <span class="fu">join_by</span>(gene_id)</span>
-<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span> </span>
-<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">as.character</span>(<span class="fu">signif</span>(.x, <span class="dv">3</span>))))</span>
-<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-consensus</span></span>
-<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Consensus between significant genes found by DESeq2 and EdgeR"</span></span>
-<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(consensus_table, <span class="at">file =</span> <span class="st">"data/consensus_table.rds"</span>)</span>
+<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="fu">across</span>(<span class="fu">where</span>(is.numeric), <span class="sc">~</span> <span class="fu">as.character</span>(<span class="fu">signif</span>(.x, <span class="dv">3</span>))))</span>
+<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-consensus</span></span>
+<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Consensus differentially expressed genes (SARS vs. mock, padj/FDR &lt; 0.05) supported by both DESeq2 and edgeR."</span></span>
+<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(consensus_table, <span class="at">file =</span> <span class="st">"data/consensus_table.rds"</span>)</span>
+<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="sc">|&gt;</span></span>
+<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span>, <span class="dv">6</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">2</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">|&gt;</span></span>
+<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(adj_p_value_edger) <span class="sc">|&gt;</span></span>
+<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span>
+<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-249"><a href="#cb7-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a>Among the six consensus hits:</span>
+<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Five genes are strongly upregulated in SARS-CoV-2 infection:** <span class="in">`OAS2`</span>, <span class="in">`GPRASP1`</span>, <span class="in">`AC026801.2`</span>, <span class="in">`IFI27`</span>, and <span class="in">`CXCL11`</span>.</span>
+<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**One gene is downregulated:** <span class="in">`SERPINB2`</span> ($\log_2\text{FC} = -1.69$ in <span class="in">`DESeq2`</span>; $-1.67$ in <span class="in">`edgeR`</span>).</span>
+<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a><span class="ss">* </span>**Biotype diversity:** Five genes (<span class="in">`OAS2`</span>, <span class="in">`GPRASP1`</span>, <span class="in">`IFI27`</span>, <span class="in">`SERPINB2`</span>, <span class="in">`CXCL11`</span>) are protein-coding, whereas <span class="in">`AC026801.2`</span> is a long non-coding RNA (lncRNA).</span>
 <span id="cb7-255"><a href="#cb7-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a>consensus_table <span class="sc">|&gt;</span></span>
-<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="dv">1</span>, <span class="dv">6</span><span class="sc">:</span><span class="dv">10</span>, <span class="dv">2</span><span class="sc">:</span><span class="dv">5</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a>  <span class="fu">arrange</span>(adj_p_value_edger) <span class="sc">|&gt;</span> </span>
-<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a>  <span class="fu">kable</span>()</span>
-<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-261"><a href="#cb7-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-262"><a href="#cb7-262" aria-hidden="true" tabindex="-1"></a>The consensus contains **six genes**: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five are upregulated; SERPINB2 is downregulated. This corresponds to 6 of the 7 edgeR hits and 6 of the 68 DESeq2 hits. The final rule did not retain 62 DESeq2 hits and 1 edgeR hit.</span>
-<span id="cb7-263"><a href="#cb7-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-264"><a href="#cb7-264" aria-hidden="true" tabindex="-1"></a>OAS2, GPRASP1 and AC026801.2 have the largest positive log2 fold changes, close to 10 or higher. IFI27 and CXCL11 show smaller positive changes, while SERPINB2 has similar negative estimates in both tools (-1.69 and -1.67). The annotation identifies AC026801.2 as a long non-coding RNA and the other five as protein-coding genes. Thus, the consensus includes both increased and decreased expression and more than one gene type.</span>
-<span id="cb7-265"><a href="#cb7-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-266"><a href="#cb7-266" aria-hidden="true" tabindex="-1"></a>Large effect estimates need care. GPRASP1 and AC026801.2 have zero counts in both mock samples, and OAS2 has only 0 and 2. The reported fold changes are model estimates without additional fold-change shrinkage. Low baseline expression and the small number of donors limit how precisely these large changes can be interpreted.</span>
-<span id="cb7-267"><a href="#cb7-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-268"><a href="#cb7-268" aria-hidden="true" tabindex="-1"></a>OAS2 was selected for Task 2 because both methods support increased expression and its role in the antiviral OAS pathway is described in the available literature <span class="co">[</span><span class="ot">@merold2025</span><span class="co">]</span>. The largest fold change alone would not be enough to justify this choice. These results identify candidates for the project; they do not show that reducing any of these genes would improve recovery.</span>
+<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discussion &amp; Conclusion</span></span>
+<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a>While <span class="in">`OAS2`</span>, <span class="in">`GPRASP1`</span>, and <span class="in">`AC026801.2`</span> exhibit extreme positive $\log_2$ fold changes ($\approx 9.9\text{ to }10.9$), these magnitudes must be interpreted with statistical caution: <span class="in">`GPRASP1`</span> and <span class="in">`AC026801.2`</span> have zero raw counts in both <span class="in">`mock`</span> samples, and <span class="in">`OAS2`</span> has almost zero baseline expression (0 and 2 counts). Because unshrunken maximum-likelihood fold-change estimates are reported, near-zero denominators inflate the $\log_2$ ratio. Furthermore, with only two biological donors, these results establish transcriptomic deregulation within this specific experimental cohort rather than a population-wide clinical estimate.</span>
+<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a>Nevertheless, the consensus intersection confirms that **OAS2**, **IFI27**, and **CXCL11**—hallmark interferon-stimulated innate immune genes—are robustly induced across both statistical models. From this six-gene consensus set (`data/consensus_table.rds`), **OAS2** is carried forward to Task 2 for systematic evaluation as a CRISPR therapeutic target.</span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
