@@ -1,0 +1,35 @@
+##fileformat=VCFv4.3
+##FILTER=<ID=PASS,Description="All filters passed">
+##fileDate=27022019_15h52m43s
+##source=IGSRpipeline
+##reference=ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/reference/GRCh38_reference_genome/GRCh38_full_analysis_set_plus_decoy_hla.fa
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Phased Genotype">
+##contig=<ID=12>
+##INFO=<ID=AF,Number=A,Type=Float,Description="Estimated allele frequency in the range (0,1)">
+##INFO=<ID=AC,Number=A,Type=Integer,Description="Total number of alternate alleles in called genotypes">
+##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of samples with data">
+##INFO=<ID=AN,Number=1,Type=Integer,Description="Total number of alleles in called genotypes">
+##INFO=<ID=EAS_AF,Number=A,Type=Float,Description="Allele frequency in the EAS populations calculated from AC and AN, in the range (0,1)">
+##INFO=<ID=EUR_AF,Number=A,Type=Float,Description="Allele frequency in the EUR populations calculated from AC and AN, in the range (0,1)">
+##INFO=<ID=AFR_AF,Number=A,Type=Float,Description="Allele frequency in the AFR populations calculated from AC and AN, in the range (0,1)">
+##INFO=<ID=AMR_AF,Number=A,Type=Float,Description="Allele frequency in the AMR populations calculated from AC and AN, in the range (0,1)">
+##INFO=<ID=SAS_AF,Number=A,Type=Float,Description="Allele frequency in the SAS populations calculated from AC and AN, in the range (0,1)">
+##INFO=<ID=VT,Number=.,Type=String,Description="indicates what type of variant the line represents">
+##INFO=<ID=EX_TARGET,Number=0,Type=Flag,Description="indicates whether a variant is within the exon pull down target boundaries">
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Approximate read depth; some reads may have been filtered">
+##bcftools_viewVersion=1.24+htslib-1.23.1
+##bcftools_viewCommand=view -r 12:112978600-112978850 -s HG00142,HG00178,HG00237,HG01521,HG03129,NA19175,NA19462 -Ov -o chr12_OAS2_7samples.vcf https://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/1000_genomes_project/release/20190312_biallelic_SNV_and_INDEL/ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz; Date=Wed Oct 14 13:49:28 2026
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	HG00142	HG00178	HG00237	HG01521	HG03129	NA19175	NA19462
+12	112978623	.	G	A	.	PASS	AC=0;AN=14;DP=288831;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978626	.	C	T	.	PASS	AC=0;AN=14;DP=293558;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978645	.	G	A	.	PASS	AC=0;AN=14;DP=318524;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978655	.	T	C	.	PASS	AC=0;AN=14;DP=323020;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978725	.	C	T	.	PASS	AC=0;AN=14;DP=300873;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978750	.	C	T	.	PASS	AC=0;AN=14;DP=284579;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978752	.	C	T	.	PASS	AC=0;AN=14;DP=282536;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978758	.	G	A	.	PASS	AC=0;AN=14;DP=276767;AF=0;EAS_AF=0.02;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978760	.	T	C	.	PASS	AC=0;AN=14;DP=275968;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978804	.	T	C	.	PASS	AC=0;AN=14;DP=211295;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;EX_TARGET;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978847	.	C	T	.	PASS	AC=0;AN=14;DP=137101;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
+12	112978848	.	G	A	.	PASS	AC=5;AN=14;DP=134720;AF=0.3;EAS_AF=0.08;EUR_AF=0.27;AFR_AF=0.51;AMR_AF=0.37;SAS_AF=0.22;VT=SNP;NS=2548	GT	0|0	0|1	0|1	0|0	0|1	0|0	1|1
+12	112978850	.	G	A	.	PASS	AC=0;AN=14;DP=131146;AF=0;EAS_AF=0;EUR_AF=0;AFR_AF=0;AMR_AF=0;SAS_AF=0;VT=SNP;NS=2548	GT	0|0	0|0	0|0	0|0	0|0	0|0	0|0
