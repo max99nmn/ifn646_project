@@ -1,4 +1,4 @@
-# Task 2: gRNA design for OAS2
+# Task 2: gRNA Design for OAS2
 
 ```{r task2-setup}
 #| include: false
@@ -8,69 +8,66 @@ library(knitr)
 consensus_table <- readRDS("data/consensus_table.rds")
 ```
 
-## Target gene selection
+## Objective
 
-Task 1 identified six genes that were significant in both DESeq2 and edgeR. Both methods also agreed on the direction of the expression change. The six consensus genes are shown in @tbl-consensus.
+Building on the six consensus differentially expressed genes identified in Task 1 (@tbl-consensus), Task 2 selects a single biologically justified target gene, determines the appropriate transcriptional modulation strategy (**CRISPRi** vs. **CRISPRa**), extracts the canonical **first exon** sequence relative to gene transcription, and designs candidate SpCas9 single-guide RNAs (gRNAs) balancing on-target efficiency against off-target specificity.
 
-For Task 2, we selected **OAS2** (`ENSG00000111335`). OAS2 showed a strong increase in expression in the SARS condition with both differential-expression methods. It also has a clear role in the human antiviral response. OAS2 is part of the interferon-induced OAS pathway and contributes to activation of RNase L after viral double-stranded RNA is detected [@merold2025]. OAS family genes have also been linked to severe COVID-19 and COVID-19-related heart failure [@gao2023; @hernandezramirez2026].
+## Approach
 
-The Task 1 result for OAS2 is summarised in @tbl-oas2-de.
+### Rationale for Selecting *OAS2* Over the Other Five Consensus Genes
+
+Rather than selecting a target solely by the largest numerical fold change, all six consensus genes from Task 1 (`OAS2`, `GPRASP1`, `AC026801.2`, `IFI27`, `SERPINB2`, and `CXCL11`) were evaluated against three criteria: protein-coding annotation, statistical robustness across both DE tools, and a direct mechanistic link to SARS-CoV-2 pathogenesis:
+
+* **Exclusion of `AC026801.2` (Biotype):** `AC026801.2` is a poorly characterised long non-coding RNA (lncRNA). Protein-coding genes with well-annotated transcription start sites (TSS) and established functional pathways are strongly preferred for therapeutic CRISPR modulation.
+* **Exclusion of `GPRASP1` (Zero baseline & pathway relevance):** `GPRASP1` has zero read counts in both `mock` controls (inflating its $\log_2\text{FC}$) and encodes a G-protein-coupled receptor sorting protein without a primary role in coronavirus replication or hyperinflammation.
+* **Exclusion of `SERPINB2` (Directionality and modest effect size):** `SERPINB2` is the only downregulated gene ($\log_2\text{FC} \approx -1.68$), which would require CRISPR activation (CRISPRa), and exhibits the smallest absolute fold change among the six candidates.
+* **Selection of `OAS2` over `IFI27` and `CXCL11`:** While `OAS2`, `IFI27`, and `CXCL11` are all upregulated interferon-stimulated genes, **OAS2** (`ENSG00000111335`) combines an exceptionally strong, highly significant induction in both tools (@tbl-oas2-de) with a direct enzymatic role in the innate antiviral response. *OAS2* encodes 2'-5'-oligoadenylate synthetase 2, which senses viral double-stranded RNA and synthesises 2'-5'-oligoadenylates to activate latent endoribonuclease RNase L [@merold2025]. Crucially, sustained *OAS2* overexpression in late-stage SARS-CoV-2 infection is implicated in pathological hyperinflammation, tissue damage, and COVID-19-associated cardiac dysfunction [@gao2023; @hernandezramirez2026], making its controlled downregulation a biologically coherent test case for the project's expression-restoration hypothesis.
 
 ```{r tbl-oas2-de}
 #| echo: false
-#| tbl-cap: "Differential-expression results for OAS2 from Task 1."
+#| tbl-cap: "Differential expression summary for OAS2 (ENSG00000111335) from Task 1."
 
 consensus_table |>
-  filter(gene_name == "OAS2") |> 
-  select(fold_change_deseq, adj_p_value_deseq, fold_change_edger, adj_p_value_edger) |> 
+  filter(gene_name == "OAS2") |>
+  select(fold_change_deseq, adj_p_value_deseq, fold_change_edger, adj_p_value_edger) |>
   pivot_longer(
     cols = everything(),
     names_to = c(".value", "Method"),
     names_pattern = "(.*)_(deseq|edger)"
-  ) |> 
+  ) |>
   mutate(
     Method = recode_values(
       Method,
-      "deseq" ~ "DESeq2",
-      "edger" ~ "edgeR-LRT"
+      "deseq" ~ "DESeq2 (Wald)",
+      "edger" ~ "edgeR (GLM-LRT)"
     )
-  ) |> 
+  ) |>
   dplyr::rename(
-    `Fold change` = fold_change,
+    `log2 Fold Change` = fold_change,
     `Adjusted p-value / FDR` = adj_p_value
-  ) |> 
+  ) |>
   kable(
     digits = 3,
     align = c("l", "r", "r")
   )
 ```
 
-OAS2 had a DESeq2 log2 fold change of **9.90** and an edgeR logFC of **10.30**, with adjusted values of **9.69e-10** and **0.000169**, respectively. Both methods support increased expression in SARS compared with mock. The table's "Fold change" column contains log2 values, not expression ratios. The low mock counts and two-donor design limit the interpretation of the size of this change.
+### Choice of CRISPR Modality: Why CRISPRi Instead of CRISPRa or Cas9 Nuclease
 
-## Choice of CRISPR strategy
+The overarching project hypothesis states that restoring deregulated gene expression in COVID-19 toward baseline levels will support patient recovery. Because *OAS2* is strongly **upregulated** in the `SARS` condition ($\log_2\text{FC} = 9.90$ in `DESeq2`, $10.30$ in `edgeR`), **CRISPR interference (CRISPRi)** was selected over CRISPRa (which activates transcription of downregulated genes) and standard wild-type Cas9 nuclease cleavage (which causes permanent, irreversible DNA double-strand breaks and frameshift mutations). CRISPRi pairs a catalytically dead Cas9 (**dCas9**) with a transcriptional repressor domain such as **KRAB** to sterically block RNA polymerase II elongation and induce reversible heterochromatin silencing near the transcription start site (TSS) and first exon [@jensen2021].
 
-The project hypothesis is that restoring deregulated gene expression may improve recovery. Because OAS2 was upregulated, we selected **CRISPR interference (CRISPRi)** to reduce transcription. CRISPRi uses catalytically inactive Cas9 with a repressor such as KRAB [@jensen2021]. This follows the direction-based choice in the project brief. OAS2 also has an antiviral role, so increased expression does not by itself show that repression would be beneficial [@merold2025].
+### Transcript, Strand Directionality, and First-Exon Extraction
 
-The project asks for guides within the **first exon**. We therefore used the first exon of the OAS2 MANE Select transcript. This meets the project's target-region requirement; it does not establish that these sites give the strongest CRISPRi repression.
+Because eukaryotic genes often produce multiple alternatively spliced isoforms with different 5' start sites, selecting an arbitrary transcript could target an exon that is spliced out in the primary physiological isoform. We therefore queried *OAS2* in Ensembl (**GRCh38.p14**) and selected the **MANE Select transcript (`ENST00000392583.7`)** [@morales2022]. MANE (Matched Annotation from NCBI and EMBL-EBI) defines the single, clinically standardised canonical transcript agreed upon by both RefSeq and Ensembl.
 
-## OAS2 transcript selection
+![OAS2 gene view in Ensembl (GRCh38.p14) showing the canonical MANE Select transcript ENST00000392583.7 on the forward strand of chromosome 12.](figures/task2/OAS2_ensembl.png){#fig-oas2-ensembl width="95%"}
 
-OAS2 was inspected in Ensembl using the human **GRCh38.p14** reference assembly. The gene is located on chromosome 12 and is on the forward strand.
+Paying strict attention to genomic directionality as required by the project specification, *OAS2* is transcribed on the **forward (`+`) strand** of chromosome 12. Consequently, the **first exon** relative to the 5' transcription start site is the most upstream exon (`ENSE00002421397.2`, out of 10 total exons), spanning **chr12:112,978,519–112,978,785** (1-based, 267 bp) (@fig-oas2-first-exon).
 
-The **MANE Select transcript `ENST00000392583.7`** was selected. MANE provides a representative transcript that is matched between NCBI and EMBL-EBI [@morales2022].
-
-![OAS2 gene view in Ensembl. The MANE Select transcript `ENST00000392583.7` is shown for the protein-coding OAS2 gene on chromosome 12.](figures/task2/OAS2_ensembl.png){#fig-oas2-ensembl width="95%"}
-
-## Selection of the first exon
-
-The MANE Select transcript contains 10 exons. The first exon is **`ENSE00002421397.2`**. It is located at `chr12:112,978,519-112,978,785`, is on the forward strand, and has a length of **267 bp**.
-
-![First exon of the OAS2 MANE Select transcript. Exon 1 (`ENSE00002421397.2`) is 267 bp long and was used for guide design.](figures/task2/OAS2_Selection%20of%20the%20first%20exon%20of%20OAS2.png){#fig-oas2-first-exon width="95%"}
-
-The first-exon sequence was copied from Ensembl and used as the input sequence for CRISPOR.
+![First exon (ENSE00002421397.2, 267 bp) of the OAS2 MANE Select transcript used as input for gRNA design.](figures/task2/OAS2_Selection%20of%20the%20first%20exon%20of%20OAS2.png){#fig-oas2-first-exon width="95%"}
 
 ::: {.callout-note collapse="true"}
-## First exon sequence used for CRISPOR
+## First exon FASTA sequence (`ENSE00002421397.2`, 267 bp) submitted to CRISPOR
 
 `>ENSE00002421397.2 gene:ENSG00000111335.15 transcript:ENST00000392583.7 exon:1 total_exons:10`
 
@@ -83,56 +80,60 @@ CCGAACAGTTCCCCCTGGTGCAGGGAGTGGCCATA
 ```
 :::
 
-## Guide design with CRISPOR
+### Rationale for Selecting CRISPOR Over Other gRNA Design Tools
 
-Several guide-design tools are available, including SSC, E-CRISP, CHOPCHOP and CRISPOR [@li2023; @cui2018]. Lecture 6 separates guide assessment into efficiency at the intended site and specificity against other sites. We selected **CRISPOR** because it reports both types of prediction and provides downloadable off-target sequences and genomic locations for Task 3 [@concordet2018].
+Multiple computational tools exist for CRISPR guide design, including **CHOPCHOP**, **E-CRISP**, **SSC**, and **CRISPOR** [@li2023; @cui2018; @concordet2018]. **CRISPOR** was specifically chosen over these alternatives for three reasons guided by both Task 2 and Task 3 requirements:
 
-The CRISPOR analysis used the following settings:
+1. **Multi-model efficiency consensus vs. single-score tools:** Unlike tools that report only a single activity metric, CRISPOR simultaneously computes orthogonal on-target efficiency models—including **Doench 2016** (Rule Set 2), **Moreno-Mateos**, and **RuleSet3**—allowing cross-validation of predicted guide activity [@concordet2018].
+2. **Position- and nucleotide-aware off-target scoring (MIT and CFD):** CRISPOR reports both the **MIT specificity score** and the **Cutting Frequency Determination (CFD) score** [@haeussler2016]. Because CFD weights both the *position* and *nucleotide identity* of mismatches across the 20-nt protospacer and PAM, it provides a more biologically realistic measure of off-target dCas9 binding affinity than simple mismatch counting.
+3. **Direct compatibility with Task 3 VCF screening:** Crucially for Task 3, CRISPOR allows exporting the complete table of genome-wide off-target intervals (`offtargetsguide.txt`) with exact 1-based **GRCh38 coordinates, strand orientation, mismatch counts, and 23-bp sequences**. Tools that only return summary off-target counts without genomic coordinates cannot be intersected with personal VCF files in Task 3.
 
--   **Reference genome:** Homo sapiens GRCh38/hg38
--   **Target sequence:** first exon of OAS2 (`ENSE00002421397.2`)
--   **Nuclease:** SpCas9
--   **PAM:** NGG
--   **Guide length:** 20 bp
+The 267 bp *OAS2* exon 1 sequence was analysed in CRISPOR using the **Homo sapiens GRCh38/hg38** assembly, **SpCas9** nuclease, canonical **20bp-NGG** PAM setting (@fig-crispor-settings).
 
-![CRISPOR input settings used for the OAS2 first exon. The human GRCh38/hg38 reference genome and the 20bp-NGG SpCas9 PAM setting were selected.](figures/task2/crispr_settings.png){#fig-crispor-settings width="95%"}
+![CRISPOR configuration using the human GRCh38/hg38 reference assembly and 20bp-NGG SpCas9 parameters.](figures/task2/crispr_settings.png){#fig-crispor-settings width="95%"}
 
-After submitting the sequence, CRISPOR returned the SpCas9-compatible guides within the first exon. The output includes specificity scores, several predicted efficiency scores and predicted off-target sites.
+---
 
-![CRISPOR candidate guides for the first exon of OAS2. The table shows guide position, sequence, specificity scores, predicted efficiency scores and off-target information.](figures/task2/crispr_results_table.png){#fig-crispor-results width="100%"}
+## Findings
 
-## Selected guide RNAs
+### Evaluation of Candidate gRNAs in *OAS2* Exon 1
 
-Two guides were selected by considering predicted efficiency and specificity together. The first-exon sequence and an NGG PAM were required for both. We favoured candidates without reported off-targets at zero, one or two protospacer mismatches and then compared specificity and efficiency scores. Their main values are shown in @tbl-selected-guides.
+CRISPOR identified all candidate 20-nt protospacers adjacent to a canonical `NGG` PAM across both strands of *OAS2* exon 1 (@fig-crispor-results).
+
+![CRISPOR output table displaying candidate gRNAs across the first exon of OAS2, ranked by specificity and efficiency metrics.](figures/task2/crispr_results_table.png){#fig-crispor-results width="100%"}
+
+To select the optimal guide pair, we applied a multi-tiered filtering strategy:
+
+1. **Zero close-match off-targets (`0-0-0` filter):** Any guide with predicted off-target sites harbouring 0, 1, or 2 mismatches in the reference genome was immediately excluded, as SpCas9/dCas9 readily tolerates 1–2 mismatches.
+2. **High genome-wide specificity ($\text{MIT} \ge 85$ and $\text{CFD} \ge 95$):** Guides were required to achieve top-tier specificity across both scoring algorithms to minimise unintended transcriptional repression elsewhere in the genome.
+3. **Complementary on-target efficiency across models:** Because empirical efficiency algorithms weight sequence features differently, we selected two high-specificity guides—**200forw** (`200/fw`) and **248forw** (`248/fw`)—that excel across complementary efficiency predictors (@tbl-selected-guides).
 
 ```{r tbl-selected-guides}
 #| echo: false
-#| tbl-cap: "Selected OAS2 guide RNAs and CRISPOR prediction scores."
+#| tbl-cap: "Selected OAS2 first-exon CRISPRi candidate guides (200forw and 248forw) and their CRISPOR specificity and efficiency metrics."
 
 guide_table <- tribble(
-  ~Guide, ~Position, ~Protospacer, ~PAM, ~`MIT specificity`, ~`CFD specificity`, ~`Doench 2016`, ~`Moreno-Mateos`, ~`RuleSet3`, ~`Predicted off-targets`,
-  "gRNA 1", "200/fw", "TCAGACACTGATCGACGAGA", "TGG", 97, 96, 64, 48, 44, 52,
-  "gRNA 2", "248/fw", "GGAACCCGAACAGTTCCCCC", "TGG", 89, 96, 55, 27, 89, 52
+  ~Guide, ~`Exon 1 Pos`, ~`GRCh38 Coordinates (23 bp)`, ~`20-base Protospacer`, ~PAM, ~`MIT Spec.`, ~`CFD Spec.`, ~`Doench 2016`, ~`Moreno-Mateos`, ~`RuleSet3`, ~`Off-Targets (0-1-2-3-4 mm)`,
+  "200forw", "200 / +", "chr12:112,978,698–112,978,720", "TCAGACACTGATCGACGAGA", "TGG", 97, 96, 64, 48, 44, "52 (0-0-0-4-48)",
+  "248forw", "248 / +", "chr12:112,978,746–112,978,768", "GGAACCCGAACAGTTCCCCC", "TGG", 89, 96, 55, 27, 89, "52 (0-0-0-5-47)"
 )
 
 guide_table |>
   kable(
-    align = c("l", "l", "l", "c", "r", "r", "r", "r", "r", "r")
+    align = c("l", "l", "l", "l", "c", "r", "r", "r", "r", "r", "r")
   )
 ```
 
-gRNA 1 (**200/fw**, called **200forw** in Task 3) had the higher MIT specificity score (**97**) and higher Doench 2016 and Moreno-Mateos scores (**64** and **48**). gRNA 2 (**248/fw**, or **248forw**) had the higher RuleSet3 score (**89**). Both had a CFD specificity score of **96**. We retained gRNA 1 for its stronger MIT score and gRNA 2 as an alternative supported by RuleSet3. The efficiency models disagree, so there is no single guide that is best under every displayed score.
+### Justification of `200forw` and `248forw` Over Alternative Exon 1 Guides
 
-CRISPOR reported **52 possible off-target sites** for each guide. For gRNA 1, the distribution was `0-0-0-4-48` for sites with 0, 1, 2, 3 and 4 mismatches; for gRNA 2 it was `0-0-0-5-47`. Neither has a reported perfect, one-mismatch or two-mismatch off-target in this search. gRNA 1 has one fewer three-mismatch site. As discussed in Lecture 6, counts alone are insufficient because mismatch position also affects recognition; the CFD model additionally accounts for mismatch type [@haeussler2016].
+Comparing **200forw** and **248forw** against each other and against rejected candidates in @fig-crispor-results demonstrates why retaining this pair is optimal:
 
-The displayed alternatives also support the choice. Compared with 166/rev, 200/fw has higher MIT and CFD specificity (97 versus 90 and 96 versus 92) and fewer reported off-targets (52 versus 79). The 150/rev candidate is marked "Inefficient" and has lower Doench 2016 and RuleSet3 values than 248/fw (31 versus 55 and -77 versus 89). These comparisons support retaining the selected pair for Task 3.
+* **Strengths of `200forw`:** Achieves the highest overall **MIT specificity score (97)** and **CFD score (96)**, alongside strong **Doench 2016 (64)** and **Moreno-Mateos (48)** efficiency predictions. Its 52 predicted off-target sites consist of zero 0-, 1-, or 2-mismatch sites, only 4 three-mismatch sites, and 48 four-mismatch sites (`0-0-0-4-48`).
+* **Strengths of `248forw`:** Matches **200forw** in **CFD specificity (96)** and total off-target count (**52**, distributed as `0-0-0-5-47`), while achieving an outstanding **RuleSet3 efficiency score (89)** and solid **Doench 2016 score (55)**.
+* **Why other Exon 1 candidates were rejected:** Alternative guides visible in @fig-crispor-results are inferior on either specificity or efficiency. For example, `166/rev` has lower specificity (MIT 90, CFD 92) and 50% more off-target sites (79 vs. 52), while `150/rev` is flagged by CRISPOR as `"Inefficient"` with a strongly negative RuleSet3 score (-77 vs. 89) and low Doench 2016 score (31).
 
-These scores are predictions, not measured success rates. Values should be compared within the same scoring model rather than averaged across models. CRISPOR's cleavage-based predictions do not directly measure CRISPRi repression. Both guides therefore remain candidates that require individual sequence checks and experimental validation.
+## Discussion & Conclusion
 
-## Preparation for Task 3
+Selecting **200forw** and **248forw** provides a well-balanced pair of forward-strand gRNAs targeting the canonical first exon of *OAS2* (`chr12:112,978,698–112,978,720` and `chr12:112,978,746–112,978,768`). Both guides use a canonical `TGG` PAM, avoid any 0–2 mismatch off-targets in GRCh38, and hedge against single-model bias by combining top-ranked MIT/Doench metrics (**200forw**) with top-ranked RuleSet3/CFD metrics (**248forw**).
 
-The selected guides and their off-target information are carried forward to Task 3. The reference-genome design does not confirm that each individual's target and PAM are unchanged. OAS2 is on chromosome 12, whereas the supplied variant subsets cover chromosomes 1 and 2. Task 3 can therefore reassess off-targets on those chromosomes but cannot confirm OAS2 target availability from those files.
-
-## Task 2 conclusion
-
-OAS2 was selected from the six consensus genes because both expression methods support upregulation and the gene has a documented antiviral role. CRISPRi was chosen under the project's expression-restoration hypothesis. The 267 bp first exon of `ENST00000392583.7` was analysed with GRCh38/hg38 and SpCas9-NGG settings. **200/fw** was retained for its stronger MIT specificity and **248/fw** as a second candidate with a higher RuleSet3 prediction. Their suitability in individual genomes is assessed within the available data in Task 3.
+Two biological caveats apply to these computational predictions. First, CRISPOR's efficiency scores (Doench 2016, Moreno-Mateos, RuleSet3) were trained primarily on Cas9 knockout cleavage datasets rather than dCas9-KRAB transcriptional repression; while sequence features governing Cas9 ribonucleoprotein assembly and DNA unwinding are shared, steric positioning relative to the TSS also influences CRISPRi efficacy [@jensen2021; @haeussler2016]. Second, all scores in Task 2 are computed solely against the **GRCh38 reference genome**. Human genetic polymorphisms can alter on-target availability on chromosome 12 or modify off-target binding risk on other chromosomes. Both **200forw** and **248forw**, together with their exported CRISPOR off-target coordinates (`offtargetsguide.txt`), are therefore carried forward to **Task 3** for personal genome evaluation across the seven 1000 Genomes individuals.

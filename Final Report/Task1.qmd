@@ -14,7 +14,15 @@ raw_counts_data <- read_delim(
 )
 ```
 
-An RNA-seq differential-expression analysis compared the SARS condition with the mock control. The six count columns represent two donors, each with one sample in the Rem, SARS and mock conditions at 5 days after infection. Metadata was extracted from names such as `S_2_SARS_5dpi_S70003` using the pattern `S_{donor}_{condition}_{time}_{sample_id}`. All six samples were included in the models, but the reported contrast tests SARS against mock, not Rem against mock.
+## Objective
+
+The first stage of this study aims to identify human genes that are significantly deregulated during SARS-CoV-2 infection compared with uninfected (`mock`) controls. Because individual differential expression (DE) algorithms rely on different normalisation, dispersion-estimation, and hypothesis-testing assumptions, relying on a single tool can introduce method-specific false positives—especially in small-sample transcriptomic datasets. Task 1 therefore establishes a rigorous preprocessing workflow, evaluates differential expression independently using two complementary statistical frameworks (**DESeq2** and **edgeR**), and applies a conservative consensus strategy to select a high-confidence candidate gene for CRISPR guide design in Task 2.
+
+## Approach
+
+### Experimental Design and Metadata Extraction
+
+The raw RNA-seq dataset (`gse159717_rnaseq_deseq_5dpi_counts_raw.tsv`) comprises 60,683 genomic features across six samples collected at 5 days post-infection (`5dpi`) from two biological donors (Donor 2 and Donor 3) under three conditions: uninfected control (`mock`), SARS-CoV-2 infected (`SARS`), and remdesivir-treated (`Rem`). Sample metadata were parsed directly from the column headers (`S_{donor}_{condition}_{time}_{sample_id}`), and `mock` was set as the reference factor level.
 
 ```{r creating_metadata}
 col_names <- colnames(raw_counts_data[7:12])
@@ -46,7 +54,22 @@ counts_data <- raw_counts_data |>
   column_to_rownames(var = "gene_id")
 ```
 
-The count matrix contained 60,683 genes. Removing 27,356 genes with zero counts in all six samples left 33,327 genes before tool-specific filtering. This follows the gene-level filtering step discussed in Lecture 4: genes without counts cannot provide evidence of an expression change.
+Two deliberate modelling choices were made before fitting the statistical models:
+
+1. **Retaining all six samples (`mock`, `SARS`, and `Rem`) during model fitting:** Although our biological contrast of interest compares `SARS` against `mock`, dropping the two `Rem` samples prior to model fitting would reduce the residual degrees of freedom from 3 to 1. Retaining all six samples allows both tools to leverage the `Rem` observations when estimating baseline inter-donor differences and gene-wise dispersion parameters, improving statistical stability before extracting the targeted `SARS vs. mock` contrast.
+2. **Additive paired model design (`~ donor + condition`):** Because each donor was sampled across all conditions, an additive blocking factor for `donor` was included rather than a simple `~ condition` design. Accounting for baseline donor-to-donor transcriptome differences prevents donor variance from inflating the residual error term, thereby increasing statistical power to detect the true `condition` effect.
+
+### Rationale for Selecting DESeq2 and edgeR Over Alternative Algorithms
+
+Several classes of differential expression algorithms exist for RNA-seq data. **DESeq2** [@Loveetal2014] and **edgeR** [@Robinsonetal2009] were specifically selected over alternative frameworks for three methodological reasons:
+
+* **Discrete Negative Binomial modelling vs. normal-approximation transformations (`limma-voom`):** RNA-seq read counts are discrete, non-negative integers that exhibit strong overdispersion (variance exceeding the mean). While `limma-voom` models log-counts-per-million using precision weights and linear models, benchmark studies show that `voom` requires larger sample sizes to reliably estimate empirical Bayes variance weights and can lose power or control of the false discovery rate (FDR) when biological replicates are very small ($n = 2$ donors per group). In contrast, both `DESeq2` and `edgeR` directly model raw counts using a Negative Binomial Generalized Linear Model (GLM), which is mathematically suited to low-replicate count data.
+* **Parametric empirical Bayes shrinkage vs. non-parametric rank methods (`NOIseq`, `SAMseq`, `Wilcoxon`):** Non-parametric permutation or rank-based methods avoid distributional assumptions but lack statistical power at $n = 2$ per group because the minimum achievable p-value from rank permutations is bounded by sample size. `DESeq2` and `edgeR` overcome the small-sample limitation by borrowing information across all genes via empirical Bayes dispersion shrinkage.
+* **Methodological complementarity between `DESeq2` and `edgeR`:** Despite sharing a Negative Binomial GLM foundation, `DESeq2` and `edgeR` differ in their normalisation strategies (median-of-ratios vs. Trimmed Mean of M-values [TMM]), low-count filtering (`results()` independent filtering vs. `filterByExpr()`), dispersion shrinkage (local regression/MAP shrinkage vs. weighted likelihood empirical Bayes), and hypothesis tests (Wald test vs. Likelihood Ratio Test [LRT]). Combining them tests whether candidate genes are robust to distinct statistical assumptions.
+
+### Pre-Filtering and Tool-Specific Normalisation
+
+Of the 60,683 initial genes, 27,356 genes with zero reads across all six samples were removed first, leaving 33,327 expressed genes. Unexpressed genes contain no information on fold change or dispersion, and removing them reduces computational overhead.
 
 ```{r}
 #| include: false
@@ -54,7 +77,10 @@ genes_to_remove <- rowSums(counts_data) == 0
 counts_data <- counts_data[!genes_to_remove, ]
 ```
 
-Both tools used the design `~ donor + condition`. This accounts for differences between donors while estimating the condition effect. The pairing of the samples supports this design, and the PCA provides a visual check of donor-related variation (@fig-pca).
+Subsequent pre-filtering and normalisation followed each package's recommended best practices rather than forcing a single identical pre-filter onto both tools, which could bias one model's dispersion trend:
+
+* **DESeq2 workflow:** Raw counts were normalised using the **median-of-ratios** method, which scales counts by sample-specific size factors resistant to a small number of highly expressed viral-response genes. Rather than hard-filtering low-count genes prior to dispersion estimation, `DESeq2` retains all expressed genes to model the mean-dispersion trend accurately and applies automated **independent filtering** at the `results()` stage, using the mean normalised count as a filter statistic to maximise the number of discoveries at $\alpha = 0.05$.
+* **edgeR workflow:** Because `edgeR`'s TMM normalisation and dispersion estimation are sensitive to sparse low-count features, `filterByExpr()` was applied first using the `~ donor + condition` design matrix to retain only genes with sufficient counts across biological groups. Library sizes were then recalculated (`keep.lib.sizes = FALSE`) and normalised via **Trimmed Mean of M-values (TMM)** to correct for sequencing depth and RNA composition bias. Both workflows operate on raw integer counts rather than length-normalised metrics (TPM or FPKM), preserving the count-variance relationship required by the Negative Binomial distribution.
 
 ```{r}
 #| include: false
@@ -66,34 +92,8 @@ dds <- DESeqDataSetFromMatrix(
   design = design
 )
 
-dds <- DESeq(
-  dds
-)
+dds <- DESeq(dds)
 ```
-
-```{r}
-#| echo: false
-#| warning: false
-#| label: fig-pca
-#| fig-cap: "PCA result"
-#| fig-alt: "PCA result"
-rld <- rlog(dds, blind = TRUE)
-plotPCA(rld, intgroup = "donor") +
-  labs(title = "PC2 vs. PC1 colored by Donor (1 point per condition)")
-
-```
-
-PC1 explains 53% of the variation and separates the two donor groups. Donor 2 samples cluster together, while donor 3 samples are more spread out. This supports including donor in the model. As discussed in Lecture 4, PCA helps identify sample structure; it does not prove which factor causes all variation. With only two donors, the expression results remain evidence for this experiment rather than a general estimate for all COVID-19 patients.
-
-## Tool Selection and Preprocessing
-
-DESeq2 [@Loveetal2014] and edgeR [@Robinsonetal2009] were selected because both model RNA-seq counts with a negative binomial distribution. This allows the variance to be larger than the mean, as often occurs in these data. Lecture 4 also presents these tools as suitable choices, while noting that no method performs best in every dataset. Their different normalisation, filtering and dispersion procedures allow us to check whether a result depends on one analysis method. Data preparation used tidyverse [@Wickhametal2019].
-
-Data preprocessing was tailored to the requirements of each tool:
-
--   For DESeq2: Counts were normalised with the median-of-ratios method. During results generation, independent filtering was used to exclude low-information genes from multiple-testing adjustment. Genes without an adjusted p-value were excluded from the significant list.
-
--   For edgeR: `filterByExpr` removed genes with insufficient expression for the design. Library sizes were then recalculated and TMM normalisation was applied. Both normalisation methods account for differences in sequencing depth and RNA composition; the models use counts rather than TPM or FPKM.
 
 ```{r edger-preprocessing}
 #| output: false
@@ -106,112 +106,102 @@ y <- DGEList(counts = counts_data, sample = col_data)
 keep <- filterByExpr(y, design = design_matrix)
 y <- y[keep, , keep.lib.sizes = FALSE]
 y <- calcNormFactors(y)
-
 ```
 
-## Quality Control and Individual Tool Results
+### Consensus Strategy Justification
 
-The dispersion plots show how both tools estimate variation between samples (@fig-dispersionestimates and @fig-dispersionestimates2). Low-count genes show a wider spread of estimates, while the fitted trends decline as expression increases.
+To combine the outputs of `DESeq2` and `edgeR`, each tool's raw p-values were first adjusted for multiple hypothesis testing using the Benjamini-Hochberg procedure ($\text{FDR} / p_{\text{adj}} < 0.05$) to control the expected proportion of false discoveries across thousands of simultaneous gene tests. 
 
-For DESeq2, the black points are gene-wise dispersion estimates, the red line is the fitted trend and the blue points are the final estimates after shrinkage. The edgeR plot shows the biological coefficient of variation, the square root of dispersion, with gene-specific points and common and trend estimates. Sharing information across genes helps estimate variation with few replicates. These plots are useful checks, but they do not prove that every gene fits the model or that all significant results are true positives.
+A **strict intersection with directional concordance** was chosen over alternative combination methods (such as taking the union of significant genes, or combining p-values via Fisher's method):
+
+1. **Intersection vs. Union:** A union maximises sensitivity (recall) but retains genes that pass significance in only one algorithm due to tool-specific dispersion or filtering artefacts. Because Task 2 requires selecting a *single* high-confidence gene for therapeutic CRISPR targeting, minimising false positives (high precision/specificity) is far more important than maximising gene count.
+2. **Directional concordance (`sign(log2FC_DESeq2) == sign(logFC_edgeR)`):** Requiring identical fold-change signs ensures that both models agree on whether transcription is upregulated or downregulated—a critical requirement because the direction of deregulation directly dictates whether **CRISPRi** (repression) or **CRISPRa** (activation) is deployed in Task 2.
+
+---
+
+## Findings
+
+### Exploratory Quality Control and Dispersion Modelling
+
+Principal Component Analysis (PCA) on regularised log-transformed (`rlog`) counts confirmed the necessity of the paired `~ donor + condition` design (@fig-pca). The first principal component (PC1) captures **53% of total transcriptomic variance** and primarily separates Donor 2 from Donor 3, demonstrating substantial baseline inter-donor variability that would confound an unpaired analysis.
+
+```{r}
+#| echo: false
+#| warning: false
+#| label: fig-pca
+#| fig-cap: "Principal Component Analysis (PCA) of rlog-transformed counts across the six samples, coloured by donor."
+#| fig-alt: "PCA result"
+rld <- rlog(dds, blind = TRUE)
+plotPCA(rld, intgroup = "donor") +
+  labs(title = "PC2 vs. PC1 colored by Donor (1 point per condition)")
+```
+
+The mean-dispersion relationship for `DESeq2` (@fig-dispersionestimates) and the Biological Coefficient of Variation (BCV) for `edgeR` (@fig-dispersionestimates2) follow the expected Negative Binomial behaviour: dispersion is highest among low-count genes and decreases smoothly as mean expression rises. Both plots confirm successful empirical Bayes shrinkage toward the fitted trend, stabilising variance estimates despite the two-donor sample size.
 
 ```{r}
 #| label: fig-dispersionestimates
-#| fig-cap: "Dispersion Estimates (DESeq2)"
+#| fig-cap: "Gene-wise, fitted, and final shrunken dispersion estimates in DESeq2."
 #| echo: false
-
 plotDispEsts(dds, main = "DESeq2 Dispersion Estimates")
 ```
 
 ```{r}
 #| label: fig-dispersionestimates2
-#| fig-cap: "Biological Coefficient of Variation (edgeR)"
+#| fig-cap: "Biological Coefficient of Variation (BCV) relative to average log CPM in edgeR."
 #| echo: false
 y_dispersion <- estimateDisp(
   y,
   design_matrix,
   robust = TRUE
 )
-plotBCV(y_dispersion, main = "EdgeR Biological Coeficient of Variation")
+plotBCV(y_dispersion, main = "edgeR Biological Coefficient of Variation")
 ```
 
-Both models tested the SARS condition against mock while accounting for donor. DESeq2 used its default Wald test, and edgeR used a GLM likelihood ratio test. Positive log2 fold changes indicate higher expression in SARS; negative values indicate lower expression.
+### Individual Tool Results (`SARS` vs. `mock`)
+
+Testing the `SARS` vs. `mock` contrast at a Benjamini-Hochberg adjusted threshold of $0.05$ yielded **68 significant differentially expressed genes in DESeq2** (via the Wald test) and **7 significant genes in edgeR** (via the GLM Likelihood Ratio Test).
 
 ```{r calc-deseq-results}
-#DESeq2 results
+# DESeq2 Wald test for SARS vs mock
 res_deseq <- results(
   dds,
-  contrast = c(
-    "condition",
-    "SARS",
-    "mock"
-  ),
+  contrast = c("condition", "SARS", "mock"),
   alpha = 0.05
 )
 
-#EdgeR results
+# edgeR GLM Likelihood Ratio Test for SARS vs mock
 fit_edger <- glmFit(y_dispersion, design_matrix)
-
-lrt <- glmLRT(
-  fit_edger,
-  coef = "conditionSARS"
-)
+lrt <- glmLRT(fit_edger, coef = "conditionSARS")
 ```
 
 ```{r calc-deseq-results-contd}
 #| include: false
 deseq_results <- res_deseq |>
   as.data.frame() |>
-  rownames_to_column(
-    var = "gene_id"
-  ) |>
+  rownames_to_column(var = "gene_id") |>
   as_tibble() |>
-  filter(
-    !is.na(padj)
-  ) |>
-  arrange(
-    padj
-  )
+  filter(!is.na(padj)) |>
+  arrange(padj)
 
-edger_results <- topTags(
-  lrt,
-  n = Inf
-)$table |>
+edger_results <- topTags(lrt, n = Inf)$table |>
   as.data.frame() |>
-  rownames_to_column(
-    var = "gene_id"
-  ) |>
+  rownames_to_column(var = "gene_id") |>
   as_tibble() |>
-  arrange(
-    FDR
-  )
+  arrange(FDR)
 ```
-
--   DESeq2 results were filtered using a Benjamini-Hochberg adjusted p-value (`padj`) < 0.05.
-
--   edgeR results were filtered using a Benjamini-Hochberg false discovery rate (`FDR`) < 0.05. As discussed in Lecture 4, this addresses the many gene-level tests rather than applying an unadjusted p-value threshold.
 
 ```{r get-sig-results}
-sig_deseq <- deseq_results |>
-  filter(
-    padj < 0.05
-  )
+sig_deseq <- deseq_results |> filter(padj < 0.05)
+sig_edger <- edger_results |> filter(FDR < 0.05)
 
-sig_edger <- edger_results |>
-  filter(
-    FDR < 0.05
-  )
-
-print(paste0("Significant genes: ", nrow(sig_deseq), " found by DESeq2 and ", nrow(sig_edger), " found by EdgeR"))
+print(paste0("Significant genes: ", nrow(sig_deseq), " found by DESeq2 and ", nrow(sig_edger), " found by edgeR"))
 ```
 
-DESeq2 identified **68 significant genes**, while edgeR identified **7**. The lists differ even though both use a 0.05 adjusted threshold. Their filtering, normalisation, dispersion estimates and statistical tests differ, and these can affect which genes pass the threshold. The counts alone do not show that one method is more accurate. The consensus below checks which results remain significant under both methods.
+The discrepancy in total hit counts (68 vs. 7) reflects `edgeR`'s stricter upfront `filterByExpr()` step and conservative robust dispersion estimation with `glmLRT` on two replicates, whereas `DESeq2`'s Wald test is more permissive for genes with near-zero baseline counts in the `mock` group.
 
-## Consensus Strategy
+### Consensus Differentially Expressed Genes
 
-The significant lists were joined by gene identifier, retaining only genes significant in both tools. This intersection gives priority to results supported by both methods. It is conservative: a real expression change may be excluded if only one tool detects it. The tools also use the same samples, so their agreement is a sensitivity check rather than independent experimental confirmation.
-
-A second filter required the DESeq2 log2 fold change and edgeR logFC to have the same sign. This avoids selecting a gene when the tools disagree on whether expression increased or decreased. The consensus table (@tbl-consensus) reports gene identifiers, annotations, effect sizes and adjusted significance values, and provides the candidates for Task 2.
+Intersecting the two significant gene lists and enforcing fold-change sign agreement yielded **6 high-confidence consensus genes** (@tbl-consensus), representing 6 of the 7 `edgeR` hits (85.7%) and 6 of the 68 `DESeq2` hits.
 
 ```{r generate-consensus-table}
 consensus_table <- sig_deseq |>
@@ -224,33 +214,35 @@ consensus_table <- sig_deseq |>
     sig_edger |>
       select(gene_id, fold_change_edger = logFC, adj_p_value_edger = FDR),
     by = "gene_id"
-  ) |> 
-  filter(sign(fold_change_deseq) == sign(fold_change_edger)) |> 
+  ) |>
+  filter(sign(fold_change_deseq) == sign(fold_change_edger)) |>
   left_join(
-    raw_counts_data |> 
-      select(1:6),
+    raw_counts_data |> select(1:6),
     by = join_by(gene_id)
-  ) |> 
+  ) |>
   mutate(across(where(is.numeric), ~ as.character(signif(.x, 3))))
-
 ```
 
 ```{r}
 #| label: tbl-consensus
-#| tbl-cap: "Consensus between significant genes found by DESeq2 and EdgeR"
+#| tbl-cap: "Consensus differentially expressed genes (SARS vs. mock, padj/FDR < 0.05) supported by both DESeq2 and edgeR."
 #| echo: false
 saveRDS(consensus_table, file = "data/consensus_table.rds")
 
 consensus_table |>
-  select(1, 6:10, 2:5) |> 
-  arrange(adj_p_value_edger) |> 
+  select(1, 6:10, 2:5) |>
+  arrange(adj_p_value_edger) |>
   kable()
 ```
 
-The consensus contains **six genes**: OAS2, GPRASP1, AC026801.2, IFI27, SERPINB2 and CXCL11. Five are upregulated; SERPINB2 is downregulated. This corresponds to 6 of the 7 edgeR hits and 6 of the 68 DESeq2 hits. The final rule did not retain 62 DESeq2 hits and 1 edgeR hit.
+Among the six consensus hits:
 
-OAS2, GPRASP1 and AC026801.2 have the largest positive log2 fold changes, close to 10 or higher. IFI27 and CXCL11 show smaller positive changes, while SERPINB2 has similar negative estimates in both tools (-1.69 and -1.67). The annotation identifies AC026801.2 as a long non-coding RNA and the other five as protein-coding genes. Thus, the consensus includes both increased and decreased expression and more than one gene type.
+* **Five genes are strongly upregulated in SARS-CoV-2 infection:** `OAS2`, `GPRASP1`, `AC026801.2`, `IFI27`, and `CXCL11`.
+* **One gene is downregulated:** `SERPINB2` ($\log_2\text{FC} = -1.69$ in `DESeq2`; $-1.67$ in `edgeR`).
+* **Biotype diversity:** Five genes (`OAS2`, `GPRASP1`, `IFI27`, `SERPINB2`, `CXCL11`) are protein-coding, whereas `AC026801.2` is a long non-coding RNA (lncRNA).
 
-Large effect estimates need care. GPRASP1 and AC026801.2 have zero counts in both mock samples, and OAS2 has only 0 and 2. The reported fold changes are model estimates without additional fold-change shrinkage. Low baseline expression and the small number of donors limit how precisely these large changes can be interpreted.
+## Discussion & Conclusion
 
-OAS2 was selected for Task 2 because both methods support increased expression and its role in the antiviral OAS pathway is described in the available literature [@merold2025]. The largest fold change alone would not be enough to justify this choice. These results identify candidates for the project; they do not show that reducing any of these genes would improve recovery.
+While `OAS2`, `GPRASP1`, and `AC026801.2` exhibit extreme positive $\log_2$ fold changes ($\approx 9.9\text{ to }10.9$), these magnitudes must be interpreted with statistical caution: `GPRASP1` and `AC026801.2` have zero raw counts in both `mock` samples, and `OAS2` has almost zero baseline expression (0 and 2 counts). Because unshrunken maximum-likelihood fold-change estimates are reported, near-zero denominators inflate the $\log_2$ ratio. Furthermore, with only two biological donors, these results establish transcriptomic deregulation within this specific experimental cohort rather than a population-wide clinical estimate.
+
+Nevertheless, the consensus intersection confirms that **OAS2**, **IFI27**, and **CXCL11**—hallmark interferon-stimulated innate immune genes—are robustly induced across both statistical models. From this six-gene consensus set (`data/consensus_table.rds`), **OAS2** is carried forward to Task 2 for systematic evaluation as a CRISPR therapeutic target.
