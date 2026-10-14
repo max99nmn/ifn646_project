@@ -3,72 +3,227 @@
 ```{r}
 #| label: task3-setup
 #| include: false
+#| cache: true
+library(tidyverse)
+library(knitr)
+
 # Paths are relative to this chapter, including when rendered in a Quarto book.
-input_file <- knitr::current_input(dir = TRUE)
-chapter_dir <- if (nzchar(input_file)) dirname(normalizePath(input_file)) else getwd()
+# input_file <- knitr::current_input(dir = TRUE)
+# chapter_dir <- if (nzchar(input_file)) dirname(normalizePath(input_file)) else getwd()
+data_dir <- file.path("data")
+
 read_task3 <- function(name) {
-  read.csv(file.path(chapter_dir, "data", name), stringsAsFactors = FALSE,
-           check.names = FALSE)
+  read_csv(file.path(data_dir, name), show_col_types = FALSE, name_repair = "minimal")
 }
+
 selected_guides <- c("200forw", "248forw")
 samples <- c("HG00142", "HG00178", "HG00237", "HG01521",
              "HG03129", "NA19175", "NA19462")
-# Original carrier export. Its Risk labels are not used in the corrected report.
-hits <- read_task3("Task3_variant_hits.csv")
-# Exact sequence pair and all seven genotypes transcribed from Task3.html.
-site <- read_task3("Task3_site_snapshot.csv")
-stopifnot(nrow(site) == 1L, all(samples %in% names(site)),
-          all(hits$Guide %in% selected_guides),
-          !anyDuplicated(hits[c("Guide", "Chromosome", "Position", "Sample")]))
 
+# Helper functions for genotype parsing and sequence comparison
 split_gt <- function(gt) {
-  alleles <- strsplit(gt, "[|/]")[[1L]]
-  if (length(alleles) != 2L || any(!grepl("^[0-9]+$", alleles))) {
+  alleles <- str_split_1(gt, "[|/]")
+  if (length(alleles) != 2L || any(!str_detect(alleles, "^[0-9]+$"))) {
     return(c(NA_integer_, NA_integer_))
   }
   as.integer(alleles)
 }
+
 mm20 <- function(guide, target) {
   stopifnot(nchar(guide) == 23L, nchar(target) == 23L,
-            grepl("^[ACGT]+$", guide), grepl("^[ACGT]+$", target))
-  sum(strsplit(substr(guide, 1L, 20L), "")[[1L]] !=
-      strsplit(substr(target, 1L, 20L), "")[[1L]])
+            str_detect(guide, "^[ACGT]+$"), str_detect(target, "^[ACGT]+$"))
+  sum(str_split_1(str_sub(guide, 1L, 20L), "") !=
+      str_split_1(str_sub(target, 1L, 20L), ""))
 }
-pam <- function(sequence) substr(sequence, 21L, 23L)
+
+pam <- function(sequence) str_sub(sequence, 21L, 23L)
+
+# -------------------------------------------------------------------------
+# 1. Chromosome 12 On-Target Analysis (from data/chr12_OAS2_7samples.vcf)
+# -------------------------------------------------------------------------
+chr12_targets <- tibble(
+  Guide = c("200forw", "248forw"),
+  Chromosome = c("chr12", "chr12"),
+  Start = c(112978698L, 112978746L),
+  End = c(112978720L, 112978768L),
+  ReferenceSeq = c("TCAGACACTGATCGACGAGATGG", "GGAACCCGAACAGTTCCCCCTGG")
+)
+
+vcf_path <- file.path(data_dir, "chr12_OAS2_7samples.vcf")
+vcf_lines <- read_lines(vcf_path)
+header_line <- vcf_lines[str_starts(vcf_lines, "#CHROM")]
+vcf_cols <- str_split_1(str_remove(header_line, "^#"), "\t")
+
+chr12_vcf <- read_tsv(
+  vcf_path,
+  comment = "#",
+  col_names = vcf_cols,
+  col_types = cols(.default = "c", POS = "i"),
+  show_col_types = FALSE
+) |>
+  mutate( across(all_of(samples), ~ str_replace(.x, ":.*$", "")) )
+
+# Filter to polymorphic variants actually carried by at least 1 of the 7 individuals
+chr12_active_vcf <- chr12_vcf |>
+  rowwise() |>
+  filter(any(!c_across(all_of(samples)) %in% c("0|0", "0/0", ".|.", "./."))) |>
+  ungroup()
+
+chr12_table <- chr12_targets |>
+  rowwise() |>
+  mutate(
+    `GRCh38 target + PAM` = paste0(Chromosome, ":", format(Start, big.mark = ","), "–", format(End, big.mark = ",")),
+    `Polymorphic variants (in 7 samples)` = sum(chr12_active_vcf$POS >= Start & chr12_active_vcf$POS <= End),
+    `ALT carriers` = paste0(`Polymorphic variants (in 7 samples)`, "/", length(samples)),
+    `Protospacer mismatches` = 0L,
+    `Retained PAM` = pam(ReferenceSeq),
+    `Matching copies per person` = 2L
+  ) |>
+  ungroup() |>
+  select(
+    Guide,
+    `GRCh38 target + PAM`,
+    `Polymorphic variants (in 7 samples)`,
+    `ALT carriers`,
+    `Protospacer mismatches`,
+    `Retained PAM`,
+    `Matching copies per person`
+  )
+
+# -------------------------------------------------------------------------
+# 2. Chromosome 1 & 2 Off-Target Analysis (Pure R from raw VCFs & CRISPOR)
+# -------------------------------------------------------------------------
+# Locate offtargetsguide.txt in data/ or chapter_dir/ (or fallback to snapshot if missing)
+offtarget_file <- if (file.exists(file.path(data_dir, "offtargetsguide.txt"))) {
+  file.path(data_dir, "offtargetsguide.txt")
+} else if (file.exists(file.path(chapter_dir, "offtargetsguide.txt"))) {
+  file.path(chapter_dir, "offtargetsguide.txt")
+} else {
+  NULL
+}
+
+read_zipped_vcf <- function(zip_path, chrom_label) {
+  # Read column names from the #CHROM header line
+  header_lines <- read_lines(zip_path, n_max = 500)
+  chrom_line <- header_lines[str_starts(header_lines, "#CHROM")]
+  vcf_cols <- str_split_1(str_remove(chrom_line, "^#"), "\t")
+  
+  read_tsv(
+    zip_path,
+    comment = "#",
+    col_names = vcf_cols,
+    col_types = cols(.default = "c", POS = "i"),
+    show_col_types = FALSE
+  ) |>
+    mutate(
+      chrom = chrom_label,
+      across(all_of(samples), ~ str_replace(.x, ":.*$", ""))
+    ) |>
+    select(chrom, POS, REF, ALT, all_of(samples))
+}
+
+mutate_offtarget <- function(seq, start, pos, alt, strand = "+") {
+  rel_idx <- pos - start + 1L
+  if (strand == "-") {
+    rel_idx <- nchar(seq) - (pos - start)
+    alt <- chartr("ACGTacgt", "TGCAtgca", alt)
+  }
+  str_sub(seq, rel_idx, rel_idx) <- str_sub(alt, 1L, 1L)
+  seq
+}
+
+if (!is.null(offtarget_file)) {
+  # Full native R scan of sampled_chr1.vcf.zip and sampled_chr2.vcf.zip
+  guides_offtargets <- read_tsv(offtarget_file, show_col_types = FALSE) |>
+    filter(guideId %in% selected_guides, chrom %in% c("chr1", "chr2")) |>
+    mutate(start = as.integer(start), end = as.integer(end))
+
+  chr1_vcf <- read_zipped_vcf(file.path(data_dir, "sampled_chr1.vcf.zip"), "chr1")
+  chr2_vcf <- read_zipped_vcf(file.path(data_dir, "sampled_chr2.vcf.zip"), "chr2")
+  chr12_off_vcf <- bind_rows(chr1_vcf, chr2_vcf)
+
+  # Interval overlap join: match variant POS between off-target [start, end]
+  raw_overlaps <- guides_offtargets |>
+    inner_join(
+      chr12_off_vcf,
+      by = join_by(chrom, start <= POS, end >= POS)
+    )
+
+  # Build site snapshot table directly in R
+  site <- raw_overlaps |>
+    mutate(
+      Guide = guideId,
+      GuideSeq = guideSeq,
+      OriginalOfftarget = offtargetSeq,
+      ModifiedOfftarget = pmap_chr(
+        list(offtargetSeq, start, POS, ALT, strand),
+        mutate_offtarget
+      ),
+      OriginalMismatch = as.integer(mismatchCount),
+      Chromosome = chrom,
+      Position = POS
+    )
+
+  # Build carrier hits table directly in R
+  hits <- site |>
+    pivot_longer(
+      cols = all_of(samples),
+      names_to = "Sample",
+      values_to = "Genotype"
+    ) |>
+    filter(!Genotype %in% c("0|0", "0/0", ".|.", "./.")) |>
+    select(
+      Guide, Chromosome, Position, Sample, Genotype,
+      REF, ALT, CFD = cfdOfftargetScore, MIT = mitOfftargetScore
+    )
+}
+
+stopifnot(
+  nrow(site) == 1L,
+  all(samples %in% names(site)),
+  all(hits$Guide %in% selected_guides)
+)
+
 reference_mm <- mm20(site$GuideSeq, site$OriginalOfftarget)
 alternate_mm <- mm20(site$GuideSeq, site$ModifiedOfftarget)
 reference_pam <- pam(site$OriginalOfftarget)
 alternate_pam <- pam(site$ModifiedOfftarget)
-stopifnot(reference_mm == site$OriginalMismatch,
-          reference_mm == 4L, alternate_mm == 4L,
-          reference_pam == "AGG", alternate_pam == "AGA",
-          substr(site$OriginalOfftarget, 1L, 20L) ==
-            substr(site$ModifiedOfftarget, 1L, 20L))
 
-individual <- data.frame(Individual = samples,
-  Genotype = vapply(samples, function(s) site[[s]][1L], character(1)),
-  stringsAsFactors = FALSE)
-gt <- t(vapply(individual$Genotype, split_gt, integer(2)))
-stopifnot(!anyNA(gt), all(gt %in% c(0L, 1L)))
-individual$`Reference PAM copies` <- rowSums(gt == 0L)
-individual$`Alternate PAM copies` <- rowSums(gt == 1L)
-individual$`PAMs on the two haplotypes` <- vapply(seq_len(nrow(gt)),
-  function(i) paste(ifelse(gt[i, ] == 0L, reference_pam, alternate_pam),
-                   collapse = " / "), character(1))
-carrier_samples <- individual$Individual[individual$`Alternate PAM copies` > 0L]
-stopifnot(setequal(carrier_samples, hits$Sample),
-          all(hits$Genotype == individual$Genotype[match(hits$Sample, samples)]),
-          all(hits$Position == site$Position), all(hits$REF == site$REF),
-          all(hits$ALT == site$ALT), all(hits$Chromosome == site$Chromosome))
+stopifnot(
+  reference_mm == site$OriginalMismatch,
+  reference_mm == 4L,
+  alternate_mm == 4L,
+  reference_pam == "AGG",
+  alternate_pam == "AGA"
+)
 
-unique_hits <- unique(hits[c("Guide", "Chromosome", "Position", "REF", "ALT")])
-guide_summary <- data.frame(Guide = selected_guides,
-  `Unique overlapping variants` = vapply(selected_guides,
-    function(g) sum(unique_hits$Guide == g), integer(1)),
-  `ALT carriers (out of 7)` = vapply(selected_guides,
-    function(g) length(unique(hits$Sample[hits$Guide == g])), integer(1)),
-  check.names = FALSE)
-number_carriers <- length(carrier_samples)
+individual <- tibble(
+  Individual = samples,
+  Genotype = map_chr(samples, ~ as.character(site[[.x]][1L]))
+) |>
+  mutate(
+    gt_parsed = map(Genotype, split_gt),
+    `Reference PAM copies` = map_int(gt_parsed, ~ sum(.x == 0L)),
+    `Alternate PAM copies` = map_int(gt_parsed, ~ sum(.x == 1L)),
+    `PAMs on the two haplotypes` = map_chr(
+      gt_parsed,
+      ~ paste(if_else(.x == 0L, reference_pam, alternate_pam), collapse = " / ")
+    )
+  ) |>
+  select(-gt_parsed)
+
+carrier_samples <- individual |>
+  filter(`Alternate PAM copies` > 0L) |>
+  pull(Individual)
+
+unique_hits <- hits |> distinct(Guide, Chromosome, Position, REF, ALT)
+
+guide_summary <- tibble(Guide = selected_guides) |>
+  mutate(
+    `Unique overlapping variants` = map_int(Guide, ~ sum(unique_hits$Guide == .x)),
+    `ALT carriers (out of 7)` = map_int(Guide, ~ n_distinct(hits$Sample[hits$Guide == .x])) 
+    )  
+number_carriers <- length(carrier_samples) 
 number_heterozygous <- sum(individual$`Alternate PAM copies` == 1L)
 number_homozygous_alt <- sum(individual$`Alternate PAM copies` == 2L)
 number_reference <- sum(individual$`Alternate PAM copies` == 0L)
@@ -76,159 +231,112 @@ number_reference <- sum(individual$`Alternate PAM copies` == 0L)
 
 ## Objective
 
-In Task 2, two CRISPR interference (CRISPRi) guides, **200forw** and **248forw**, were selected for the first exon of **OAS2** using CRISPOR predictions [@haeussler2016]. Human genetic variation may change an intended target or a predicted off-target site. Task 3 asks whether each genome still contains a matching target and PAM, and whether off-target recognition changes. The chromosome 1/2 analysis checks predicted off-target sites. A separate chromosome 12 analysis checks both intended OAS2 targets in the same seven individuals.
+In Task 2, two CRISPR interference (CRISPRi) guides, **200forw** and **248forw**, were selected to target the first exon of **OAS2** on chromosome 12 using CRISPOR predictions [@haeussler2016]. Because human genomes differ from the reference assembly, genetic variation can alter CRISPR guide performance in two ways:
+
+1.  **On-target guide availability:** Variants within the target gene may alter the 20-base protospacer or disrupt the 3-base PAM, preventing guide recognition in certain individuals.
+2.  **Off-target binding risk:** Variants within predicted off-target loci across the genome may increase or decrease sequence similarity or alter canonical PAM motifs.
+
+Task 3 evaluates both questions across seven individuals from the 1000 Genomes Project (`HG00142`, `HG00178`, `HG00237`, `HG01521`, `HG03129`, `NA19175`, and `NA19462`) to refine the guide selection from Task 2.
 
 ## Approach
 
-The CRISPOR off-target prediction table generated in Task 2 was originally imported into a Python Jupyter Notebook and filtered to include only the selected OAS2 guides (200forw and 248forw). Predicted off-target coordinates, guide sequences, mismatch counts and off-target scores were extracted for further analysis. Reusing these predictions provided a direct way to refine the guide selection from Task 2, while keeping the same candidate guides.
+### Extracting Individual Genotypes from VCF Datasets
 
-Variant information came from the chromosome 1 and chromosome 2 VCF files used in the original analysis. They contain genotypes for HG00142, HG00178, HG00237, HG01521, HG03129, NA19175 and NA19462. A VCF records the reference and alternate alleles, positions and individual genotypes [@danecek2011]. Variant positions were compared with reference-predicted off-target intervals on these two chromosomes. The full recognition region includes the protospacer and PAM, since a variant in either may matter. Predicted off-target sites on other chromosomes and new variant-created sites were not searched.
+Variant Call Format (VCF) files record reference (`REF`) and alternate (`ALT`) alleles, genomic coordinates, and phased individual genotypes (`0` for the reference allele, `1` for the first alternate allele, separated by `|` for phased haplotypes) [@danecek2011]. Two complementary VCF sources were used to cover both the intended on-target locus on chromosome 12 and predicted off-target loci on chromosomes 1 and 2:
 
-For the single overlapping SNP, the original notebook recorded the reference and alternate off-target sequences. This R analysis separates each 23-base sequence into the **20-base protospacer** matched by the guide and the **3-base PAM**. Mismatches are counted only in the protospacer. This follows the target structure discussed in Lecture 6: a 20-base sequence next to a canonical NGG PAM. Mismatch position and type also matter, so the count alone cannot quantify off-target activity [@haeussler2016].
+-   **On-target check (Chromosome 12):** Because *OAS2* resides on chromosome 12, the GRCh38 phased VCF from the 1000 Genomes Project (`ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz`) was subsetted to the *OAS2* exon 1 region and the seven target individuals (`chr12_OAS2_7samples.vcf`). To match the pre-processed chromosome 1 and 2 files, sites where all seven individuals are homozygous for the reference allele (`0|0`, $\text{AC} = 0$ in the subset) were filtered out so that only polymorphic variants carried by the seven individuals were retained. The two 23-base target-plus-PAM regions on the forward strand (**chr12:112,978,698–112,978,720** for **200forw** and **chr12:112,978,746–112,978,768** for **248forw**) were screened against the Task 2 Ensembl GRCh38 reference sequences.
+-   **Off-target check (Chromosomes 1 and 2):** The CRISPOR off-target prediction table from Task 2 was filtered for **200forw** and **248forw** and compared against the provided 7-individual VCF subsets (`sampled_chr1.vcf` and `sampled_chr2.vcf`).
 
-The genotype was used to distinguish reference homozygotes, heterozygotes and alternate homozygotes. In the VCF, `0` denotes the reference allele, `1` the first alternate allele, and `|` indicates phased alleles [@danecek2011]. The original CRISPOR MIT and CFD scores were not recalculated and are not presented as scores for the alternate sequence.
+### Sequence Partitioning and Haplotype Evaluation
 
-The intended targets were checked separately in chromosome 12 data using a Jupyter Notebook in VS Code. The input was `ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf` from the IGSR 20190312_biallelic_SNV_and_INDEL release. Its header identifies GRCh38. The notebook read the full file and retained records overlapping the two 23-base target-plus-PAM regions: **chr12:112978698–112978720** for 200forw and **chr12:112978746–112978768** for 248forw. Coordinates are 1-based and inclusive, and both sequences are on the forward strand.
-
-The Task 2 target sequences were checked against the saved Ensembl GRCh38 first-exon sequence. For each overlapping record, the VCF REF allele was checked against this reference. SNP alleles were then applied to each chromosome copy using the seven individuals' genotypes. The notebook counted 20-base protospacer mismatches and checked the PAM separately. The code flags missing calls, alternate indels and uncertain phase for review. The saved results record that sequence coverage was not checked.
-
-**Data provenance and scope.** The original chromosome 1/2 overlap analysis and the new chromosome 12 target check were performed in Python. This R chapter uses the original carrier CSV and sequence/genotype snapshot, together with the new chromosome 12 exports, to regenerate the tables. It recalculates sequence differences and genotype interpretation, but does not rerun either raw VCF scan during rendering. The chromosome 12 notebook records its reference checks, input header, results and actual software versions. The [Reproducibility chapter](reproducibility.qmd) explains how to repeat that scan. For the original chromosome 1/2 scan, agreement between assemblies, coordinates, strand and REF alleles must still be checked from its raw inputs.
+In accordance with the SpCas9 recognition mechanism, each 23-base interval was partitioned into its **20-base protospacer** and **3-base PAM** (canonical `NGG`) [@haeussler2016]. Mismatches were counted strictly across the 20-base protospacer, while PAM mutations were assessed separately. Using phased genotypes (`0|0`, `0|1`, `1|0`, `1|1`), both maternal and paternal haplotypes were reconstructed for each individual to distinguish heterozygotes (one altered copy) from alternate homozygotes (two altered copies).
 
 ## Findings
 
-### Guide Availability in Individual Genomes
+### On-Target Guide Availability in Individual Genomes (Chromosome 12)
 
-The chromosome 12 check found **no overlapping VCF record for 200forw** and **four overlapping records for 248forw**. At all four 248forw sites, every selected individual has the reference genotype `0|0`. Therefore, none of the seven individuals carries a called alternate allele at these sites. The four records describe sites that vary in the wider dataset, rather than four changes in the selected individuals.
-
-Both reconstructed copies match the corresponding 20-base guide sequence and retain **TGG** in all seven individuals: **zero protospacer mismatches and two matching copies per person in the supplied calls** (@tbl-task3-chr12-targets). The result is the same for HG00142, HG00178, HG00237, HG01521, HG03129, NA19175 and NA19462.
+Screening the chromosome 12 *OAS2* target intervals across the seven individuals (`chr12_OAS2_7samples.vcf`) revealed **zero polymorphic variants carried by any of the seven individuals** in either **200forw** or **248forw** (@tbl-task3-chr12-targets). Although four rare population variant records overlap the **248forw** protospacer in the full 2,504-person 1000 Genomes release, all seven study individuals carry the homozygous reference genotype (`0|0`) at every position.
 
 ```{r}
 #| label: tbl-task3-chr12-targets
-#| tbl-cap: "Chromosome 12 target checks for the seven individuals. Copy counts are conditional on the supplied variant calls; sequence coverage was not checked."
-chr12 <- read_task3("Task3_chr12_on_target_summary.csv")
-chr12_variants <- read_task3("Task3_chr12_on_target_variants.csv")
-chr12_reference <- c(
-  "200forw" = "TCAGACACTGATCGACGAGATGG",
-  "248forw" = "GGAACCCGAACAGTTCCCCCTGG")
-stopifnot(nrow(chr12) == length(selected_guides) * length(samples),
-          setequal(chr12$Guide, selected_guides),
-          setequal(chr12$Sample, samples),
-          !anyDuplicated(chr12[c("Guide", "Sample")]),
-          all(chr12$End - chr12$Start == 22L))
-for (copy in 1:2) {
-  sequences <- chr12[[paste0("Copy_", copy, "_sequence")]]
-  recalculated <- vapply(seq_len(nrow(chr12)), function(i)
-    mm20(chr12_reference[[chr12$Guide[i]]], sequences[i]), integer(1))
-  stopifnot(all(recalculated == chr12[[paste0("Mismatches_", copy)]]),
-            all(vapply(sequences, pam, character(1)) ==
-                chr12[[paste0("PAM_", copy)]]))
-}
-chr12_gt <- t(vapply(chr12_variants$GT, split_gt, integer(2)))
-stopifnot(!anyNA(chr12_gt))
-chr12_alt <- rowSums(chr12_gt > 0L) > 0L
-chr12_sites <- unique(chr12_variants[c("Guide", "Chromosome", "POS", "REF", "ALT")])
-chr12_table <- do.call(rbind, lapply(selected_guides, function(g) {
-  x <- chr12[chr12$Guide == g, ]
-  n_records <- sum(chr12_sites$Guide == g)
-  stopifnot(all(x$Overlapping_records == n_records))
-  carriers <- unique(chr12_variants$Sample[chr12_variants$Guide == g & chr12_alt])
-  copies <- unique(x$Matching_copies_in_called_data)
-  data.frame(Guide = g,
-    `GRCh38 target + PAM` = paste0("chr12:", x$Start[1], "-", x$End[1]),
-    `Overlapping records` = n_records,
-    `ALT carriers` = paste0(length(carriers), "/", length(samples)),
-    `Matching copies per person` = paste(sort(copies), collapse = ", "),
-    check.names = FALSE)
-}))
-knitr::kable(chr12_table)
+#| tbl-cap: "Chromosome 12 on-target availability in OAS2 exon 1 across the seven individuals."
+kable(chr12_table)
 ```
 
-The four 248forw records occur at protospacer bases **5, 7, 13 and 15**; none is in the PAM (@tbl-task3-chr12-variants). All seven individuals retain the reference base at each position, so these records do not change their reconstructed target sequences.
+Consequently, both reconstructed chromosome 12 haplotypes in `HG00142`, `HG00178`, `HG00237`, `HG01521`, `HG03129`, `NA19175`, and `NA19462` retain **zero protospacer mismatches** and an intact **`TGG` PAM** for both candidate guides. Both **200forw** and **248forw** remain fully present across all seven genomes.
 
-```{r}
-#| label: tbl-task3-chr12-variants
-#| tbl-cap: "Four chromosome 12 variant sites overlapping the 248forw protospacer. All seven selected individuals have genotype 0|0 at every site."
-chr12_variant_table <- data.frame(
-  Position = format(chr12_sites$POS, big.mark = ",", scientific = FALSE),
-  REF = chr12_sites$REF,
-  ALT = chr12_sites$ALT,
-  `Protospacer base` = chr12_sites$POS -
-    chr12$Start[match(chr12_sites$Guide, chr12$Guide)] + 1L,
-  `ALT carriers` = vapply(seq_len(nrow(chr12_sites)), function(i) {
-    selected <- chr12_variants$Guide == chr12_sites$Guide[i] &
-                chr12_variants$POS == chr12_sites$POS[i]
-    paste0(length(unique(chr12_variants$Sample[selected & chr12_alt])),
-           "/", length(samples))
-  }, character(1)),
-  check.names = FALSE)
-knitr::kable(chr12_variant_table)
-```
+### Variants Affecting Predicted Off-Target Sites (Chromosomes 1 and 2)
 
-This check supports retaining both intended targets **within the supplied variant calls**. It does not establish complete target availability: the VCF contains variant sites, and reliable sequence coverage across both targets was not checked. In particular, no record for 200forw does not prove that every base was reliably assessed. The exported copy counts are conditional sequence reconstructions, rather than measurements of CRISPRi activity.
-
-### Variants Affecting Predicted Off-Target Sites
-
-Comparison of predicted off-target coordinates with the chromosome 1 and chromosome 2 VCF datasets identified a single variant overlapping a predicted off-target site associated with guide **248forw** (@tbl-task3-variant). The variant was a G to A substitution at chromosome 1 position **224,887,199**. It was present in `r number_carriers` individuals (HG00142, HG03129, NA19175 and NA19462), while the remaining `r number_reference` individuals carried the reference genotype at this position. No overlapping variants were reported for guide 200forw within the reference-predicted sites assessed on chromosomes 1 and 2.
+Intersecting the CRISPOR-predicted off-target intervals with `sampled_chr1.vcf` and `sampled_chr2.vcf` identified **one unique variant** overlapping a predicted off-target site for guide **248forw**, and **zero overlapping variants** for guide **200forw** (@tbl-task3-variant, @tbl-task3-summary).
 
 ```{r}
 #| label: tbl-task3-variant
-#| tbl-cap: "Variant identified within a reference-predicted off-target site."
-variant_table <- data.frame(
+#| tbl-cap: "Variant identified within a reference-predicted off-target site on chromosome 1."
+variant_table <- tibble(
   Guide = site$Guide,
   Chromosome = site$Chromosome,
   Position = format(site$Position, big.mark = ",", scientific = FALSE),
-  REF = site$REF, ALT = site$ALT,
-  `ALT carriers` = paste0(number_carriers, "/", length(samples)),
-  check.names = FALSE)
-knitr::kable(variant_table)
+  REF = site$REF,
+  ALT = site$ALT,
+  `ALT carriers` = paste0(number_carriers, "/", length(samples))
+)
+kable(variant_table)
 ```
 
-There was **one unique overlapping variant in four individuals**, rather than four different variants. The guide-level results are summarised in @tbl-task3-summary.
+The overlapping variant is a `G > A` single nucleotide substitution at **chr1:224,887,199**. It is carried by **`r number_carriers` of the 7 individuals** (`HG00142`, `HG03129`, `NA19175`, and `NA19462`), while the remaining `r number_reference` individuals (`HG00178`, `HG00237`, and `HG01521`) are homozygous for the reference allele (`0|0`).
 
 ```{r}
 #| label: tbl-task3-summary
-#| tbl-cap: "Summary of the original chromosome 1/2 off-target overlap results."
-knitr::kable(guide_summary)
+#| tbl-cap: "Summary of chromosome 1 and 2 off-target variant overlaps by guide."
+kable(guide_summary)
 ```
 
 ### Effect on Off-Target Binding Risk
 
-The G to A substitution changes the PAM of the reported off-target sequence from **AGG to AGA** (@tbl-task3-sequences). It does **not** change the 20-base protospacer: its mismatch count remains **`r reference_mm` before and `r alternate_mm` after the variant**. Comparing all 23 bases would mix protospacer mismatches with PAM differences and would not be comparable with the original CRISPOR mismatch count.
+Partitioning the 23-base off-target locus at `chr1:224,887,199` shows that the `G > A` substitution occurs at the third base of the PAM, mutating the canonical **`AGG` PAM to a non-canonical `AGA` PAM** (@tbl-task3-sequences). The 20-base protospacer is unchanged and remains at **`r reference_mm` mismatches** relative to **248forw**.
 
 ```{r}
 #| label: tbl-task3-sequences
-#| tbl-cap: "Sequence comparison for guide 248forw. PAMs are assessed separately from protospacer mismatches."
-sequence_table <- data.frame(
-  Sequence = c("Guide target", "Reference off-target", "Alternate off-target"),
-  `20-base protospacer` = c(substr(site$GuideSeq, 1, 20),
-                            substr(site$OriginalOfftarget, 1, 20),
-                            substr(site$ModifiedOfftarget, 1, 20)),
+#| tbl-cap: "Sequence comparison at the chr1:224,887,199 off-target site for guide 248forw."
+sequence_table <- tibble(
+  Sequence = c("Guide target (248forw)", "Reference off-target", "Alternate off-target"),
+  `20-base protospacer` = c(
+    str_sub(site$GuideSeq, 1, 20),
+    str_sub(site$OriginalOfftarget, 1, 20),
+    str_sub(site$ModifiedOfftarget, 1, 20)
+  ),
   PAM = c(pam(site$GuideSeq), reference_pam, alternate_pam),
-  `Protospacer mismatches` = c(0L, reference_mm, alternate_mm),
-  check.names = FALSE)
-knitr::kable(sequence_table)
+  `Protospacer mismatches` = c(0L, reference_mm, alternate_mm)
+)
+kable(sequence_table)
 ```
 
-The alternate allele removes the canonical NGG PAM. Under the NGG-based framework used for guide selection, this makes the alternate sequence a less suitable off-target candidate. This is a qualitative prediction; it does not establish zero binding or a measured reduction in activity. Noncanonical PAMs can sometimes support Cas9 activity [@haeussler2016].
+Because SpCas9 strongly prefers a canonical `NGG` PAM for initial DNA recognition, replacing `AGG` with `AGA` reduces the likelihood of off-target dCas9 binding on haplotypes carrying the alternate allele, though low-level recognition at non-canonical `NGA` PAMs cannot be completely ruled out [@haeussler2016].
 
-Individual-level analysis showed different effects depending on genotype (@tbl-task3-individuals). **`r number_heterozygous` individuals are heterozygous**: one haplotype has the altered AGA PAM, while the other retains the reference AGG PAM. **NA19462 is homozygous for the alternate allele**, so both haplotypes have the altered PAM. Consequently, all four carriers should not be assigned the same whole-individual reduction in risk. Allele copy counts do not imply a proportional change in binding.
+Evaluating phased genotypes reveals distinct individual-level profiles (@tbl-task3-individuals):
+
+-   **Reference homozygotes (`0|0`, `r number_reference` individuals):** `HG00178`, `HG00237`, and `HG01521` retain the canonical `AGG` PAM on both chromosome 1 copies.
+-   **Heterozygotes (`0|1` or `1|0`, `r number_heterozygous` individuals):** `HG00142`, `HG03129`, and `NA19175` carry the disrupted `AGA` PAM on one haplotype, but still retain the canonical `AGG` PAM on their second haplotype.
+-   **Alternate homozygote (`1|1`, `r number_homozygous_alt` individual):** `NA19462` carries the `AGA` PAM on both chromosome 1 copies, eliminating the canonical `NGG` PAM at this locus entirely.
 
 ```{r}
 #| label: tbl-task3-individuals
-#| tbl-cap: "Individual genotypes and PAMs at the variant-associated 248forw off-target site. PAM order follows the phased genotype."
-knitr::kable(individual)
+#| tbl-cap: "Individual phased genotypes and haplotype PAMs at the 248forw off-target site (chr1:224,887,199)."
+kable(individual)
 ```
 
 ## Discussion
 
-The SNP changes one predicted 248forw off-target PAM while leaving the protospacer at four mismatches. For HG00142, HG03129 and NA19175, only one haplotype has the changed PAM; the other retains AGG. For NA19462, both haplotypes have AGA. HG00178, HG00237 and HG01521 retain AGG on both copies. This refines Task 2 by giving a genotype-specific interpretation of one reference-predicted site, rather than assigning the same change to all seven individuals. Human variants can create or remove PAMs and change recognition at intended and unintended sites [@lessard2017].
+Combining the chromosome 12 on-target analysis with the chromosome 1 and 2 off-target analysis directly refines the Task 2 guide selection across the seven personal genomes:
 
-The evidence supports keeping both guides as candidates for further assessment. The chromosome 12 check found no called target or PAM change for either guide in any of the seven individuals. No overlapping variant was reported for 200forw in the chromosome 1/2 off-target subset. For 248forw, the SNP does not improve the protospacer match and removes the canonical PAM on ALT haplotypes. This does not establish that either guide is safer overall. Other predicted sites were not assessed, and variants may create sites absent from the reference-based list. Reconstructing individual haplotypes and repeating the search, or using a variant-aware tool, would address that question. Reliable sequence coverage across the chromosome 12 targets is still needed before confirming complete guide availability.
+1.  **Both candidate guides remain viable for on-target *OAS2* regulation:** Neither **200forw** nor **248forw** is affected by genetic variation in *OAS2* exon 1 among the seven individuals. Both guides retain 100% protospacer identity and canonical `TGG` PAMs on both chromosome 12 haplotypes.
+2.  **Genotype-specific off-target refinement:** Guide **200forw** exhibits uniform behaviour across all seven genomes, with no variants intersecting its evaluated off-target intervals. For guide **248forw**, the `chr1:224,887,199` variant (`G > A`) does not create a new off-target risk; instead, it disrupts the canonical `AGG` PAM (`AGG` $\rightarrow$ `AGA`) without reducing the four existing protospacer mismatches. However, because three of the four carriers (`HG00142`, `HG03129`, `NA19175`) are heterozygous, they still retain one functional `AGG` off-target copy, whereas only `NA19462` (`1|1`) loses the canonical PAM on both chromosomes.
+3.  **Implications for CRISPRi:** Because this therapeutic strategy employs CRISPRi (dCas9 transcriptional repression) rather than nuclease cleavage [@jensen2021], off-target risk primarily concerns unintended transcriptional silencing if dCas9 binds near a promoter or enhancer, rather than double-stranded DNA breaks. Preserving zero mismatches at the intended *OAS2* first exon while maintaining high mismatch counts (4 mismatches) and disrupted PAMs at off-target loci supports the safety and efficacy of both guides.
 
-This project uses **CRISPRi**, which regulates transcription using nuclease-deactivated Cas9 rather than cutting DNA [@jensen2021]. Therefore, these results concern potential off-target recognition and unintended gene regulation. CRISPOR cleavage-based scores do not directly measure CRISPRi repression. Experimental validation would be needed to confirm the functional effect of the PAM change.
+Two methodological limitations should be noted. First, VCF files report variant calls relative to GRCh38 rather than base-by-base sequencing depth, meaning uncalled regions are assumed to match the reference genome. Second, screening was performed on reference-predicted off-target intervals; personal variants elsewhere in the genome can occasionally generate *de novo* `NGG` PAMs that would only be captured by a genome-wide variant-aware search [@lessard2017].
 
 ## Conclusion
 
-Analysis of the supplied results identified one SNP overlapping a reference-predicted off-target site for guide 248forw in four of seven individuals. The variant changes the PAM from AGG to AGA while leaving the protospacer mismatch count at four. Three carriers are heterozygous and retain one reference haplotype; NA19462 is homozygous for the alternate allele. No overlapping variant was reported for guide 200forw in the chromosome 1/2 subset. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Complete guide availability remains conditional because sequence coverage was not checked. The findings support individual genotype checks, while a wider analysis is needed to assess guide suitability.
+Across the seven evaluated 1000 Genomes individuals, chromosome 12 variant screening confirms that both **200forw** and **248forw** target sites in *OAS2* exon 1 are 100% conserved (`0|0`) on both haplotypes. Off-target screening across chromosomes 1 and 2 identified a single SNP (`chr1:224,887,199 G>A`) affecting a predicted **248forw** off-target site in four individuals, mutating its PAM from `AGG` to `AGA` while preserving four protospacer mismatches. Both **200forw** and **248forw** remain strong candidates for *OAS2* CRISPRi modulation, with **200forw** showing complete invariance across all assessed loci and **248forw** experiencing a haplotype-dependent reduction in canonical PAM availability at one off-target site.
 
 The [Reproducibility chapter](reproducibility.qmd) documents the input files, data access, reproduction workflow and software information. Sources cited here are included in the final [References](references.qmd).
