@@ -125,6 +125,35 @@ div.csl-indent {
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -252,102 +281,84 @@ div.csl-indent {
 
 <section id="objective" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="objective"><span class="header-section-number">4.1</span> Objective</h2>
-<p>In Task 2, two CRISPR interference (CRISPRi) guides, <strong>200forw</strong> and <strong>248forw</strong>, were selected for the first exon of <strong>OAS2</strong> using CRISPOR predictions <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Human genetic variation may change an intended target or a predicted off-target site. Task 3 asks whether each genome still contains a matching target and PAM, and whether off-target recognition changes. The chromosome 1/2 analysis checks predicted off-target sites. A separate chromosome 12 analysis checks both intended OAS2 targets in the same seven individuals.</p>
+<p>In Task 2, two CRISPR interference (CRISPRi) guides, <strong>200forw</strong> and <strong>248forw</strong>, were selected to target the first exon of <strong>OAS2</strong> on chromosome 12 using CRISPOR predictions <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Because human genomes differ from the reference assembly, genetic variation can alter CRISPR guide performance in two ways:</p>
+<ol type="1">
+<li><strong>On-target guide availability:</strong> Variants within the target gene may alter the 20-base protospacer or disrupt the 3-base PAM, preventing guide recognition in certain individuals.</li>
+<li><strong>Off-target binding risk:</strong> Variants within predicted off-target loci across the genome may increase or decrease sequence similarity or alter canonical PAM motifs.</li>
+</ol>
+<p>Task 3 evaluates both questions across seven individuals from the 1000 Genomes Project (<code>HG00142</code>, <code>HG00178</code>, <code>HG00237</code>, <code>HG01521</code>, <code>HG03129</code>, <code>NA19175</code>, and <code>NA19462</code>) to refine the guide selection from Task 2.</p>
 </section>
 <section id="approach" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="approach"><span class="header-section-number">4.2</span> Approach</h2>
-<p>The CRISPOR off-target prediction table generated in Task 2 was originally imported into a Python Jupyter Notebook and filtered to include only the selected OAS2 guides (200forw and 248forw). Predicted off-target coordinates, guide sequences, mismatch counts and off-target scores were extracted for further analysis. Reusing these predictions provided a direct way to refine the guide selection from Task 2, while keeping the same candidate guides.</p>
-<p>Variant information came from the chromosome 1 and chromosome 2 VCF files used in the original analysis. They contain genotypes for HG00142, HG00178, HG00237, HG01521, HG03129, NA19175 and NA19462. A VCF records the reference and alternate alleles, positions and individual genotypes <span class="citation" data-cites="danecek2011">(<a href="references.html#ref-danecek2011" role="doc-biblioref">Danecek et al. 2011</a>)</span>. Variant positions were compared with reference-predicted off-target intervals on these two chromosomes. The full recognition region includes the protospacer and PAM, since a variant in either may matter. Predicted off-target sites on other chromosomes and new variant-created sites were not searched.</p>
-<p>For the single overlapping SNP, the original notebook recorded the reference and alternate off-target sequences. This R analysis separates each 23-base sequence into the <strong>20-base protospacer</strong> matched by the guide and the <strong>3-base PAM</strong>. Mismatches are counted only in the protospacer. This follows the target structure discussed in Lecture 6: a 20-base sequence next to a canonical NGG PAM. Mismatch position and type also matter, so the count alone cannot quantify off-target activity <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>.</p>
-<p>The genotype was used to distinguish reference homozygotes, heterozygotes and alternate homozygotes. In the VCF, <code>0</code> denotes the reference allele, <code>1</code> the first alternate allele, and <code>|</code> indicates phased alleles <span class="citation" data-cites="danecek2011">(<a href="references.html#ref-danecek2011" role="doc-biblioref">Danecek et al. 2011</a>)</span>. The original CRISPOR MIT and CFD scores were not recalculated and are not presented as scores for the alternate sequence.</p>
-<p>The intended targets were checked separately in chromosome 12 data using a Jupyter Notebook in VS Code. The input was <code>ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf</code> from the IGSR 20190312_biallelic_SNV_and_INDEL release. Its header identifies GRCh38. The notebook read the full file and retained records overlapping the two 23-base target-plus-PAM regions: <strong>chr12:112978698–112978720</strong> for 200forw and <strong>chr12:112978746–112978768</strong> for 248forw. Coordinates are 1-based and inclusive, and both sequences are on the forward strand.</p>
-<p>The Task 2 target sequences were checked against the saved Ensembl GRCh38 first-exon sequence. For each overlapping record, the VCF REF allele was checked against this reference. SNP alleles were then applied to each chromosome copy using the seven individuals’ genotypes. The notebook counted 20-base protospacer mismatches and checked the PAM separately. The code flags missing calls, alternate indels and uncertain phase for review. The saved results record that sequence coverage was not checked.</p>
-<p><strong>Data provenance and scope.</strong> The original chromosome 1/2 overlap analysis and the new chromosome 12 target check were performed in Python. This R chapter uses the original carrier CSV and sequence/genotype snapshot, together with the new chromosome 12 exports, to regenerate the tables. It recalculates sequence differences and genotype interpretation, but does not rerun either raw VCF scan during rendering. The chromosome 12 notebook records its reference checks, input header, results and actual software versions. The <a href="./reproducibility.html">Reproducibility chapter</a> explains how to repeat that scan. For the original chromosome 1/2 scan, agreement between assemblies, coordinates, strand and REF alleles must still be checked from its raw inputs.</p>
+<section id="extracting-individual-genotypes-from-vcf-datasets" class="level3">
+<h3 class="anchored" data-anchor-id="extracting-individual-genotypes-from-vcf-datasets">Extracting Individual Genotypes from VCF Datasets</h3>
+<p>Variant Call Format (VCF) files record reference (<code>REF</code>) and alternate (<code>ALT</code>) alleles, genomic coordinates, and phased individual genotypes (<code>0</code> for the reference allele, <code>1</code> for the first alternate allele, separated by <code>|</code> for phased haplotypes) <span class="citation" data-cites="danecek2011">(<a href="references.html#ref-danecek2011" role="doc-biblioref">Danecek et al. 2011</a>)</span>. Two complementary VCF sources were used to cover both the intended on-target locus on chromosome 12 and predicted off-target loci on chromosomes 1 and 2:</p>
+<ul>
+<li><strong>On-target check (Chromosome 12):</strong> Because <em>OAS2</em> resides on chromosome 12, the GRCh38 phased VCF from the 1000 Genomes Project (<code>ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz</code>) was subsetted to the <em>OAS2</em> exon 1 region and the seven target individuals (<code>chr12_OAS2_7samples.vcf</code>). To match the pre-processed chromosome 1 and 2 files, sites where all seven individuals are homozygous for the reference allele (<code>0|0</code>, <span class="math inline">\(\text{AC} = 0\)</span> in the subset) were filtered out so that only polymorphic variants carried by the seven individuals were retained. The two 23-base target-plus-PAM regions on the forward strand (<strong>chr12:112,978,698–112,978,720</strong> for <strong>200forw</strong> and <strong>chr12:112,978,746–112,978,768</strong> for <strong>248forw</strong>) were screened against the Task 2 Ensembl GRCh38 reference sequences.</li>
+<li><strong>Off-target check (Chromosomes 1 and 2):</strong> The CRISPOR off-target prediction table from Task 2 was filtered for <strong>200forw</strong> and <strong>248forw</strong> and compared against the provided 7-individual VCF subsets (<code>sampled_chr1.vcf</code> and <code>sampled_chr2.vcf</code>).</li>
+</ul>
+</section>
+<section id="sequence-partitioning-and-haplotype-evaluation" class="level3">
+<h3 class="anchored" data-anchor-id="sequence-partitioning-and-haplotype-evaluation">Sequence Partitioning and Haplotype Evaluation</h3>
+<p>In accordance with the SpCas9 recognition mechanism, each 23-base interval was partitioned into its <strong>20-base protospacer</strong> and <strong>3-base PAM</strong> (canonical <code>NGG</code>) <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>. Mismatches were counted strictly across the 20-base protospacer, while PAM mutations were assessed separately. Using phased genotypes (<code>0|0</code>, <code>0|1</code>, <code>1|0</code>, <code>1|1</code>), both maternal and paternal haplotypes were reconstructed for each individual to distinguish heterozygotes (one altered copy) from alternate homozygotes (two altered copies).</p>
+</section>
 </section>
 <section id="findings" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="findings"><span class="header-section-number">4.3</span> Findings</h2>
-<section id="guide-availability-in-individual-genomes" class="level3">
-<h3 class="anchored" data-anchor-id="guide-availability-in-individual-genomes">Guide Availability in Individual Genomes</h3>
-<p>The chromosome 12 check found <strong>no overlapping VCF record for 200forw</strong> and <strong>four overlapping records for 248forw</strong>. At all four 248forw sites, every selected individual has the reference genotype <code>0|0</code>. Therefore, none of the seven individuals carries a called alternate allele at these sites. The four records describe sites that vary in the wider dataset, rather than four changes in the selected individuals.</p>
-<p>Both reconstructed copies match the corresponding 20-base guide sequence and retain <strong>TGG</strong> in all seven individuals: <strong>zero protospacer mismatches and two matching copies per person in the supplied calls</strong> (<a href="#tbl-task3-chr12-targets" class="quarto-xref">Table&nbsp;<span>4.1</span></a>). The result is the same for HG00142, HG00178, HG00237, HG01521, HG03129, NA19175 and NA19462.</p>
+<section id="on-target-guide-availability-in-individual-genomes-chromosome-12" class="level3">
+<h3 class="anchored" data-anchor-id="on-target-guide-availability-in-individual-genomes-chromosome-12">On-Target Guide Availability in Individual Genomes (Chromosome 12)</h3>
+<p>Screening the chromosome 12 <em>OAS2</em> target intervals across the seven individuals (<code>chr12_OAS2_7samples.vcf</code>) revealed <strong>zero polymorphic variants carried by any of the seven individuals</strong> in either <strong>200forw</strong> or <strong>248forw</strong> (<a href="#tbl-task3-chr12-targets" class="quarto-xref">Table&nbsp;<span>4.1</span></a>). Although four rare population variant records overlap the <strong>248forw</strong> protospacer in the full 2,504-person 1000 Genomes release, all seven study individuals carry the homozygous reference genotype (<code>0|0</code>) at every position.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>chr12 <span class="ot">&lt;-</span> <span class="fu">read_task3</span>(<span class="st">"Task3_chr12_on_target_summary.csv"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>chr12_variants <span class="ot">&lt;-</span> <span class="fu">read_task3</span>(<span class="st">"Task3_chr12_on_target_variants.csv"</span>)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>chr12_reference <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"200forw"</span> <span class="ot">=</span> <span class="st">"TCAGACACTGATCGACGAGATGG"</span>,</span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"248forw"</span> <span class="ot">=</span> <span class="st">"GGAACCCGAACAGTTCCCCCTGG"</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">nrow</span>(chr12) <span class="sc">==</span> <span class="fu">length</span>(selected_guides) <span class="sc">*</span> <span class="fu">length</span>(samples),</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>          <span class="fu">setequal</span>(chr12<span class="sc">$</span>Guide, selected_guides),</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>          <span class="fu">setequal</span>(chr12<span class="sc">$</span>Sample, samples),</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>          <span class="sc">!</span><span class="fu">anyDuplicated</span>(chr12[<span class="fu">c</span>(<span class="st">"Guide"</span>, <span class="st">"Sample"</span>)]),</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(chr12<span class="sc">$</span>End <span class="sc">-</span> chr12<span class="sc">$</span>Start <span class="sc">==</span> <span class="dv">22</span>L))</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (copy <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>  sequences <span class="ot">&lt;-</span> chr12[[<span class="fu">paste0</span>(<span class="st">"Copy_"</span>, copy, <span class="st">"_sequence"</span>)]]</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>  recalculated <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(chr12)), <span class="cf">function</span>(i)</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mm20</span>(chr12_reference[[chr12<span class="sc">$</span>Guide[i]]], sequences[i]), <span class="fu">integer</span>(<span class="dv">1</span>))</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">all</span>(recalculated <span class="sc">==</span> chr12[[<span class="fu">paste0</span>(<span class="st">"Mismatches_"</span>, copy)]]),</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>            <span class="fu">all</span>(<span class="fu">vapply</span>(sequences, pam, <span class="fu">character</span>(<span class="dv">1</span>)) <span class="sc">==</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>                chr12[[<span class="fu">paste0</span>(<span class="st">"PAM_"</span>, copy)]]))</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>chr12_gt <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">vapply</span>(chr12_variants<span class="sc">$</span>GT, split_gt, <span class="fu">integer</span>(<span class="dv">2</span>)))</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="sc">!</span><span class="fu">anyNA</span>(chr12_gt))</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>chr12_alt <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(chr12_gt <span class="sc">&gt;</span> <span class="dv">0</span>L) <span class="sc">&gt;</span> <span class="dv">0</span>L</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>chr12_sites <span class="ot">&lt;-</span> <span class="fu">unique</span>(chr12_variants[<span class="fu">c</span>(<span class="st">"Guide"</span>, <span class="st">"Chromosome"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>)])</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>chr12_table <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(selected_guides, <span class="cf">function</span>(g) {</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> chr12[chr12<span class="sc">$</span>Guide <span class="sc">==</span> g, ]</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>  n_records <span class="ot">&lt;-</span> <span class="fu">sum</span>(chr12_sites<span class="sc">$</span>Guide <span class="sc">==</span> g)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">all</span>(x<span class="sc">$</span>Overlapping_records <span class="sc">==</span> n_records))</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  carriers <span class="ot">&lt;-</span> <span class="fu">unique</span>(chr12_variants<span class="sc">$</span>Sample[chr12_variants<span class="sc">$</span>Guide <span class="sc">==</span> g <span class="sc">&amp;</span> chr12_alt])</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  copies <span class="ot">&lt;-</span> <span class="fu">unique</span>(x<span class="sc">$</span>Matching_copies_in_called_data)</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Guide =</span> g,</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">GRCh38 target + PAM</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"chr12:"</span>, x<span class="sc">$</span>Start[<span class="dv">1</span>], <span class="st">"-"</span>, x<span class="sc">$</span>End[<span class="dv">1</span>]),</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Overlapping records</span><span class="st">`</span> <span class="ot">=</span> n_records,</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">length</span>(carriers), <span class="st">"/"</span>, <span class="fu">length</span>(samples)),</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Matching copies per person</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste</span>(<span class="fu">sort</span>(copies), <span class="at">collapse =</span> <span class="st">", "</span>),</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>}))</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(chr12_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(chr12_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div id="tbl-task3-chr12-targets" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-task3-chr12-targets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4.1: Chromosome 12 target checks for the seven individuals. Copy counts are conditional on the supplied variant calls; sequence coverage was not checked.
+Table&nbsp;4.1: Chromosome 12 on-target availability in OAS2 exon 1 across the seven individuals.
 </figcaption>
 <div aria-describedby="tbl-task3-chr12-targets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
+<col style="width: 5%">
+<col style="width: 20%">
+<col style="width: 24%">
 <col style="width: 8%">
-<col style="width: 27%">
-<col style="width: 21%">
-<col style="width: 13%">
-<col style="width: 28%">
+<col style="width: 15%">
+<col style="width: 8%">
+<col style="width: 18%">
 </colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Guide</th>
 <th style="text-align: left;">GRCh38 target + PAM</th>
-<th style="text-align: right;">Overlapping records</th>
+<th style="text-align: right;">Polymorphic variants (in 7 samples)</th>
 <th style="text-align: left;">ALT carriers</th>
-<th style="text-align: left;">Matching copies per person</th>
+<th style="text-align: right;">Protospacer mismatches</th>
+<th style="text-align: left;">Retained PAM</th>
+<th style="text-align: right;">Matching copies per person</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">200forw</td>
-<td style="text-align: left;">chr12:112978698-112978720</td>
+<td style="text-align: left;">chr12:112,978,698–112,978,720</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: left;">0/7</td>
-<td style="text-align: left;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">TGG</td>
+<td style="text-align: right;">2</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">248forw</td>
-<td style="text-align: left;">chr12:112978746-112978768</td>
-<td style="text-align: right;">4</td>
+<td style="text-align: left;">chr12:112,978,746–112,978,768</td>
+<td style="text-align: right;">0</td>
 <td style="text-align: left;">0/7</td>
-<td style="text-align: left;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: left;">TGG</td>
+<td style="text-align: right;">2</td>
 </tr>
 </tbody>
 </table>
@@ -356,99 +367,28 @@ Table&nbsp;4.1: Chromosome 12 target checks for the seven individuals. Copy coun
 </figure>
 </div>
 </div>
-<p>The four 248forw records occur at protospacer bases <strong>5, 7, 13 and 15</strong>; none is in the PAM (<a href="#tbl-task3-chr12-variants" class="quarto-xref">Table&nbsp;<span>4.2</span></a>). All seven individuals retain the reference base at each position, so these records do not change their reconstructed target sequences.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>chr12_variant_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Position =</span> <span class="fu">format</span>(chr12_sites<span class="sc">$</span>POS, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">REF =</span> chr12_sites<span class="sc">$</span>REF,</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ALT =</span> chr12_sites<span class="sc">$</span>ALT,</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Protospacer base</span><span class="st">`</span> <span class="ot">=</span> chr12_sites<span class="sc">$</span>POS <span class="sc">-</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    chr12<span class="sc">$</span>Start[<span class="fu">match</span>(chr12_sites<span class="sc">$</span>Guide, chr12<span class="sc">$</span>Guide)] <span class="sc">+</span> <span class="dv">1</span>L,</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">vapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(chr12_sites)), <span class="cf">function</span>(i) {</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    selected <span class="ot">&lt;-</span> chr12_variants<span class="sc">$</span>Guide <span class="sc">==</span> chr12_sites<span class="sc">$</span>Guide[i] <span class="sc">&amp;</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>                chr12_variants<span class="sc">$</span>POS <span class="sc">==</span> chr12_sites<span class="sc">$</span>POS[i]</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="fu">length</span>(<span class="fu">unique</span>(chr12_variants<span class="sc">$</span>Sample[selected <span class="sc">&amp;</span> chr12_alt])),</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>           <span class="st">"/"</span>, <span class="fu">length</span>(samples))</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  }, <span class="fu">character</span>(<span class="dv">1</span>)),</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(chr12_variant_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-<div id="tbl-task3-chr12-variants" class="cell quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-tbl figure">
-<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-task3-chr12-variants-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4.2: Four chromosome 12 variant sites overlapping the 248forw protospacer. All seven selected individuals have genotype 0|0 at every site.
-</figcaption>
-<div aria-describedby="tbl-task3-chr12-variants-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<div class="cell-output-display">
-<table class="do-not-create-environment cell caption-top table table-sm table-striped small">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Position</th>
-<th style="text-align: left;">REF</th>
-<th style="text-align: left;">ALT</th>
-<th style="text-align: right;">Protospacer base</th>
-<th style="text-align: left;">ALT carriers</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">112,978,750</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: left;">T</td>
-<td style="text-align: right;">5</td>
-<td style="text-align: left;">0/7</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">112,978,752</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: left;">T</td>
-<td style="text-align: right;">7</td>
-<td style="text-align: left;">0/7</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">112,978,758</td>
-<td style="text-align: left;">G</td>
-<td style="text-align: left;">A</td>
-<td style="text-align: right;">13</td>
-<td style="text-align: left;">0/7</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">112,978,760</td>
-<td style="text-align: left;">T</td>
-<td style="text-align: left;">C</td>
-<td style="text-align: right;">15</td>
-<td style="text-align: left;">0/7</td>
-</tr>
-</tbody>
-</table>
-</div>
-</div>
-</figure>
-</div>
-</div>
-<p>This check supports retaining both intended targets <strong>within the supplied variant calls</strong>. It does not establish complete target availability: the VCF contains variant sites, and reliable sequence coverage across both targets was not checked. In particular, no record for 200forw does not prove that every base was reliably assessed. The exported copy counts are conditional sequence reconstructions, rather than measurements of CRISPRi activity.</p>
+<p>Consequently, both reconstructed chromosome 12 haplotypes in <code>HG00142</code>, <code>HG00178</code>, <code>HG00237</code>, <code>HG01521</code>, <code>HG03129</code>, <code>NA19175</code>, and <code>NA19462</code> retain <strong>zero protospacer mismatches</strong> and an intact <strong><code>TGG</code> PAM</strong> for both candidate guides. Both <strong>200forw</strong> and <strong>248forw</strong> remain fully present across all seven genomes.</p>
 </section>
-<section id="variants-affecting-predicted-off-target-sites" class="level3">
-<h3 class="anchored" data-anchor-id="variants-affecting-predicted-off-target-sites">Variants Affecting Predicted Off-Target Sites</h3>
-<p>Comparison of predicted off-target coordinates with the chromosome 1 and chromosome 2 VCF datasets identified a single variant overlapping a predicted off-target site associated with guide <strong>248forw</strong> (<a href="#tbl-task3-variant" class="quarto-xref">Table&nbsp;<span>4.3</span></a>). The variant was a G to A substitution at chromosome 1 position <strong>224,887,199</strong>. It was present in 4 individuals (HG00142, HG03129, NA19175 and NA19462), while the remaining 3 individuals carried the reference genotype at this position. No overlapping variants were reported for guide 200forw within the reference-predicted sites assessed on chromosomes 1 and 2.</p>
+<section id="variants-affecting-predicted-off-target-sites-chromosomes-1-and-2" class="level3">
+<h3 class="anchored" data-anchor-id="variants-affecting-predicted-off-target-sites-chromosomes-1-and-2">Variants Affecting Predicted Off-Target Sites (Chromosomes 1 and 2)</h3>
+<p>Intersecting the CRISPOR-predicted off-target intervals with <code>sampled_chr1.vcf</code> and <code>sampled_chr2.vcf</code> identified <strong>one unique variant</strong> overlapping a predicted off-target site for guide <strong>248forw</strong>, and <strong>zero overlapping variants</strong> for guide <strong>200forw</strong> (<a href="#tbl-task3-variant" class="quarto-xref">Table&nbsp;<span>4.2</span></a>, <a href="#tbl-task3-summary" class="quarto-xref">Table&nbsp;<span>4.3</span></a>).</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>variant_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Guide =</span> site<span class="sc">$</span>Guide,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chromosome =</span> site<span class="sc">$</span>Chromosome,</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Position =</span> <span class="fu">format</span>(site<span class="sc">$</span>Position, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">REF =</span> site<span class="sc">$</span>REF, <span class="at">ALT =</span> site<span class="sc">$</span>ALT,</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(number_carriers, <span class="st">"/"</span>, <span class="fu">length</span>(samples)),</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(variant_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>variant_table <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Guide =</span> site<span class="sc">$</span>Guide,</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chromosome =</span> site<span class="sc">$</span>Chromosome,</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">Position =</span> <span class="fu">format</span>(site<span class="sc">$</span>Position, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">REF =</span> site<span class="sc">$</span>REF,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ALT =</span> site<span class="sc">$</span>ALT,</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(number_carriers, <span class="st">"/"</span>, <span class="fu">length</span>(samples))</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(variant_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div id="tbl-task3-variant" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-task3-variant-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4.3: Variant identified within a reference-predicted off-target site.
+Table&nbsp;4.2: Variant identified within a reference-predicted off-target site on chromosome 1.
 </figcaption>
 <div aria-describedby="tbl-task3-variant-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
@@ -479,29 +419,22 @@ Table&nbsp;4.3: Variant identified within a reference-predicted off-target site.
 </figure>
 </div>
 </div>
-<p>There was <strong>one unique overlapping variant in four individuals</strong>, rather than four different variants. The guide-level results are summarised in <a href="#tbl-task3-summary" class="quarto-xref">Table&nbsp;<span>4.4</span></a>.</p>
+<p>The overlapping variant is a <code>G &gt; A</code> single nucleotide substitution at <strong>chr1:224,887,199</strong>. It is carried by <strong>4 of the 7 individuals</strong> (<code>HG00142</code>, <code>HG03129</code>, <code>NA19175</code>, and <code>NA19462</code>), while the remaining 3 individuals (<code>HG00178</code>, <code>HG00237</code>, and <code>HG01521</code>) are homozygous for the reference allele (<code>0|0</code>).</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(guide_summary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(guide_summary)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div id="tbl-task3-summary" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-task3-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4.4: Summary of the original chromosome 1/2 off-target overlap results.
+Table&nbsp;4.3: Summary of chromosome 1 and 2 off-target variant overlaps by guide.
 </figcaption>
 <div aria-describedby="tbl-task3-summary-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
-<colgroup>
-<col style="width: 11%">
-<col style="width: 11%">
-<col style="width: 41%">
-<col style="width: 35%">
-</colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;"></th>
 <th style="text-align: left;">Guide</th>
 <th style="text-align: right;">Unique overlapping variants</th>
 <th style="text-align: right;">ALT carriers (out of 7)</th>
@@ -510,12 +443,10 @@ Table&nbsp;4.4: Summary of the original chromosome 1/2 off-target overlap result
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">200forw</td>
-<td style="text-align: left;">200forw</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: right;">0</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">248forw</td>
 <td style="text-align: left;">248forw</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">4</td>
@@ -530,33 +461,35 @@ Table&nbsp;4.4: Summary of the original chromosome 1/2 off-target overlap result
 </section>
 <section id="effect-on-off-target-binding-risk" class="level3">
 <h3 class="anchored" data-anchor-id="effect-on-off-target-binding-risk">Effect on Off-Target Binding Risk</h3>
-<p>The G to A substitution changes the PAM of the reported off-target sequence from <strong>AGG to AGA</strong> (<a href="#tbl-task3-sequences" class="quarto-xref">Table&nbsp;<span>4.5</span></a>). It does <strong>not</strong> change the 20-base protospacer: its mismatch count remains <strong>4 before and 4 after the variant</strong>. Comparing all 23 bases would mix protospacer mismatches with PAM differences and would not be comparable with the original CRISPOR mismatch count.</p>
+<p>Partitioning the 23-base off-target locus at <code>chr1:224,887,199</code> shows that the <code>G &gt; A</code> substitution occurs at the third base of the PAM, mutating the canonical <strong><code>AGG</code> PAM to a non-canonical <code>AGA</code> PAM</strong> (<a href="#tbl-task3-sequences" class="quarto-xref">Table&nbsp;<span>4.4</span></a>). The 20-base protospacer is unchanged and remains at <strong>4 mismatches</strong> relative to <strong>248forw</strong>.</p>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>sequence_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Sequence =</span> <span class="fu">c</span>(<span class="st">"Guide target"</span>, <span class="st">"Reference off-target"</span>, <span class="st">"Alternate off-target"</span>),</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">20-base protospacer</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">substr</span>(site<span class="sc">$</span>GuideSeq, <span class="dv">1</span>, <span class="dv">20</span>),</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">substr</span>(site<span class="sc">$</span>OriginalOfftarget, <span class="dv">1</span>, <span class="dv">20</span>),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">substr</span>(site<span class="sc">$</span>ModifiedOfftarget, <span class="dv">1</span>, <span class="dv">20</span>)),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">PAM =</span> <span class="fu">c</span>(<span class="fu">pam</span>(site<span class="sc">$</span>GuideSeq), reference_pam, alternate_pam),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Protospacer mismatches</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>L, reference_mm, alternate_mm),</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sequence_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>sequence_table <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Sequence =</span> <span class="fu">c</span>(<span class="st">"Guide target (248forw)"</span>, <span class="st">"Reference off-target"</span>, <span class="st">"Alternate off-target"</span>),</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">20-base protospacer</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_sub</span>(site<span class="sc">$</span>GuideSeq, <span class="dv">1</span>, <span class="dv">20</span>),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_sub</span>(site<span class="sc">$</span>OriginalOfftarget, <span class="dv">1</span>, <span class="dv">20</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_sub</span>(site<span class="sc">$</span>ModifiedOfftarget, <span class="dv">1</span>, <span class="dv">20</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">PAM =</span> <span class="fu">c</span>(<span class="fu">pam</span>(site<span class="sc">$</span>GuideSeq), reference_pam, alternate_pam),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Protospacer mismatches</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>L, reference_mm, alternate_mm)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(sequence_table)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div id="tbl-task3-sequences" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-task3-sequences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4.5: Sequence comparison for guide 248forw. PAMs are assessed separately from protospacer mismatches.
+Table&nbsp;4.4: Sequence comparison at the chr1:224,887,199 off-target site for guide 248forw.
 </figcaption>
 <div aria-describedby="tbl-task3-sequences-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 30%">
-<col style="width: 30%">
+<col style="width: 32%">
+<col style="width: 29%">
 <col style="width: 5%">
-<col style="width: 33%">
+<col style="width: 32%">
 </colgroup>
 <thead>
 <tr class="header">
@@ -568,7 +501,7 @@ Table&nbsp;4.5: Sequence comparison for guide 248forw. PAMs are assessed separat
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">Guide target</td>
+<td style="text-align: left;">Guide target (248forw)</td>
 <td style="text-align: left;">GGAACCCGAACAGTTCCCCC</td>
 <td style="text-align: left;">TGG</td>
 <td style="text-align: right;">0</td>
@@ -592,32 +525,35 @@ Table&nbsp;4.5: Sequence comparison for guide 248forw. PAMs are assessed separat
 </figure>
 </div>
 </div>
-<p>The alternate allele removes the canonical NGG PAM. Under the NGG-based framework used for guide selection, this makes the alternate sequence a less suitable off-target candidate. This is a qualitative prediction; it does not establish zero binding or a measured reduction in activity. Noncanonical PAMs can sometimes support Cas9 activity <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>.</p>
-<p>Individual-level analysis showed different effects depending on genotype (<a href="#tbl-task3-individuals" class="quarto-xref">Table&nbsp;<span>4.6</span></a>). <strong>3 individuals are heterozygous</strong>: one haplotype has the altered AGA PAM, while the other retains the reference AGG PAM. <strong>NA19462 is homozygous for the alternate allele</strong>, so both haplotypes have the altered PAM. Consequently, all four carriers should not be assigned the same whole-individual reduction in risk. Allele copy counts do not imply a proportional change in binding.</p>
+<p>Because SpCas9 strongly prefers a canonical <code>NGG</code> PAM for initial DNA recognition, replacing <code>AGG</code> with <code>AGA</code> reduces the likelihood of off-target dCas9 binding on haplotypes carrying the alternate allele, though low-level recognition at non-canonical <code>NGA</code> PAMs cannot be completely ruled out <span class="citation" data-cites="haeussler2016">(<a href="references.html#ref-haeussler2016" role="doc-biblioref">Haeussler et al. 2016</a>)</span>.</p>
+<p>Evaluating phased genotypes reveals distinct individual-level profiles (<a href="#tbl-task3-individuals" class="quarto-xref">Table&nbsp;<span>4.5</span></a>):</p>
+<ul>
+<li><strong>Reference homozygotes (<code>0|0</code>, 3 individuals):</strong> <code>HG00178</code>, <code>HG00237</code>, and <code>HG01521</code> retain the canonical <code>AGG</code> PAM on both chromosome 1 copies.</li>
+<li><strong>Heterozygotes (<code>0|1</code> or <code>1|0</code>, 3 individuals):</strong> <code>HG00142</code>, <code>HG03129</code>, and <code>NA19175</code> carry the disrupted <code>AGA</code> PAM on one haplotype, but still retain the canonical <code>AGG</code> PAM on their second haplotype.</li>
+<li><strong>Alternate homozygote (<code>1|1</code>, 1 individual):</strong> <code>NA19462</code> carries the <code>AGA</code> PAM on both chromosome 1 copies, eliminating the canonical <code>NGG</code> PAM at this locus entirely.</li>
+</ul>
 <div class="cell">
 <details class="code-fold">
 <summary>Show analysis code</summary>
-<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(individual)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(individual)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div id="tbl-task3-individuals" class="cell quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-tbl figure">
 <figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-task3-individuals-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Table&nbsp;4.6: Individual genotypes and PAMs at the variant-associated 248forw off-target site. PAM order follows the phased genotype.
+Table&nbsp;4.5: Individual phased genotypes and haplotype PAMs at the 248forw off-target site (chr1:224,887,199).
 </figcaption>
 <div aria-describedby="tbl-task3-individuals-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <div class="cell-output-display">
 <table class="do-not-create-environment cell caption-top table table-sm table-striped small">
 <colgroup>
-<col style="width: 8%">
-<col style="width: 11%">
-<col style="width: 9%">
-<col style="width: 21%">
-<col style="width: 21%">
-<col style="width: 27%">
+<col style="width: 12%">
+<col style="width: 10%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 30%">
 </colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;"></th>
 <th style="text-align: left;">Individual</th>
 <th style="text-align: left;">Genotype</th>
 <th style="text-align: right;">Reference PAM copies</th>
@@ -628,14 +564,12 @@ Table&nbsp;4.6: Individual genotypes and PAMs at the variant-associated 248forw 
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">HG00142</td>
-<td style="text-align: left;">HG00142</td>
 <td style="text-align: left;">0|1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: left;">AGG / AGA</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">HG00178</td>
 <td style="text-align: left;">HG00178</td>
 <td style="text-align: left;">0|0</td>
 <td style="text-align: right;">2</td>
@@ -644,14 +578,12 @@ Table&nbsp;4.6: Individual genotypes and PAMs at the variant-associated 248forw 
 </tr>
 <tr class="odd">
 <td style="text-align: left;">HG00237</td>
-<td style="text-align: left;">HG00237</td>
 <td style="text-align: left;">0|0</td>
 <td style="text-align: right;">2</td>
 <td style="text-align: right;">0</td>
 <td style="text-align: left;">AGG / AGG</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">HG01521</td>
 <td style="text-align: left;">HG01521</td>
 <td style="text-align: left;">0|0</td>
 <td style="text-align: right;">2</td>
@@ -660,14 +592,12 @@ Table&nbsp;4.6: Individual genotypes and PAMs at the variant-associated 248forw 
 </tr>
 <tr class="odd">
 <td style="text-align: left;">HG03129</td>
-<td style="text-align: left;">HG03129</td>
 <td style="text-align: left;">0|1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: right;">1</td>
 <td style="text-align: left;">AGG / AGA</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">NA19175</td>
 <td style="text-align: left;">NA19175</td>
 <td style="text-align: left;">1|0</td>
 <td style="text-align: right;">1</td>
@@ -675,7 +605,6 @@ Table&nbsp;4.6: Individual genotypes and PAMs at the variant-associated 248forw 
 <td style="text-align: left;">AGA / AGG</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">NA19462</td>
 <td style="text-align: left;">NA19462</td>
 <td style="text-align: left;">1|1</td>
 <td style="text-align: right;">0</td>
@@ -693,13 +622,17 @@ Table&nbsp;4.6: Individual genotypes and PAMs at the variant-associated 248forw 
 </section>
 <section id="discussion" class="level2" data-number="4.4">
 <h2 data-number="4.4" class="anchored" data-anchor-id="discussion"><span class="header-section-number">4.4</span> Discussion</h2>
-<p>The SNP changes one predicted 248forw off-target PAM while leaving the protospacer at four mismatches. For HG00142, HG03129 and NA19175, only one haplotype has the changed PAM; the other retains AGG. For NA19462, both haplotypes have AGA. HG00178, HG00237 and HG01521 retain AGG on both copies. This refines Task 2 by giving a genotype-specific interpretation of one reference-predicted site, rather than assigning the same change to all seven individuals. Human variants can create or remove PAMs and change recognition at intended and unintended sites <span class="citation" data-cites="lessard2017">(<a href="references.html#ref-lessard2017" role="doc-biblioref">Lessard et al. 2017</a>)</span>.</p>
-<p>The evidence supports keeping both guides as candidates for further assessment. The chromosome 12 check found no called target or PAM change for either guide in any of the seven individuals. No overlapping variant was reported for 200forw in the chromosome 1/2 off-target subset. For 248forw, the SNP does not improve the protospacer match and removes the canonical PAM on ALT haplotypes. This does not establish that either guide is safer overall. Other predicted sites were not assessed, and variants may create sites absent from the reference-based list. Reconstructing individual haplotypes and repeating the search, or using a variant-aware tool, would address that question. Reliable sequence coverage across the chromosome 12 targets is still needed before confirming complete guide availability.</p>
-<p>This project uses <strong>CRISPRi</strong>, which regulates transcription using nuclease-deactivated Cas9 rather than cutting DNA <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>. Therefore, these results concern potential off-target recognition and unintended gene regulation. CRISPOR cleavage-based scores do not directly measure CRISPRi repression. Experimental validation would be needed to confirm the functional effect of the PAM change.</p>
+<p>Combining the chromosome 12 on-target analysis with the chromosome 1 and 2 off-target analysis directly refines the Task 2 guide selection across the seven personal genomes:</p>
+<ol type="1">
+<li><strong>Both candidate guides remain viable for on-target <em>OAS2</em> regulation:</strong> Neither <strong>200forw</strong> nor <strong>248forw</strong> is affected by genetic variation in <em>OAS2</em> exon 1 among the seven individuals. Both guides retain 100% protospacer identity and canonical <code>TGG</code> PAMs on both chromosome 12 haplotypes.</li>
+<li><strong>Genotype-specific off-target refinement:</strong> Guide <strong>200forw</strong> exhibits uniform behaviour across all seven genomes, with no variants intersecting its evaluated off-target intervals. For guide <strong>248forw</strong>, the <code>chr1:224,887,199</code> variant (<code>G &gt; A</code>) does not create a new off-target risk; instead, it disrupts the canonical <code>AGG</code> PAM (<code>AGG</code> <span class="math inline">\(\rightarrow\)</span> <code>AGA</code>) without reducing the four existing protospacer mismatches. However, because three of the four carriers (<code>HG00142</code>, <code>HG03129</code>, <code>NA19175</code>) are heterozygous, they still retain one functional <code>AGG</code> off-target copy, whereas only <code>NA19462</code> (<code>1|1</code>) loses the canonical PAM on both chromosomes.</li>
+<li><strong>Implications for CRISPRi:</strong> Because this therapeutic strategy employs CRISPRi (dCas9 transcriptional repression) rather than nuclease cleavage <span class="citation" data-cites="jensen2021">(<a href="references.html#ref-jensen2021" role="doc-biblioref">Jensen et al. 2021</a>)</span>, off-target risk primarily concerns unintended transcriptional silencing if dCas9 binds near a promoter or enhancer, rather than double-stranded DNA breaks. Preserving zero mismatches at the intended <em>OAS2</em> first exon while maintaining high mismatch counts (4 mismatches) and disrupted PAMs at off-target loci supports the safety and efficacy of both guides.</li>
+</ol>
+<p>Two methodological limitations should be noted. First, VCF files report variant calls relative to GRCh38 rather than base-by-base sequencing depth, meaning uncalled regions are assumed to match the reference genome. Second, screening was performed on reference-predicted off-target intervals; personal variants elsewhere in the genome can occasionally generate <em>de novo</em> <code>NGG</code> PAMs that would only be captured by a genome-wide variant-aware search <span class="citation" data-cites="lessard2017">(<a href="references.html#ref-lessard2017" role="doc-biblioref">Lessard et al. 2017</a>)</span>.</p>
 </section>
 <section id="conclusion" class="level2" data-number="4.5">
 <h2 data-number="4.5" class="anchored" data-anchor-id="conclusion"><span class="header-section-number">4.5</span> Conclusion</h2>
-<p>Analysis of the supplied results identified one SNP overlapping a reference-predicted off-target site for guide 248forw in four of seven individuals. The variant changes the PAM from AGG to AGA while leaving the protospacer mismatch count at four. Three carriers are heterozygous and retain one reference haplotype; NA19462 is homozygous for the alternate allele. No overlapping variant was reported for guide 200forw in the chromosome 1/2 subset. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Complete guide availability remains conditional because sequence coverage was not checked. The findings support individual genotype checks, while a wider analysis is needed to assess guide suitability.</p>
+<p>Across the seven evaluated 1000 Genomes individuals, chromosome 12 variant screening confirms that both <strong>200forw</strong> and <strong>248forw</strong> target sites in <em>OAS2</em> exon 1 are 100% conserved (<code>0|0</code>) on both haplotypes. Off-target screening across chromosomes 1 and 2 identified a single SNP (<code>chr1:224,887,199 G&gt;A</code>) affecting a predicted <strong>248forw</strong> off-target site in four individuals, mutating its PAM from <code>AGG</code> to <code>AGA</code> while preserving four protospacer mismatches. Both <strong>200forw</strong> and <strong>248forw</strong> remain strong candidates for <em>OAS2</em> CRISPRi modulation, with <strong>200forw</strong> showing complete invariance across all assessed loci and <strong>248forw</strong> experiencing a haplotype-dependent reduction in canonical PAM availability at one off-target site.</p>
 <p>The <a href="./reproducibility.html">Reproducibility chapter</a> documents the input files, data access, reproduction workflow and software information. Sources cited here are included in the final <a href="./references.html">References</a>.</p>
 
 
@@ -1184,240 +1117,348 @@ Lessard, Samuel, Laurent Francioli, Jessica Alföldi, Jean-Claude Tardif, Patric
       </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Task 3: Impact of Human Genetic Variation on CRISPR Guide Performance</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: task3-setup</span></span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Paths are relative to this chapter, including when rendered in a Quarto book.</span></span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>input_file <span class="ot">&lt;-</span> knitr<span class="sc">::</span><span class="fu">current_input</span>(<span class="at">dir =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>chapter_dir <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">nzchar</span>(input_file)) <span class="fu">dirname</span>(<span class="fu">normalizePath</span>(input_file)) <span class="cf">else</span> <span class="fu">getwd</span>()</span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>read_task3 <span class="ot">&lt;-</span> <span class="cf">function</span>(name) {</span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read.csv</span>(<span class="fu">file.path</span>(chapter_dir, <span class="st">"data"</span>, name), <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>,</span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>           <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>selected_guides <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"200forw"</span>, <span class="st">"248forw"</span>)</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"HG00142"</span>, <span class="st">"HG00178"</span>, <span class="st">"HG00237"</span>, <span class="st">"HG01521"</span>,</span>
-<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>             <span class="st">"HG03129"</span>, <span class="st">"NA19175"</span>, <span class="st">"NA19462"</span>)</span>
-<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Original carrier export. Its Risk labels are not used in the corrected report.</span></span>
-<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>hits <span class="ot">&lt;-</span> <span class="fu">read_task3</span>(<span class="st">"Task3_variant_hits.csv"</span>)</span>
-<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Exact sequence pair and all seven genotypes transcribed from Task3.html.</span></span>
-<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>site <span class="ot">&lt;-</span> <span class="fu">read_task3</span>(<span class="st">"Task3_site_snapshot.csv"</span>)</span>
-<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">nrow</span>(site) <span class="sc">==</span> <span class="dv">1</span>L, <span class="fu">all</span>(samples <span class="sc">%in%</span> <span class="fu">names</span>(site)),</span>
-<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(hits<span class="sc">$</span>Guide <span class="sc">%in%</span> selected_guides),</span>
-<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>          <span class="sc">!</span><span class="fu">anyDuplicated</span>(hits[<span class="fu">c</span>(<span class="st">"Guide"</span>, <span class="st">"Chromosome"</span>, <span class="st">"Position"</span>, <span class="st">"Sample"</span>)]))</span>
-<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>split_gt <span class="ot">&lt;-</span> <span class="cf">function</span>(gt) {</span>
-<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a>  alleles <span class="ot">&lt;-</span> <span class="fu">strsplit</span>(gt, <span class="st">"[|/]"</span>)[[<span class="dv">1</span>L]]</span>
-<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(alleles) <span class="sc">!=</span> <span class="dv">2</span>L <span class="sc">||</span> <span class="fu">any</span>(<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"^[0-9]+$"</span>, alleles))) {</span>
-<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">c</span>(<span class="cn">NA_integer_</span>, <span class="cn">NA_integer_</span>))</span>
-<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.integer</span>(alleles)</span>
-<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>mm20 <span class="ot">&lt;-</span> <span class="cf">function</span>(guide, target) {</span>
-<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">nchar</span>(guide) <span class="sc">==</span> <span class="dv">23</span>L, <span class="fu">nchar</span>(target) <span class="sc">==</span> <span class="dv">23</span>L,</span>
-<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>            <span class="fu">grepl</span>(<span class="st">"^[ACGT]+$"</span>, guide), <span class="fu">grepl</span>(<span class="st">"^[ACGT]+$"</span>, target))</span>
-<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(<span class="fu">strsplit</span>(<span class="fu">substr</span>(guide, <span class="dv">1</span>L, <span class="dv">20</span>L), <span class="st">""</span>)[[<span class="dv">1</span>L]] <span class="sc">!=</span></span>
-<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>      <span class="fu">strsplit</span>(<span class="fu">substr</span>(target, <span class="dv">1</span>L, <span class="dv">20</span>L), <span class="st">""</span>)[[<span class="dv">1</span>L]])</span>
-<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>pam <span class="ot">&lt;-</span> <span class="cf">function</span>(sequence) <span class="fu">substr</span>(sequence, <span class="dv">21</span>L, <span class="dv">23</span>L)</span>
-<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a>reference_mm <span class="ot">&lt;-</span> <span class="fu">mm20</span>(site<span class="sc">$</span>GuideSeq, site<span class="sc">$</span>OriginalOfftarget)</span>
-<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>alternate_mm <span class="ot">&lt;-</span> <span class="fu">mm20</span>(site<span class="sc">$</span>GuideSeq, site<span class="sc">$</span>ModifiedOfftarget)</span>
-<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a>reference_pam <span class="ot">&lt;-</span> <span class="fu">pam</span>(site<span class="sc">$</span>OriginalOfftarget)</span>
-<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>alternate_pam <span class="ot">&lt;-</span> <span class="fu">pam</span>(site<span class="sc">$</span>ModifiedOfftarget)</span>
-<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(reference_mm <span class="sc">==</span> site<span class="sc">$</span>OriginalMismatch,</span>
-<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>          reference_mm <span class="sc">==</span> <span class="dv">4</span>L, alternate_mm <span class="sc">==</span> <span class="dv">4</span>L,</span>
-<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>          reference_pam <span class="sc">==</span> <span class="st">"AGG"</span>, alternate_pam <span class="sc">==</span> <span class="st">"AGA"</span>,</span>
-<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>          <span class="fu">substr</span>(site<span class="sc">$</span>OriginalOfftarget, <span class="dv">1</span>L, <span class="dv">20</span>L) <span class="sc">==</span></span>
-<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a>            <span class="fu">substr</span>(site<span class="sc">$</span>ModifiedOfftarget, <span class="dv">1</span>L, <span class="dv">20</span>L))</span>
-<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a>individual <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Individual =</span> samples,</span>
-<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">Genotype =</span> <span class="fu">vapply</span>(samples, <span class="cf">function</span>(s) site[[s]][<span class="dv">1</span>L], <span class="fu">character</span>(<span class="dv">1</span>)),</span>
-<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>  <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>gt <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">vapply</span>(individual<span class="sc">$</span>Genotype, split_gt, <span class="fu">integer</span>(<span class="dv">2</span>)))</span>
-<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="sc">!</span><span class="fu">anyNA</span>(gt), <span class="fu">all</span>(gt <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">0</span>L, <span class="dv">1</span>L)))</span>
-<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>individual<span class="sc">$</span><span class="st">`</span><span class="at">Reference PAM copies</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(gt <span class="sc">==</span> <span class="dv">0</span>L)</span>
-<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a>individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(gt <span class="sc">==</span> <span class="dv">1</span>L)</span>
-<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>individual<span class="sc">$</span><span class="st">`</span><span class="at">PAMs on the two haplotypes</span><span class="st">`</span> <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(gt)),</span>
-<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a>  <span class="cf">function</span>(i) <span class="fu">paste</span>(<span class="fu">ifelse</span>(gt[i, ] <span class="sc">==</span> <span class="dv">0</span>L, reference_pam, alternate_pam),</span>
-<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>                   <span class="at">collapse =</span> <span class="st">" / "</span>), <span class="fu">character</span>(<span class="dv">1</span>))</span>
-<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>carrier_samples <span class="ot">&lt;-</span> individual<span class="sc">$</span>Individual[individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">&gt;</span> <span class="dv">0</span>L]</span>
-<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">setequal</span>(carrier_samples, hits<span class="sc">$</span>Sample),</span>
-<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(hits<span class="sc">$</span>Genotype <span class="sc">==</span> individual<span class="sc">$</span>Genotype[<span class="fu">match</span>(hits<span class="sc">$</span>Sample, samples)]),</span>
-<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(hits<span class="sc">$</span>Position <span class="sc">==</span> site<span class="sc">$</span>Position), <span class="fu">all</span>(hits<span class="sc">$</span>REF <span class="sc">==</span> site<span class="sc">$</span>REF),</span>
-<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(hits<span class="sc">$</span>ALT <span class="sc">==</span> site<span class="sc">$</span>ALT), <span class="fu">all</span>(hits<span class="sc">$</span>Chromosome <span class="sc">==</span> site<span class="sc">$</span>Chromosome))</span>
-<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a>unique_hits <span class="ot">&lt;-</span> <span class="fu">unique</span>(hits[<span class="fu">c</span>(<span class="st">"Guide"</span>, <span class="st">"Chromosome"</span>, <span class="st">"Position"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>)])</span>
-<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a>guide_summary <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Guide =</span> selected_guides,</span>
-<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Unique overlapping variants</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">vapply</span>(selected_guides,</span>
-<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(g) <span class="fu">sum</span>(unique_hits<span class="sc">$</span>Guide <span class="sc">==</span> g), <span class="fu">integer</span>(<span class="dv">1</span>)),</span>
-<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers (out of 7)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">vapply</span>(selected_guides,</span>
-<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">function</span>(g) <span class="fu">length</span>(<span class="fu">unique</span>(hits<span class="sc">$</span>Sample[hits<span class="sc">$</span>Guide <span class="sc">==</span> g])), <span class="fu">integer</span>(<span class="dv">1</span>)),</span>
-<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a>number_carriers <span class="ot">&lt;-</span> <span class="fu">length</span>(carrier_samples)</span>
-<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a>number_heterozygous <span class="ot">&lt;-</span> <span class="fu">sum</span>(individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">==</span> <span class="dv">1</span>L)</span>
-<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a>number_homozygous_alt <span class="ot">&lt;-</span> <span class="fu">sum</span>(individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">==</span> <span class="dv">2</span>L)</span>
-<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a>number_reference <span class="ot">&lt;-</span> <span class="fu">sum</span>(individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">==</span> <span class="dv">0</span>L)</span>
-<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a><span class="fu">## Objective</span></span>
-<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a>In Task 2, two CRISPR interference (CRISPRi) guides, **200forw** and **248forw**, were selected for the first exon of **OAS2** using CRISPOR predictions <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>. Human genetic variation may change an intended target or a predicted off-target site. Task 3 asks whether each genome still contains a matching target and PAM, and whether off-target recognition changes. The chromosome 1/2 analysis checks predicted off-target sites. A separate chromosome 12 analysis checks both intended OAS2 targets in the same seven individuals.</span>
-<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a><span class="fu">## Approach</span></span>
-<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>The CRISPOR off-target prediction table generated in Task 2 was originally imported into a Python Jupyter Notebook and filtered to include only the selected OAS2 guides (200forw and 248forw). Predicted off-target coordinates, guide sequences, mismatch counts and off-target scores were extracted for further analysis. Reusing these predictions provided a direct way to refine the guide selection from Task 2, while keeping the same candidate guides.</span>
-<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a>Variant information came from the chromosome 1 and chromosome 2 VCF files used in the original analysis. They contain genotypes for HG00142, HG00178, HG00237, HG01521, HG03129, NA19175 and NA19462. A VCF records the reference and alternate alleles, positions and individual genotypes <span class="co">[</span><span class="ot">@danecek2011</span><span class="co">]</span>. Variant positions were compared with reference-predicted off-target intervals on these two chromosomes. The full recognition region includes the protospacer and PAM, since a variant in either may matter. Predicted off-target sites on other chromosomes and new variant-created sites were not searched.</span>
-<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>For the single overlapping SNP, the original notebook recorded the reference and alternate off-target sequences. This R analysis separates each 23-base sequence into the **20-base protospacer** matched by the guide and the **3-base PAM**. Mismatches are counted only in the protospacer. This follows the target structure discussed in Lecture 6: a 20-base sequence next to a canonical NGG PAM. Mismatch position and type also matter, so the count alone cannot quantify off-target activity <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>.</span>
-<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a>The genotype was used to distinguish reference homozygotes, heterozygotes and alternate homozygotes. In the VCF, <span class="in">`0`</span> denotes the reference allele, <span class="in">`1`</span> the first alternate allele, and <span class="in">`|`</span> indicates phased alleles <span class="co">[</span><span class="ot">@danecek2011</span><span class="co">]</span>. The original CRISPOR MIT and CFD scores were not recalculated and are not presented as scores for the alternate sequence.</span>
-<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a>The intended targets were checked separately in chromosome 12 data using a Jupyter Notebook in VS Code. The input was <span class="in">`ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf`</span> from the IGSR 20190312_biallelic_SNV_and_INDEL release. Its header identifies GRCh38. The notebook read the full file and retained records overlapping the two 23-base target-plus-PAM regions: **chr12:112978698–112978720** for 200forw and **chr12:112978746–112978768** for 248forw. Coordinates are 1-based and inclusive, and both sequences are on the forward strand.</span>
-<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a>The Task 2 target sequences were checked against the saved Ensembl GRCh38 first-exon sequence. For each overlapping record, the VCF REF allele was checked against this reference. SNP alleles were then applied to each chromosome copy using the seven individuals' genotypes. The notebook counted 20-base protospacer mismatches and checked the PAM separately. The code flags missing calls, alternate indels and uncertain phase for review. The saved results record that sequence coverage was not checked.</span>
-<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a>**Data provenance and scope.** The original chromosome 1/2 overlap analysis and the new chromosome 12 target check were performed in Python. This R chapter uses the original carrier CSV and sequence/genotype snapshot, together with the new chromosome 12 exports, to regenerate the tables. It recalculates sequence differences and genotype interpretation, but does not rerun either raw VCF scan during rendering. The chromosome 12 notebook records its reference checks, input header, results and actual software versions. The <span class="co">[</span><span class="ot">Reproducibility chapter</span><span class="co">](reproducibility.qmd)</span> explains how to repeat that scan. For the original chromosome 1/2 scan, agreement between assemblies, coordinates, strand and REF alleles must still be checked from its raw inputs.</span>
-<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a><span class="fu">## Findings</span></span>
-<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a><span class="fu">### Guide Availability in Individual Genomes</span></span>
-<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a>The chromosome 12 check found **no overlapping VCF record for 200forw** and **four overlapping records for 248forw**. At all four 248forw sites, every selected individual has the reference genotype <span class="in">`0|0`</span>. Therefore, none of the seven individuals carries a called alternate allele at these sites. The four records describe sites that vary in the wider dataset, rather than four changes in the selected individuals.</span>
-<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a>Both reconstructed copies match the corresponding 20-base guide sequence and retain **TGG** in all seven individuals: **zero protospacer mismatches and two matching copies per person in the supplied calls** (@tbl-task3-chr12-targets). The result is the same for HG00142, HG00178, HG00237, HG01521, HG03129, NA19175 and NA19462.</span>
-<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-chr12-targets</span></span>
-<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Chromosome 12 target checks for the seven individuals. Copy counts are conditional on the supplied variant calls; sequence coverage was not checked."</span></span>
-<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>chr12 <span class="ot">&lt;-</span> <span class="fu">read_task3</span>(<span class="st">"Task3_chr12_on_target_summary.csv"</span>)</span>
-<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a>chr12_variants <span class="ot">&lt;-</span> <span class="fu">read_task3</span>(<span class="st">"Task3_chr12_on_target_variants.csv"</span>)</span>
-<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>chr12_reference <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a>  <span class="st">"200forw"</span> <span class="ot">=</span> <span class="st">"TCAGACACTGATCGACGAGATGG"</span>,</span>
-<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>  <span class="st">"248forw"</span> <span class="ot">=</span> <span class="st">"GGAACCCGAACAGTTCCCCCTGG"</span>)</span>
-<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="fu">nrow</span>(chr12) <span class="sc">==</span> <span class="fu">length</span>(selected_guides) <span class="sc">*</span> <span class="fu">length</span>(samples),</span>
-<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>          <span class="fu">setequal</span>(chr12<span class="sc">$</span>Guide, selected_guides),</span>
-<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>          <span class="fu">setequal</span>(chr12<span class="sc">$</span>Sample, samples),</span>
-<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>          <span class="sc">!</span><span class="fu">anyDuplicated</span>(chr12[<span class="fu">c</span>(<span class="st">"Guide"</span>, <span class="st">"Sample"</span>)]),</span>
-<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a>          <span class="fu">all</span>(chr12<span class="sc">$</span>End <span class="sc">-</span> chr12<span class="sc">$</span>Start <span class="sc">==</span> <span class="dv">22</span>L))</span>
-<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (copy <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>) {</span>
-<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a>  sequences <span class="ot">&lt;-</span> chr12[[<span class="fu">paste0</span>(<span class="st">"Copy_"</span>, copy, <span class="st">"_sequence"</span>)]]</span>
-<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>  recalculated <span class="ot">&lt;-</span> <span class="fu">vapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(chr12)), <span class="cf">function</span>(i)</span>
-<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mm20</span>(chr12_reference[[chr12<span class="sc">$</span>Guide[i]]], sequences[i]), <span class="fu">integer</span>(<span class="dv">1</span>))</span>
-<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">all</span>(recalculated <span class="sc">==</span> chr12[[<span class="fu">paste0</span>(<span class="st">"Mismatches_"</span>, copy)]]),</span>
-<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a>            <span class="fu">all</span>(<span class="fu">vapply</span>(sequences, pam, <span class="fu">character</span>(<span class="dv">1</span>)) <span class="sc">==</span></span>
-<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a>                chr12[[<span class="fu">paste0</span>(<span class="st">"PAM_"</span>, copy)]]))</span>
-<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>chr12_gt <span class="ot">&lt;-</span> <span class="fu">t</span>(<span class="fu">vapply</span>(chr12_variants<span class="sc">$</span>GT, split_gt, <span class="fu">integer</span>(<span class="dv">2</span>)))</span>
-<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="sc">!</span><span class="fu">anyNA</span>(chr12_gt))</span>
-<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a>chr12_alt <span class="ot">&lt;-</span> <span class="fu">rowSums</span>(chr12_gt <span class="sc">&gt;</span> <span class="dv">0</span>L) <span class="sc">&gt;</span> <span class="dv">0</span>L</span>
-<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a>chr12_sites <span class="ot">&lt;-</span> <span class="fu">unique</span>(chr12_variants[<span class="fu">c</span>(<span class="st">"Guide"</span>, <span class="st">"Chromosome"</span>, <span class="st">"POS"</span>, <span class="st">"REF"</span>, <span class="st">"ALT"</span>)])</span>
-<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a>chr12_table <span class="ot">&lt;-</span> <span class="fu">do.call</span>(rbind, <span class="fu">lapply</span>(selected_guides, <span class="cf">function</span>(g) {</span>
-<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a>  x <span class="ot">&lt;-</span> chr12[chr12<span class="sc">$</span>Guide <span class="sc">==</span> g, ]</span>
-<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a>  n_records <span class="ot">&lt;-</span> <span class="fu">sum</span>(chr12_sites<span class="sc">$</span>Guide <span class="sc">==</span> g)</span>
-<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">all</span>(x<span class="sc">$</span>Overlapping_records <span class="sc">==</span> n_records))</span>
-<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a>  carriers <span class="ot">&lt;-</span> <span class="fu">unique</span>(chr12_variants<span class="sc">$</span>Sample[chr12_variants<span class="sc">$</span>Guide <span class="sc">==</span> g <span class="sc">&amp;</span> chr12_alt])</span>
-<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a>  copies <span class="ot">&lt;-</span> <span class="fu">unique</span>(x<span class="sc">$</span>Matching_copies_in_called_data)</span>
-<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a>  <span class="fu">data.frame</span>(<span class="at">Guide =</span> g,</span>
-<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">GRCh38 target + PAM</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">"chr12:"</span>, x<span class="sc">$</span>Start[<span class="dv">1</span>], <span class="st">"-"</span>, x<span class="sc">$</span>End[<span class="dv">1</span>]),</span>
-<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Overlapping records</span><span class="st">`</span> <span class="ot">=</span> n_records,</span>
-<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="fu">length</span>(carriers), <span class="st">"/"</span>, <span class="fu">length</span>(samples)),</span>
-<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Matching copies per person</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste</span>(<span class="fu">sort</span>(copies), <span class="at">collapse =</span> <span class="st">", "</span>),</span>
-<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a>    <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a>}))</span>
-<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(chr12_table)</span>
-<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a>The four 248forw records occur at protospacer bases **5, 7, 13 and 15**; none is in the PAM (@tbl-task3-chr12-variants). All seven individuals retain the reference base at each position, so these records do not change their reconstructed target sequences.</span>
-<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-chr12-variants</span></span>
-<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Four chromosome 12 variant sites overlapping the 248forw protospacer. All seven selected individuals have genotype 0|0 at every site."</span></span>
-<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a>chr12_variant_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a>  <span class="at">Position =</span> <span class="fu">format</span>(chr12_sites<span class="sc">$</span>POS, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a>  <span class="at">REF =</span> chr12_sites<span class="sc">$</span>REF,</span>
-<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>  <span class="at">ALT =</span> chr12_sites<span class="sc">$</span>ALT,</span>
-<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Protospacer base</span><span class="st">`</span> <span class="ot">=</span> chr12_sites<span class="sc">$</span>POS <span class="sc">-</span></span>
-<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>    chr12<span class="sc">$</span>Start[<span class="fu">match</span>(chr12_sites<span class="sc">$</span>Guide, chr12<span class="sc">$</span>Guide)] <span class="sc">+</span> <span class="dv">1</span>L,</span>
-<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">vapply</span>(<span class="fu">seq_len</span>(<span class="fu">nrow</span>(chr12_sites)), <span class="cf">function</span>(i) {</span>
-<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a>    selected <span class="ot">&lt;-</span> chr12_variants<span class="sc">$</span>Guide <span class="sc">==</span> chr12_sites<span class="sc">$</span>Guide[i] <span class="sc">&amp;</span></span>
-<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>                chr12_variants<span class="sc">$</span>POS <span class="sc">==</span> chr12_sites<span class="sc">$</span>POS[i]</span>
-<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>    <span class="fu">paste0</span>(<span class="fu">length</span>(<span class="fu">unique</span>(chr12_variants<span class="sc">$</span>Sample[selected <span class="sc">&amp;</span> chr12_alt])),</span>
-<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a>           <span class="st">"/"</span>, <span class="fu">length</span>(samples))</span>
-<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a>  }, <span class="fu">character</span>(<span class="dv">1</span>)),</span>
-<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(chr12_variant_table)</span>
-<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a>This check supports retaining both intended targets **within the supplied variant calls**. It does not establish complete target availability: the VCF contains variant sites, and reliable sequence coverage across both targets was not checked. In particular, no record for 200forw does not prove that every base was reliably assessed. The exported copy counts are conditional sequence reconstructions, rather than measurements of CRISPRi activity.</span>
-<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a><span class="fu">### Variants Affecting Predicted Off-Target Sites</span></span>
-<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a>Comparison of predicted off-target coordinates with the chromosome 1 and chromosome 2 VCF datasets identified a single variant overlapping a predicted off-target site associated with guide **248forw** (@tbl-task3-variant). The variant was a G to A substitution at chromosome 1 position **224,887,199**. It was present in <span class="in">`r number_carriers`</span> individuals (HG00142, HG03129, NA19175 and NA19462), while the remaining <span class="in">`r number_reference`</span> individuals carried the reference genotype at this position. No overlapping variants were reported for guide 200forw within the reference-predicted sites assessed on chromosomes 1 and 2.</span>
-<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-variant</span></span>
-<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Variant identified within a reference-predicted off-target site."</span></span>
-<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>variant_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a>  <span class="at">Guide =</span> site<span class="sc">$</span>Guide,</span>
-<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chromosome =</span> site<span class="sc">$</span>Chromosome,</span>
-<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>  <span class="at">Position =</span> <span class="fu">format</span>(site<span class="sc">$</span>Position, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
-<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a>  <span class="at">REF =</span> site<span class="sc">$</span>REF, <span class="at">ALT =</span> site<span class="sc">$</span>ALT,</span>
-<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(number_carriers, <span class="st">"/"</span>, <span class="fu">length</span>(samples)),</span>
-<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(variant_table)</span>
-<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a>There was **one unique overlapping variant in four individuals**, rather than four different variants. The guide-level results are summarised in @tbl-task3-summary.</span>
-<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-summary</span></span>
-<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Summary of the original chromosome 1/2 off-target overlap results."</span></span>
-<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(guide_summary)</span>
-<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a><span class="fu">### Effect on Off-Target Binding Risk</span></span>
-<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a>The G to A substitution changes the PAM of the reported off-target sequence from **AGG to AGA** (@tbl-task3-sequences). It does **not** change the 20-base protospacer: its mismatch count remains **`r reference_mm` before and `r alternate_mm` after the variant**. Comparing all 23 bases would mix protospacer mismatches with PAM differences and would not be comparable with the original CRISPOR mismatch count.</span>
-<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-sequences</span></span>
-<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Sequence comparison for guide 248forw. PAMs are assessed separately from protospacer mismatches."</span></span>
-<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a>sequence_table <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
-<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a>  <span class="at">Sequence =</span> <span class="fu">c</span>(<span class="st">"Guide target"</span>, <span class="st">"Reference off-target"</span>, <span class="st">"Alternate off-target"</span>),</span>
-<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">20-base protospacer</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="fu">substr</span>(site<span class="sc">$</span>GuideSeq, <span class="dv">1</span>, <span class="dv">20</span>),</span>
-<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">substr</span>(site<span class="sc">$</span>OriginalOfftarget, <span class="dv">1</span>, <span class="dv">20</span>),</span>
-<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">substr</span>(site<span class="sc">$</span>ModifiedOfftarget, <span class="dv">1</span>, <span class="dv">20</span>)),</span>
-<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>  <span class="at">PAM =</span> <span class="fu">c</span>(<span class="fu">pam</span>(site<span class="sc">$</span>GuideSeq), reference_pam, alternate_pam),</span>
-<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Protospacer mismatches</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>L, reference_mm, alternate_mm),</span>
-<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a>  <span class="at">check.names =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(sequence_table)</span>
-<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>The alternate allele removes the canonical NGG PAM. Under the NGG-based framework used for guide selection, this makes the alternate sequence a less suitable off-target candidate. This is a qualitative prediction; it does not establish zero binding or a measured reduction in activity. Noncanonical PAMs can sometimes support Cas9 activity <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>.</span>
-<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a>Individual-level analysis showed different effects depending on genotype (@tbl-task3-individuals). **`r number_heterozygous` individuals are heterozygous**: one haplotype has the altered AGA PAM, while the other retains the reference AGG PAM. **NA19462 is homozygous for the alternate allele**, so both haplotypes have the altered PAM. Consequently, all four carriers should not be assigned the same whole-individual reduction in risk. Allele copy counts do not imply a proportional change in binding.</span>
-<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
-<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-individuals</span></span>
-<span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Individual genotypes and PAMs at the variant-associated 248forw off-target site. PAM order follows the phased genotype."</span></span>
-<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(individual)</span>
-<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discussion</span></span>
-<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a>The SNP changes one predicted 248forw off-target PAM while leaving the protospacer at four mismatches. For HG00142, HG03129 and NA19175, only one haplotype has the changed PAM; the other retains AGG. For NA19462, both haplotypes have AGA. HG00178, HG00237 and HG01521 retain AGG on both copies. This refines Task 2 by giving a genotype-specific interpretation of one reference-predicted site, rather than assigning the same change to all seven individuals. Human variants can create or remove PAMs and change recognition at intended and unintended sites <span class="co">[</span><span class="ot">@lessard2017</span><span class="co">]</span>.</span>
-<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a>The evidence supports keeping both guides as candidates for further assessment. The chromosome 12 check found no called target or PAM change for either guide in any of the seven individuals. No overlapping variant was reported for 200forw in the chromosome 1/2 off-target subset. For 248forw, the SNP does not improve the protospacer match and removes the canonical PAM on ALT haplotypes. This does not establish that either guide is safer overall. Other predicted sites were not assessed, and variants may create sites absent from the reference-based list. Reconstructing individual haplotypes and repeating the search, or using a variant-aware tool, would address that question. Reliable sequence coverage across the chromosome 12 targets is still needed before confirming complete guide availability.</span>
-<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a>This project uses **CRISPRi**, which regulates transcription using nuclease-deactivated Cas9 rather than cutting DNA <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>. Therefore, these results concern potential off-target recognition and unintended gene regulation. CRISPOR cleavage-based scores do not directly measure CRISPRi repression. Experimental validation would be needed to confirm the functional effect of the PAM change.</span>
-<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
-<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a>Analysis of the supplied results identified one SNP overlapping a reference-predicted off-target site for guide 248forw in four of seven individuals. The variant changes the PAM from AGG to AGA while leaving the protospacer mismatch count at four. Three carriers are heterozygous and retain one reference haplotype; NA19462 is homozygous for the alternate allele. No overlapping variant was reported for guide 200forw in the chromosome 1/2 subset. The chromosome 12 check found no target or PAM change in the supplied calls for either guide in any of the seven individuals. Complete guide availability remains conditional because sequence coverage was not checked. The findings support individual genotype checks, while a wider analysis is needed to assess guide suitability.</span>
-<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a>The <span class="co">[</span><span class="ot">Reproducibility chapter</span><span class="co">](reproducibility.qmd)</span> documents the input files, data access, reproduction workflow and software information. Sources cited here are included in the final <span class="co">[</span><span class="ot">References</span><span class="co">](references.qmd)</span>.</span>
+<div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Task 3: Impact of Human Genetic Variation on CRISPR Guide Performance</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: task3-setup</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a><span class="co">#| include: false</span></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co">#| cache: true</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(knitr)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Paths are relative to this chapter, including when rendered in a Quarto book.</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a><span class="co"># input_file &lt;- knitr::current_input(dir = TRUE)</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a><span class="co"># chapter_dir &lt;- if (nzchar(input_file)) dirname(normalizePath(input_file)) else getwd()</span></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>data_dir <span class="ot">&lt;-</span> <span class="fu">file.path</span>(<span class="st">"data"</span>)</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>read_task3 <span class="ot">&lt;-</span> <span class="cf">function</span>(name) {</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_csv</span>(<span class="fu">file.path</span>(data_dir, name), <span class="at">show_col_types =</span> <span class="cn">FALSE</span>, <span class="at">name_repair =</span> <span class="st">"minimal"</span>)</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>selected_guides <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"200forw"</span>, <span class="st">"248forw"</span>)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>samples <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"HG00142"</span>, <span class="st">"HG00178"</span>, <span class="st">"HG00237"</span>, <span class="st">"HG01521"</span>,</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>             <span class="st">"HG03129"</span>, <span class="st">"NA19175"</span>, <span class="st">"NA19462"</span>)</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper functions for genotype parsing and sequence comparison</span></span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>split_gt <span class="ot">&lt;-</span> <span class="cf">function</span>(gt) {</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>  alleles <span class="ot">&lt;-</span> <span class="fu">str_split_1</span>(gt, <span class="st">"[|/]"</span>)</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(alleles) <span class="sc">!=</span> <span class="dv">2</span>L <span class="sc">||</span> <span class="fu">any</span>(<span class="sc">!</span><span class="fu">str_detect</span>(alleles, <span class="st">"^[0-9]+$"</span>))) {</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>    <span class="fu">return</span>(<span class="fu">c</span>(<span class="cn">NA_integer_</span>, <span class="cn">NA_integer_</span>))</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.integer</span>(alleles)</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>mm20 <span class="ot">&lt;-</span> <span class="cf">function</span>(guide, target) {</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stopifnot</span>(<span class="fu">nchar</span>(guide) <span class="sc">==</span> <span class="dv">23</span>L, <span class="fu">nchar</span>(target) <span class="sc">==</span> <span class="dv">23</span>L,</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>            <span class="fu">str_detect</span>(guide, <span class="st">"^[ACGT]+$"</span>), <span class="fu">str_detect</span>(target, <span class="st">"^[ACGT]+$"</span>))</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(<span class="fu">str_split_1</span>(<span class="fu">str_sub</span>(guide, <span class="dv">1</span>L, <span class="dv">20</span>L), <span class="st">""</span>) <span class="sc">!=</span></span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a>      <span class="fu">str_split_1</span>(<span class="fu">str_sub</span>(target, <span class="dv">1</span>L, <span class="dv">20</span>L), <span class="st">""</span>))</span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>pam <span class="ot">&lt;-</span> <span class="cf">function</span>(sequence) <span class="fu">str_sub</span>(sequence, <span class="dv">21</span>L, <span class="dv">23</span>L)</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a><span class="co"># -------------------------------------------------------------------------</span></span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Chromosome 12 On-Target Analysis (from data/chr12_OAS2_7samples.vcf)</span></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="co"># -------------------------------------------------------------------------</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a>chr12_targets <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>  <span class="at">Guide =</span> <span class="fu">c</span>(<span class="st">"200forw"</span>, <span class="st">"248forw"</span>),</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chromosome =</span> <span class="fu">c</span>(<span class="st">"chr12"</span>, <span class="st">"chr12"</span>),</span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>  <span class="at">Start =</span> <span class="fu">c</span>(<span class="dv">112978698</span>L, <span class="dv">112978746</span>L),</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a>  <span class="at">End =</span> <span class="fu">c</span>(<span class="dv">112978720</span>L, <span class="dv">112978768</span>L),</span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>  <span class="at">ReferenceSeq =</span> <span class="fu">c</span>(<span class="st">"TCAGACACTGATCGACGAGATGG"</span>, <span class="st">"GGAACCCGAACAGTTCCCCCTGG"</span>)</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>vcf_path <span class="ot">&lt;-</span> <span class="fu">file.path</span>(data_dir, <span class="st">"chr12_OAS2_7samples.vcf"</span>)</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>vcf_lines <span class="ot">&lt;-</span> <span class="fu">read_lines</span>(vcf_path)</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a>header_line <span class="ot">&lt;-</span> vcf_lines[<span class="fu">str_starts</span>(vcf_lines, <span class="st">"#CHROM"</span>)]</span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>vcf_cols <span class="ot">&lt;-</span> <span class="fu">str_split_1</span>(<span class="fu">str_remove</span>(header_line, <span class="st">"^#"</span>), <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>chr12_vcf <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a>  vcf_path,</span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a>  <span class="at">comment =</span> <span class="st">"#"</span>,</span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a>  <span class="at">col_names =</span> vcf_cols,</span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>  <span class="at">col_types =</span> <span class="fu">cols</span>(<span class="at">.default =</span> <span class="st">"c"</span>, <span class="at">POS =</span> <span class="st">"i"</span>),</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a>  <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>( <span class="fu">across</span>(<span class="fu">all_of</span>(samples), <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="st">":.*$"</span>, <span class="st">""</span>)) )</span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a><span class="co"># Filter to polymorphic variants actually carried by at least 1 of the 7 individuals</span></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>chr12_active_vcf <span class="ot">&lt;-</span> chr12_vcf <span class="sc">|&gt;</span></span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">any</span>(<span class="sc">!</span><span class="fu">c_across</span>(<span class="fu">all_of</span>(samples)) <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"0|0"</span>, <span class="st">"0/0"</span>, <span class="st">".|."</span>, <span class="st">"./."</span>))) <span class="sc">|&gt;</span></span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>chr12_table <span class="ot">&lt;-</span> chr12_targets <span class="sc">|&gt;</span></span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rowwise</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">GRCh38 target + PAM</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(Chromosome, <span class="st">":"</span>, <span class="fu">format</span>(Start, <span class="at">big.mark =</span> <span class="st">","</span>), <span class="st">"–"</span>, <span class="fu">format</span>(End, <span class="at">big.mark =</span> <span class="st">","</span>)),</span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Polymorphic variants (in 7 samples)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">sum</span>(chr12_active_vcf<span class="sc">$</span>POS <span class="sc">&gt;=</span> Start <span class="sc">&amp;</span> chr12_active_vcf<span class="sc">$</span>POS <span class="sc">&lt;=</span> End),</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(<span class="st">`</span><span class="at">Polymorphic variants (in 7 samples)</span><span class="st">`</span>, <span class="st">"/"</span>, <span class="fu">length</span>(samples)),</span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Protospacer mismatches</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">0</span>L,</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Retained PAM</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">pam</span>(ReferenceSeq),</span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Matching copies per person</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">2</span>L</span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>() <span class="sc">|&gt;</span></span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(</span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>    Guide,</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">GRCh38 target + PAM</span><span class="st">`</span>,</span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Polymorphic variants (in 7 samples)</span><span class="st">`</span>,</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span>,</span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Protospacer mismatches</span><span class="st">`</span>,</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Retained PAM</span><span class="st">`</span>,</span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Matching copies per person</span><span class="st">`</span></span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a><span class="co"># -------------------------------------------------------------------------</span></span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a><span class="co"># 2. Chromosome 1 &amp; 2 Off-Target Analysis (Pure R from raw VCFs &amp; CRISPOR)</span></span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a><span class="co"># -------------------------------------------------------------------------</span></span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a><span class="co"># Locate offtargetsguide.txt in data/ or chapter_dir/ (or fallback to snapshot if missing)</span></span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>offtarget_file <span class="ot">&lt;-</span> <span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="fu">file.path</span>(data_dir, <span class="st">"offtargetsguide.txt"</span>))) {</span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a>  <span class="fu">file.path</span>(data_dir, <span class="st">"offtargetsguide.txt"</span>)</span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> <span class="cf">if</span> (<span class="fu">file.exists</span>(<span class="fu">file.path</span>(chapter_dir, <span class="st">"offtargetsguide.txt"</span>))) {</span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a>  <span class="fu">file.path</span>(chapter_dir, <span class="st">"offtargetsguide.txt"</span>)</span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a>  <span class="cn">NULL</span></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>read_zipped_vcf <span class="ot">&lt;-</span> <span class="cf">function</span>(zip_path, chrom_label) {</span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Read column names from the #CHROM header line</span></span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>  header_lines <span class="ot">&lt;-</span> <span class="fu">read_lines</span>(zip_path, <span class="at">n_max =</span> <span class="dv">500</span>)</span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a>  chrom_line <span class="ot">&lt;-</span> header_lines[<span class="fu">str_starts</span>(header_lines, <span class="st">"#CHROM"</span>)]</span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>  vcf_cols <span class="ot">&lt;-</span> <span class="fu">str_split_1</span>(<span class="fu">str_remove</span>(chrom_line, <span class="st">"^#"</span>), <span class="st">"</span><span class="sc">\t</span><span class="st">"</span>)</span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>  <span class="fu">read_tsv</span>(</span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>    zip_path,</span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>    <span class="at">comment =</span> <span class="st">"#"</span>,</span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>    <span class="at">col_names =</span> vcf_cols,</span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a>    <span class="at">col_types =</span> <span class="fu">cols</span>(<span class="at">.default =</span> <span class="st">"c"</span>, <span class="at">POS =</span> <span class="st">"i"</span>),</span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>    <span class="at">show_col_types =</span> <span class="cn">FALSE</span></span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a>      <span class="at">chrom =</span> chrom_label,</span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>      <span class="fu">across</span>(<span class="fu">all_of</span>(samples), <span class="sc">~</span> <span class="fu">str_replace</span>(.x, <span class="st">":.*$"</span>, <span class="st">""</span>))</span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(chrom, POS, REF, ALT, <span class="fu">all_of</span>(samples))</span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a>mutate_offtarget <span class="ot">&lt;-</span> <span class="cf">function</span>(seq, start, pos, alt, <span class="at">strand =</span> <span class="st">"+"</span>) {</span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>  rel_idx <span class="ot">&lt;-</span> pos <span class="sc">-</span> start <span class="sc">+</span> <span class="dv">1</span>L</span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (strand <span class="sc">==</span> <span class="st">"-"</span>) {</span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a>    rel_idx <span class="ot">&lt;-</span> <span class="fu">nchar</span>(seq) <span class="sc">-</span> (pos <span class="sc">-</span> start)</span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a>    alt <span class="ot">&lt;-</span> <span class="fu">chartr</span>(<span class="st">"ACGTacgt"</span>, <span class="st">"TGCAtgca"</span>, alt)</span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a>  <span class="fu">str_sub</span>(seq, rel_idx, rel_idx) <span class="ot">&lt;-</span> <span class="fu">str_sub</span>(alt, <span class="dv">1</span>L, <span class="dv">1</span>L)</span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>  seq</span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.null</span>(offtarget_file)) {</span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Full native R scan of sampled_chr1.vcf.zip and sampled_chr2.vcf.zip</span></span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>  guides_offtargets <span class="ot">&lt;-</span> <span class="fu">read_tsv</span>(offtarget_file, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>) <span class="sc">|&gt;</span></span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(guideId <span class="sc">%in%</span> selected_guides, chrom <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"chr1"</span>, <span class="st">"chr2"</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">start =</span> <span class="fu">as.integer</span>(start), <span class="at">end =</span> <span class="fu">as.integer</span>(end))</span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a>  chr1_vcf <span class="ot">&lt;-</span> <span class="fu">read_zipped_vcf</span>(<span class="fu">file.path</span>(data_dir, <span class="st">"sampled_chr1.vcf.zip"</span>), <span class="st">"chr1"</span>)</span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a>  chr2_vcf <span class="ot">&lt;-</span> <span class="fu">read_zipped_vcf</span>(<span class="fu">file.path</span>(data_dir, <span class="st">"sampled_chr2.vcf.zip"</span>), <span class="st">"chr2"</span>)</span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a>  chr12_off_vcf <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(chr1_vcf, chr2_vcf)</span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Interval overlap join: match variant POS between off-target [start, end]</span></span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>  raw_overlaps <span class="ot">&lt;-</span> guides_offtargets <span class="sc">|&gt;</span></span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a>    <span class="fu">inner_join</span>(</span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a>      chr12_off_vcf,</span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a>      <span class="at">by =</span> <span class="fu">join_by</span>(chrom, start <span class="sc">&lt;=</span> POS, end <span class="sc">&gt;=</span> POS)</span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Build site snapshot table directly in R</span></span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>  site <span class="ot">&lt;-</span> raw_overlaps <span class="sc">|&gt;</span></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(</span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a>      <span class="at">Guide =</span> guideId,</span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a>      <span class="at">GuideSeq =</span> guideSeq,</span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a>      <span class="at">OriginalOfftarget =</span> offtargetSeq,</span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a>      <span class="at">ModifiedOfftarget =</span> <span class="fu">pmap_chr</span>(</span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(offtargetSeq, start, POS, ALT, strand),</span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a>        mutate_offtarget</span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a>      <span class="at">OriginalMismatch =</span> <span class="fu">as.integer</span>(mismatchCount),</span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a>      <span class="at">Chromosome =</span> chrom,</span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a>      <span class="at">Position =</span> POS</span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Build carrier hits table directly in R</span></span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a>  hits <span class="ot">&lt;-</span> site <span class="sc">|&gt;</span></span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a>    <span class="fu">pivot_longer</span>(</span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a>      <span class="at">cols =</span> <span class="fu">all_of</span>(samples),</span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>      <span class="at">names_to =</span> <span class="st">"Sample"</span>,</span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a>      <span class="at">values_to =</span> <span class="st">"Genotype"</span></span>
+<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a>    ) <span class="sc">|&gt;</span></span>
+<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="sc">!</span>Genotype <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"0|0"</span>, <span class="st">"0/0"</span>, <span class="st">".|."</span>, <span class="st">"./."</span>)) <span class="sc">|&gt;</span></span>
+<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a>    <span class="fu">select</span>(</span>
+<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a>      Guide, Chromosome, Position, Sample, Genotype,</span>
+<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a>      REF, ALT, <span class="at">CFD =</span> cfdOfftargetScore, <span class="at">MIT =</span> mitOfftargetScore</span>
+<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-183"><a href="#cb6-183" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-184"><a href="#cb6-184" aria-hidden="true" tabindex="-1"></a>  <span class="fu">nrow</span>(site) <span class="sc">==</span> <span class="dv">1</span>L,</span>
+<span id="cb6-185"><a href="#cb6-185" aria-hidden="true" tabindex="-1"></a>  <span class="fu">all</span>(samples <span class="sc">%in%</span> <span class="fu">names</span>(site)),</span>
+<span id="cb6-186"><a href="#cb6-186" aria-hidden="true" tabindex="-1"></a>  <span class="fu">all</span>(hits<span class="sc">$</span>Guide <span class="sc">%in%</span> selected_guides)</span>
+<span id="cb6-187"><a href="#cb6-187" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-188"><a href="#cb6-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-189"><a href="#cb6-189" aria-hidden="true" tabindex="-1"></a>reference_mm <span class="ot">&lt;-</span> <span class="fu">mm20</span>(site<span class="sc">$</span>GuideSeq, site<span class="sc">$</span>OriginalOfftarget)</span>
+<span id="cb6-190"><a href="#cb6-190" aria-hidden="true" tabindex="-1"></a>alternate_mm <span class="ot">&lt;-</span> <span class="fu">mm20</span>(site<span class="sc">$</span>GuideSeq, site<span class="sc">$</span>ModifiedOfftarget)</span>
+<span id="cb6-191"><a href="#cb6-191" aria-hidden="true" tabindex="-1"></a>reference_pam <span class="ot">&lt;-</span> <span class="fu">pam</span>(site<span class="sc">$</span>OriginalOfftarget)</span>
+<span id="cb6-192"><a href="#cb6-192" aria-hidden="true" tabindex="-1"></a>alternate_pam <span class="ot">&lt;-</span> <span class="fu">pam</span>(site<span class="sc">$</span>ModifiedOfftarget)</span>
+<span id="cb6-193"><a href="#cb6-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-194"><a href="#cb6-194" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(</span>
+<span id="cb6-195"><a href="#cb6-195" aria-hidden="true" tabindex="-1"></a>  reference_mm <span class="sc">==</span> site<span class="sc">$</span>OriginalMismatch,</span>
+<span id="cb6-196"><a href="#cb6-196" aria-hidden="true" tabindex="-1"></a>  reference_mm <span class="sc">==</span> <span class="dv">4</span>L,</span>
+<span id="cb6-197"><a href="#cb6-197" aria-hidden="true" tabindex="-1"></a>  alternate_mm <span class="sc">==</span> <span class="dv">4</span>L,</span>
+<span id="cb6-198"><a href="#cb6-198" aria-hidden="true" tabindex="-1"></a>  reference_pam <span class="sc">==</span> <span class="st">"AGG"</span>,</span>
+<span id="cb6-199"><a href="#cb6-199" aria-hidden="true" tabindex="-1"></a>  alternate_pam <span class="sc">==</span> <span class="st">"AGA"</span></span>
+<span id="cb6-200"><a href="#cb6-200" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-201"><a href="#cb6-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-202"><a href="#cb6-202" aria-hidden="true" tabindex="-1"></a>individual <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb6-203"><a href="#cb6-203" aria-hidden="true" tabindex="-1"></a>  <span class="at">Individual =</span> samples,</span>
+<span id="cb6-204"><a href="#cb6-204" aria-hidden="true" tabindex="-1"></a>  <span class="at">Genotype =</span> <span class="fu">map_chr</span>(samples, <span class="sc">~</span> <span class="fu">as.character</span>(site[[.x]][<span class="dv">1</span>L]))</span>
+<span id="cb6-205"><a href="#cb6-205" aria-hidden="true" tabindex="-1"></a>) <span class="sc">|&gt;</span></span>
+<span id="cb6-206"><a href="#cb6-206" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb6-207"><a href="#cb6-207" aria-hidden="true" tabindex="-1"></a>    <span class="at">gt_parsed =</span> <span class="fu">map</span>(Genotype, split_gt),</span>
+<span id="cb6-208"><a href="#cb6-208" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Reference PAM copies</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">map_int</span>(gt_parsed, <span class="sc">~</span> <span class="fu">sum</span>(.x <span class="sc">==</span> <span class="dv">0</span>L)),</span>
+<span id="cb6-209"><a href="#cb6-209" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">map_int</span>(gt_parsed, <span class="sc">~</span> <span class="fu">sum</span>(.x <span class="sc">==</span> <span class="dv">1</span>L)),</span>
+<span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">PAMs on the two haplotypes</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">map_chr</span>(</span>
+<span id="cb6-211"><a href="#cb6-211" aria-hidden="true" tabindex="-1"></a>      gt_parsed,</span>
+<span id="cb6-212"><a href="#cb6-212" aria-hidden="true" tabindex="-1"></a>      <span class="sc">~</span> <span class="fu">paste</span>(<span class="fu">if_else</span>(.x <span class="sc">==</span> <span class="dv">0</span>L, reference_pam, alternate_pam), <span class="at">collapse =</span> <span class="st">" / "</span>)</span>
+<span id="cb6-213"><a href="#cb6-213" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-214"><a href="#cb6-214" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb6-215"><a href="#cb6-215" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="sc">-</span>gt_parsed)</span>
+<span id="cb6-216"><a href="#cb6-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-217"><a href="#cb6-217" aria-hidden="true" tabindex="-1"></a>carrier_samples <span class="ot">&lt;-</span> individual <span class="sc">|&gt;</span></span>
+<span id="cb6-218"><a href="#cb6-218" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">&gt;</span> <span class="dv">0</span>L) <span class="sc">|&gt;</span></span>
+<span id="cb6-219"><a href="#cb6-219" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(Individual)</span>
+<span id="cb6-220"><a href="#cb6-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-221"><a href="#cb6-221" aria-hidden="true" tabindex="-1"></a>unique_hits <span class="ot">&lt;-</span> hits <span class="sc">|&gt;</span> <span class="fu">distinct</span>(Guide, Chromosome, Position, REF, ALT)</span>
+<span id="cb6-222"><a href="#cb6-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-223"><a href="#cb6-223" aria-hidden="true" tabindex="-1"></a>guide_summary <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">Guide =</span> selected_guides) <span class="sc">|&gt;</span></span>
+<span id="cb6-224"><a href="#cb6-224" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb6-225"><a href="#cb6-225" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">Unique overlapping variants</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">map_int</span>(Guide, <span class="sc">~</span> <span class="fu">sum</span>(unique_hits<span class="sc">$</span>Guide <span class="sc">==</span> .x)),</span>
+<span id="cb6-226"><a href="#cb6-226" aria-hidden="true" tabindex="-1"></a>    <span class="st">`</span><span class="at">ALT carriers (out of 7)</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">map_int</span>(Guide, <span class="sc">~</span> <span class="fu">n_distinct</span>(hits<span class="sc">$</span>Sample[hits<span class="sc">$</span>Guide <span class="sc">==</span> .x])) </span>
+<span id="cb6-227"><a href="#cb6-227" aria-hidden="true" tabindex="-1"></a>    )  </span>
+<span id="cb6-228"><a href="#cb6-228" aria-hidden="true" tabindex="-1"></a>number_carriers <span class="ot">&lt;-</span> <span class="fu">length</span>(carrier_samples) </span>
+<span id="cb6-229"><a href="#cb6-229" aria-hidden="true" tabindex="-1"></a>number_heterozygous <span class="ot">&lt;-</span> <span class="fu">sum</span>(individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">==</span> <span class="dv">1</span>L)</span>
+<span id="cb6-230"><a href="#cb6-230" aria-hidden="true" tabindex="-1"></a>number_homozygous_alt <span class="ot">&lt;-</span> <span class="fu">sum</span>(individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">==</span> <span class="dv">2</span>L)</span>
+<span id="cb6-231"><a href="#cb6-231" aria-hidden="true" tabindex="-1"></a>number_reference <span class="ot">&lt;-</span> <span class="fu">sum</span>(individual<span class="sc">$</span><span class="st">`</span><span class="at">Alternate PAM copies</span><span class="st">`</span> <span class="sc">==</span> <span class="dv">0</span>L)</span>
+<span id="cb6-232"><a href="#cb6-232" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-233"><a href="#cb6-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-234"><a href="#cb6-234" aria-hidden="true" tabindex="-1"></a><span class="fu">## Objective</span></span>
+<span id="cb6-235"><a href="#cb6-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-236"><a href="#cb6-236" aria-hidden="true" tabindex="-1"></a>In Task 2, two CRISPR interference (CRISPRi) guides, **200forw** and **248forw**, were selected to target the first exon of **OAS2** on chromosome 12 using CRISPOR predictions <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>. Because human genomes differ from the reference assembly, genetic variation can alter CRISPR guide performance in two ways:</span>
+<span id="cb6-237"><a href="#cb6-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-238"><a href="#cb6-238" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**On-target guide availability:** Variants within the target gene may alter the 20-base protospacer or disrupt the 3-base PAM, preventing guide recognition in certain individuals.</span>
+<span id="cb6-239"><a href="#cb6-239" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Off-target binding risk:** Variants within predicted off-target loci across the genome may increase or decrease sequence similarity or alter canonical PAM motifs.</span>
+<span id="cb6-240"><a href="#cb6-240" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-241"><a href="#cb6-241" aria-hidden="true" tabindex="-1"></a>Task 3 evaluates both questions across seven individuals from the 1000 Genomes Project (<span class="in">`HG00142`</span>, <span class="in">`HG00178`</span>, <span class="in">`HG00237`</span>, <span class="in">`HG01521`</span>, <span class="in">`HG03129`</span>, <span class="in">`NA19175`</span>, and <span class="in">`NA19462`</span>) to refine the guide selection from Task 2.</span>
+<span id="cb6-242"><a href="#cb6-242" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-243"><a href="#cb6-243" aria-hidden="true" tabindex="-1"></a><span class="fu">## Approach</span></span>
+<span id="cb6-244"><a href="#cb6-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-245"><a href="#cb6-245" aria-hidden="true" tabindex="-1"></a><span class="fu">### Extracting Individual Genotypes from VCF Datasets</span></span>
+<span id="cb6-246"><a href="#cb6-246" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-247"><a href="#cb6-247" aria-hidden="true" tabindex="-1"></a>Variant Call Format (VCF) files record reference (<span class="in">`REF`</span>) and alternate (<span class="in">`ALT`</span>) alleles, genomic coordinates, and phased individual genotypes (<span class="in">`0`</span> for the reference allele, <span class="in">`1`</span> for the first alternate allele, separated by <span class="in">`|`</span> for phased haplotypes) <span class="co">[</span><span class="ot">@danecek2011</span><span class="co">]</span>. Two complementary VCF sources were used to cover both the intended on-target locus on chromosome 12 and predicted off-target loci on chromosomes 1 and 2:</span>
+<span id="cb6-248"><a href="#cb6-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-249"><a href="#cb6-249" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**On-target check (Chromosome 12):** Because *OAS2* resides on chromosome 12, the GRCh38 phased VCF from the 1000 Genomes Project (`ALL.chr12.shapeit2_integrated_snvindels_v2a_27022019.GRCh38.phased.vcf.gz`) was subsetted to the *OAS2* exon 1 region and the seven target individuals (`chr12_OAS2_7samples.vcf`). To match the pre-processed chromosome 1 and 2 files, sites where all seven individuals are homozygous for the reference allele (`0|0`, $\text{AC} = 0$ in the subset) were filtered out so that only polymorphic variants carried by the seven individuals were retained. The two 23-base target-plus-PAM regions on the forward strand (**chr12:112,978,698–112,978,720** for **200forw** and **chr12:112,978,746–112,978,768** for **248forw**) were screened against the Task 2 Ensembl GRCh38 reference sequences.</span>
+<span id="cb6-250"><a href="#cb6-250" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Off-target check (Chromosomes 1 and 2):** The CRISPOR off-target prediction table from Task 2 was filtered for **200forw** and **248forw** and compared against the provided 7-individual VCF subsets (<span class="in">`sampled_chr1.vcf`</span> and <span class="in">`sampled_chr2.vcf`</span>).</span>
+<span id="cb6-251"><a href="#cb6-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-252"><a href="#cb6-252" aria-hidden="true" tabindex="-1"></a><span class="fu">### Sequence Partitioning and Haplotype Evaluation</span></span>
+<span id="cb6-253"><a href="#cb6-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-254"><a href="#cb6-254" aria-hidden="true" tabindex="-1"></a>In accordance with the SpCas9 recognition mechanism, each 23-base interval was partitioned into its **20-base protospacer** and **3-base PAM** (canonical <span class="in">`NGG`</span>) <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>. Mismatches were counted strictly across the 20-base protospacer, while PAM mutations were assessed separately. Using phased genotypes (<span class="in">`0|0`</span>, <span class="in">`0|1`</span>, <span class="in">`1|0`</span>, <span class="in">`1|1`</span>), both maternal and paternal haplotypes were reconstructed for each individual to distinguish heterozygotes (one altered copy) from alternate homozygotes (two altered copies).</span>
+<span id="cb6-255"><a href="#cb6-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-256"><a href="#cb6-256" aria-hidden="true" tabindex="-1"></a><span class="fu">## Findings</span></span>
+<span id="cb6-257"><a href="#cb6-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-258"><a href="#cb6-258" aria-hidden="true" tabindex="-1"></a><span class="fu">### On-Target Guide Availability in Individual Genomes (Chromosome 12)</span></span>
+<span id="cb6-259"><a href="#cb6-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-260"><a href="#cb6-260" aria-hidden="true" tabindex="-1"></a>Screening the chromosome 12 *OAS2* target intervals across the seven individuals (`chr12_OAS2_7samples.vcf`) revealed **zero polymorphic variants carried by any of the seven individuals** in either **200forw** or **248forw** (@tbl-task3-chr12-targets). Although four rare population variant records overlap the **248forw** protospacer in the full 2,504-person 1000 Genomes release, all seven study individuals carry the homozygous reference genotype (<span class="in">`0|0`</span>) at every position.</span>
+<span id="cb6-261"><a href="#cb6-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-265"><a href="#cb6-265" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-chr12-targets</span></span>
+<span id="cb6-266"><a href="#cb6-266" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Chromosome 12 on-target availability in OAS2 exon 1 across the seven individuals."</span></span>
+<span id="cb6-267"><a href="#cb6-267" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(chr12_table)</span>
+<span id="cb6-268"><a href="#cb6-268" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-269"><a href="#cb6-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-270"><a href="#cb6-270" aria-hidden="true" tabindex="-1"></a>Consequently, both reconstructed chromosome 12 haplotypes in <span class="in">`HG00142`</span>, <span class="in">`HG00178`</span>, <span class="in">`HG00237`</span>, <span class="in">`HG01521`</span>, <span class="in">`HG03129`</span>, <span class="in">`NA19175`</span>, and <span class="in">`NA19462`</span> retain **zero protospacer mismatches** and an intact **`TGG` PAM** for both candidate guides. Both **200forw** and **248forw** remain fully present across all seven genomes.</span>
+<span id="cb6-271"><a href="#cb6-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-272"><a href="#cb6-272" aria-hidden="true" tabindex="-1"></a><span class="fu">### Variants Affecting Predicted Off-Target Sites (Chromosomes 1 and 2)</span></span>
+<span id="cb6-273"><a href="#cb6-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-274"><a href="#cb6-274" aria-hidden="true" tabindex="-1"></a>Intersecting the CRISPOR-predicted off-target intervals with <span class="in">`sampled_chr1.vcf`</span> and <span class="in">`sampled_chr2.vcf`</span> identified **one unique variant** overlapping a predicted off-target site for guide **248forw**, and **zero overlapping variants** for guide **200forw** (@tbl-task3-variant, @tbl-task3-summary).</span>
+<span id="cb6-275"><a href="#cb6-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-278"><a href="#cb6-278" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-279"><a href="#cb6-279" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-variant</span></span>
+<span id="cb6-280"><a href="#cb6-280" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Variant identified within a reference-predicted off-target site on chromosome 1."</span></span>
+<span id="cb6-281"><a href="#cb6-281" aria-hidden="true" tabindex="-1"></a>variant_table <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb6-282"><a href="#cb6-282" aria-hidden="true" tabindex="-1"></a>  <span class="at">Guide =</span> site<span class="sc">$</span>Guide,</span>
+<span id="cb6-283"><a href="#cb6-283" aria-hidden="true" tabindex="-1"></a>  <span class="at">Chromosome =</span> site<span class="sc">$</span>Chromosome,</span>
+<span id="cb6-284"><a href="#cb6-284" aria-hidden="true" tabindex="-1"></a>  <span class="at">Position =</span> <span class="fu">format</span>(site<span class="sc">$</span>Position, <span class="at">big.mark =</span> <span class="st">","</span>, <span class="at">scientific =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb6-285"><a href="#cb6-285" aria-hidden="true" tabindex="-1"></a>  <span class="at">REF =</span> site<span class="sc">$</span>REF,</span>
+<span id="cb6-286"><a href="#cb6-286" aria-hidden="true" tabindex="-1"></a>  <span class="at">ALT =</span> site<span class="sc">$</span>ALT,</span>
+<span id="cb6-287"><a href="#cb6-287" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">ALT carriers</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">paste0</span>(number_carriers, <span class="st">"/"</span>, <span class="fu">length</span>(samples))</span>
+<span id="cb6-288"><a href="#cb6-288" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-289"><a href="#cb6-289" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(variant_table)</span>
+<span id="cb6-290"><a href="#cb6-290" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-291"><a href="#cb6-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-292"><a href="#cb6-292" aria-hidden="true" tabindex="-1"></a>The overlapping variant is a <span class="in">`G &gt; A`</span> single nucleotide substitution at **chr1:224,887,199**. It is carried by **`r number_carriers` of the 7 individuals** (<span class="in">`HG00142`</span>, <span class="in">`HG03129`</span>, <span class="in">`NA19175`</span>, and <span class="in">`NA19462`</span>), while the remaining <span class="in">`r number_reference`</span> individuals (<span class="in">`HG00178`</span>, <span class="in">`HG00237`</span>, and <span class="in">`HG01521`</span>) are homozygous for the reference allele (<span class="in">`0|0`</span>).</span>
+<span id="cb6-293"><a href="#cb6-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-296"><a href="#cb6-296" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-297"><a href="#cb6-297" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-summary</span></span>
+<span id="cb6-298"><a href="#cb6-298" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Summary of chromosome 1 and 2 off-target variant overlaps by guide."</span></span>
+<span id="cb6-299"><a href="#cb6-299" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(guide_summary)</span>
+<span id="cb6-300"><a href="#cb6-300" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-301"><a href="#cb6-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-302"><a href="#cb6-302" aria-hidden="true" tabindex="-1"></a><span class="fu">### Effect on Off-Target Binding Risk</span></span>
+<span id="cb6-303"><a href="#cb6-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-304"><a href="#cb6-304" aria-hidden="true" tabindex="-1"></a>Partitioning the 23-base off-target locus at <span class="in">`chr1:224,887,199`</span> shows that the <span class="in">`G &gt; A`</span> substitution occurs at the third base of the PAM, mutating the canonical **`AGG` PAM to a non-canonical `AGA` PAM** (@tbl-task3-sequences). The 20-base protospacer is unchanged and remains at **`r reference_mm` mismatches** relative to **248forw**.</span>
+<span id="cb6-305"><a href="#cb6-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-308"><a href="#cb6-308" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-309"><a href="#cb6-309" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-sequences</span></span>
+<span id="cb6-310"><a href="#cb6-310" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Sequence comparison at the chr1:224,887,199 off-target site for guide 248forw."</span></span>
+<span id="cb6-311"><a href="#cb6-311" aria-hidden="true" tabindex="-1"></a>sequence_table <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb6-312"><a href="#cb6-312" aria-hidden="true" tabindex="-1"></a>  <span class="at">Sequence =</span> <span class="fu">c</span>(<span class="st">"Guide target (248forw)"</span>, <span class="st">"Reference off-target"</span>, <span class="st">"Alternate off-target"</span>),</span>
+<span id="cb6-313"><a href="#cb6-313" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">20-base protospacer</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(</span>
+<span id="cb6-314"><a href="#cb6-314" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_sub</span>(site<span class="sc">$</span>GuideSeq, <span class="dv">1</span>, <span class="dv">20</span>),</span>
+<span id="cb6-315"><a href="#cb6-315" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_sub</span>(site<span class="sc">$</span>OriginalOfftarget, <span class="dv">1</span>, <span class="dv">20</span>),</span>
+<span id="cb6-316"><a href="#cb6-316" aria-hidden="true" tabindex="-1"></a>    <span class="fu">str_sub</span>(site<span class="sc">$</span>ModifiedOfftarget, <span class="dv">1</span>, <span class="dv">20</span>)</span>
+<span id="cb6-317"><a href="#cb6-317" aria-hidden="true" tabindex="-1"></a>  ),</span>
+<span id="cb6-318"><a href="#cb6-318" aria-hidden="true" tabindex="-1"></a>  <span class="at">PAM =</span> <span class="fu">c</span>(<span class="fu">pam</span>(site<span class="sc">$</span>GuideSeq), reference_pam, alternate_pam),</span>
+<span id="cb6-319"><a href="#cb6-319" aria-hidden="true" tabindex="-1"></a>  <span class="st">`</span><span class="at">Protospacer mismatches</span><span class="st">`</span> <span class="ot">=</span> <span class="fu">c</span>(<span class="dv">0</span>L, reference_mm, alternate_mm)</span>
+<span id="cb6-320"><a href="#cb6-320" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-321"><a href="#cb6-321" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(sequence_table)</span>
+<span id="cb6-322"><a href="#cb6-322" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-323"><a href="#cb6-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-324"><a href="#cb6-324" aria-hidden="true" tabindex="-1"></a>Because SpCas9 strongly prefers a canonical <span class="in">`NGG`</span> PAM for initial DNA recognition, replacing <span class="in">`AGG`</span> with <span class="in">`AGA`</span> reduces the likelihood of off-target dCas9 binding on haplotypes carrying the alternate allele, though low-level recognition at non-canonical <span class="in">`NGA`</span> PAMs cannot be completely ruled out <span class="co">[</span><span class="ot">@haeussler2016</span><span class="co">]</span>.</span>
+<span id="cb6-325"><a href="#cb6-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-326"><a href="#cb6-326" aria-hidden="true" tabindex="-1"></a>Evaluating phased genotypes reveals distinct individual-level profiles (@tbl-task3-individuals):</span>
+<span id="cb6-327"><a href="#cb6-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-328"><a href="#cb6-328" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Reference homozygotes (`0|0`, `r number_reference` individuals):** <span class="in">`HG00178`</span>, <span class="in">`HG00237`</span>, and <span class="in">`HG01521`</span> retain the canonical <span class="in">`AGG`</span> PAM on both chromosome 1 copies.</span>
+<span id="cb6-329"><a href="#cb6-329" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Heterozygotes (`0|1` or `1|0`, `r number_heterozygous` individuals):** <span class="in">`HG00142`</span>, <span class="in">`HG03129`</span>, and <span class="in">`NA19175`</span> carry the disrupted <span class="in">`AGA`</span> PAM on one haplotype, but still retain the canonical <span class="in">`AGG`</span> PAM on their second haplotype.</span>
+<span id="cb6-330"><a href="#cb6-330" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>**Alternate homozygote (`1|1`, `r number_homozygous_alt` individual):** <span class="in">`NA19462`</span> carries the <span class="in">`AGA`</span> PAM on both chromosome 1 copies, eliminating the canonical <span class="in">`NGG`</span> PAM at this locus entirely.</span>
+<span id="cb6-331"><a href="#cb6-331" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-334"><a href="#cb6-334" aria-hidden="true" tabindex="-1"></a><span class="in">```{r}</span></span>
+<span id="cb6-335"><a href="#cb6-335" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: tbl-task3-individuals</span></span>
+<span id="cb6-336"><a href="#cb6-336" aria-hidden="true" tabindex="-1"></a><span class="co">#| tbl-cap: "Individual phased genotypes and haplotype PAMs at the 248forw off-target site (chr1:224,887,199)."</span></span>
+<span id="cb6-337"><a href="#cb6-337" aria-hidden="true" tabindex="-1"></a><span class="fu">kable</span>(individual)</span>
+<span id="cb6-338"><a href="#cb6-338" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-339"><a href="#cb6-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-340"><a href="#cb6-340" aria-hidden="true" tabindex="-1"></a><span class="fu">## Discussion</span></span>
+<span id="cb6-341"><a href="#cb6-341" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-342"><a href="#cb6-342" aria-hidden="true" tabindex="-1"></a>Combining the chromosome 12 on-target analysis with the chromosome 1 and 2 off-target analysis directly refines the Task 2 guide selection across the seven personal genomes:</span>
+<span id="cb6-343"><a href="#cb6-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-344"><a href="#cb6-344" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>**Both candidate guides remain viable for on-target *OAS2* regulation:** Neither **200forw** nor **248forw** is affected by genetic variation in *OAS2* exon 1 among the seven individuals. Both guides retain 100% protospacer identity and canonical <span class="in">`TGG`</span> PAMs on both chromosome 12 haplotypes.</span>
+<span id="cb6-345"><a href="#cb6-345" aria-hidden="true" tabindex="-1"></a><span class="ss">2.  </span>**Genotype-specific off-target refinement:** Guide **200forw** exhibits uniform behaviour across all seven genomes, with no variants intersecting its evaluated off-target intervals. For guide **248forw**, the <span class="in">`chr1:224,887,199`</span> variant (<span class="in">`G &gt; A`</span>) does not create a new off-target risk; instead, it disrupts the canonical <span class="in">`AGG`</span> PAM (<span class="in">`AGG`</span> $\rightarrow$ <span class="in">`AGA`</span>) without reducing the four existing protospacer mismatches. However, because three of the four carriers (<span class="in">`HG00142`</span>, <span class="in">`HG03129`</span>, <span class="in">`NA19175`</span>) are heterozygous, they still retain one functional <span class="in">`AGG`</span> off-target copy, whereas only <span class="in">`NA19462`</span> (<span class="in">`1|1`</span>) loses the canonical PAM on both chromosomes.</span>
+<span id="cb6-346"><a href="#cb6-346" aria-hidden="true" tabindex="-1"></a><span class="ss">3.  </span>**Implications for CRISPRi:** Because this therapeutic strategy employs CRISPRi (dCas9 transcriptional repression) rather than nuclease cleavage <span class="co">[</span><span class="ot">@jensen2021</span><span class="co">]</span>, off-target risk primarily concerns unintended transcriptional silencing if dCas9 binds near a promoter or enhancer, rather than double-stranded DNA breaks. Preserving zero mismatches at the intended *OAS2* first exon while maintaining high mismatch counts (4 mismatches) and disrupted PAMs at off-target loci supports the safety and efficacy of both guides.</span>
+<span id="cb6-347"><a href="#cb6-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-348"><a href="#cb6-348" aria-hidden="true" tabindex="-1"></a>Two methodological limitations should be noted. First, VCF files report variant calls relative to GRCh38 rather than base-by-base sequencing depth, meaning uncalled regions are assumed to match the reference genome. Second, screening was performed on reference-predicted off-target intervals; personal variants elsewhere in the genome can occasionally generate *de novo* <span class="in">`NGG`</span> PAMs that would only be captured by a genome-wide variant-aware search <span class="co">[</span><span class="ot">@lessard2017</span><span class="co">]</span>.</span>
+<span id="cb6-349"><a href="#cb6-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-350"><a href="#cb6-350" aria-hidden="true" tabindex="-1"></a><span class="fu">## Conclusion</span></span>
+<span id="cb6-351"><a href="#cb6-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-352"><a href="#cb6-352" aria-hidden="true" tabindex="-1"></a>Across the seven evaluated 1000 Genomes individuals, chromosome 12 variant screening confirms that both **200forw** and **248forw** target sites in *OAS2* exon 1 are 100% conserved (`0|0`) on both haplotypes. Off-target screening across chromosomes 1 and 2 identified a single SNP (`chr1:224,887,199 G&gt;A`) affecting a predicted **248forw** off-target site in four individuals, mutating its PAM from `AGG` to `AGA` while preserving four protospacer mismatches. Both **200forw** and **248forw** remain strong candidates for *OAS2* CRISPRi modulation, with **200forw** showing complete invariance across all assessed loci and **248forw** experiencing a haplotype-dependent reduction in canonical PAM availability at one off-target site.</span>
+<span id="cb6-353"><a href="#cb6-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-354"><a href="#cb6-354" aria-hidden="true" tabindex="-1"></a>The <span class="co">[</span><span class="ot">Reproducibility chapter</span><span class="co">](reproducibility.qmd)</span> documents the input files, data access, reproduction workflow and software information. Sources cited here are included in the final <span class="co">[</span><span class="ot">References</span><span class="co">](references.qmd)</span>.</span>
 </code><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
