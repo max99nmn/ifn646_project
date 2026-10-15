@@ -12,7 +12,9 @@ consensus_table <- readRDS("data/consensus_table.rds")
 
 Building on the six consensus differentially expressed genes identified in Task 1 (@tbl-consensus), Task 2 selects a single biologically justified target gene, determines the appropriate transcriptional modulation strategy (**CRISPRi** vs. **CRISPRa**), extracts the canonical **first exon** sequence relative to gene transcription, and designs candidate SpCas9 single-guide RNAs (gRNAs) balancing on-target efficiency against off-target specificity.
 
-## Approach
+## Approach [^genai-task2]
+
+[^genai-task2]: **GenAI Usage & Validation:** Google Gemini 4 (Argon) was used to structure and streamline the scientific phrasing of the gRNA design rationale and format the `knitr::kable` summary tables. Target selection (*OAS2*), Ensembl MANE Select first-exon extraction (`ENST00000392583.7`), CRISPOR execution, and candidate filtering (`200forw` and `248forw`) were conducted manually by the team. All AI-refined text and table values were verified directly against Ensembl GRCh38.p14 coordinates and raw CRISPOR outputs (`offtargetsguide.txt`). See the [AI Use Declaration](ai-declaration.qmd) for full details.
 
 ### Rationale for Selecting *OAS2* Over the Other Five Consensus Genes
 

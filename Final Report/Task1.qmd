@@ -18,7 +18,9 @@ raw_counts_data <- read_delim(
 
 The first stage of this study aims to identify human genes that are significantly deregulated during SARS-CoV-2 infection compared with uninfected (`mock`) controls. Because individual differential expression (DE) algorithms rely on different normalisation, dispersion-estimation, and hypothesis-testing assumptions, relying on a single tool can introduce method-specific false positives—especially in small-sample transcriptomic datasets. Task 1 therefore establishes a rigorous preprocessing workflow, evaluates differential expression independently using two complementary statistical frameworks (**DESeq2** and **edgeR**), and applies a conservative consensus strategy to select a high-confidence candidate gene for CRISPR guide design in Task 2.
 
-## Approach
+## Approach [^task1-1]
+
+[^task1-1]: **GenAI Usage & Validation:** Google Gemini 3.1 Pro was used to assist in coding and phrasing for the `DESeq2`/`edgeR` workflow, while Gemini 4 (Argon) assisted in structuring and streamlining the chapter text. All experimental design choices (`~ donor + condition`), normalization strategies, and biological interpretations were performed independently. Refactored R code was validated by verifying that gene-filtering counts (33,327 expressed genes), tool-specific hit counts (68 in `DESeq2`, 7 in `edgeR`), and the 6 consensus genes in `data/consensus_table.rds` remained strictly identical before and after code refinement. See the [AI Use Declaration](ai-declaration.qmd) for full details.
 
 ### Experimental Design and Metadata Extraction
 
@@ -56,16 +58,16 @@ counts_data <- raw_counts_data |>
 
 Two deliberate modelling choices were made before fitting the statistical models:
 
-1. **Retaining all six samples (`mock`, `SARS`, and `Rem`) during model fitting:** Although our biological contrast of interest compares `SARS` against `mock`, dropping the two `Rem` samples prior to model fitting would reduce the residual degrees of freedom from 3 to 1. Retaining all six samples allows both tools to leverage the `Rem` observations when estimating baseline inter-donor differences and gene-wise dispersion parameters, improving statistical stability before extracting the targeted `SARS vs. mock` contrast.
-2. **Additive paired model design (`~ donor + condition`):** Because each donor was sampled across all conditions, an additive blocking factor for `donor` was included rather than a simple `~ condition` design. Accounting for baseline donor-to-donor transcriptome differences prevents donor variance from inflating the residual error term, thereby increasing statistical power to detect the true `condition` effect.
+1.  **Retaining all six samples (`mock`, `SARS`, and `Rem`) during model fitting:** Although our biological contrast of interest compares `SARS` against `mock`, dropping the two `Rem` samples prior to model fitting would reduce the residual degrees of freedom from 3 to 1. Retaining all six samples allows both tools to leverage the `Rem` observations when estimating baseline inter-donor differences and gene-wise dispersion parameters, improving statistical stability before extracting the targeted `SARS vs. mock` contrast.
+2.  **Additive paired model design (`~ donor + condition`):** Because each donor was sampled across all conditions, an additive blocking factor for `donor` was included rather than a simple `~ condition` design. Accounting for baseline donor-to-donor transcriptome differences prevents donor variance from inflating the residual error term, thereby increasing statistical power to detect the true `condition` effect.
 
 ### Rationale for Selecting DESeq2 and edgeR Over Alternative Algorithms
 
 Several classes of differential expression algorithms exist for RNA-seq data. **DESeq2** [@Loveetal2014] and **edgeR** [@Robinsonetal2009] were specifically selected over alternative frameworks for three methodological reasons:
 
-* **Discrete Negative Binomial modelling vs. normal-approximation transformations (`limma-voom`):** RNA-seq read counts are discrete, non-negative integers that exhibit strong overdispersion (variance exceeding the mean). While `limma-voom` models log-counts-per-million using precision weights and linear models, benchmark studies show that `voom` requires larger sample sizes to reliably estimate empirical Bayes variance weights and can lose power or control of the false discovery rate (FDR) when biological replicates are very small ($n = 2$ donors per group). In contrast, both `DESeq2` and `edgeR` directly model raw counts using a Negative Binomial Generalized Linear Model (GLM), which is mathematically suited to low-replicate count data.
-* **Parametric empirical Bayes shrinkage vs. non-parametric rank methods (`NOIseq`, `SAMseq`, `Wilcoxon`):** Non-parametric permutation or rank-based methods avoid distributional assumptions but lack statistical power at $n = 2$ per group because the minimum achievable p-value from rank permutations is bounded by sample size. `DESeq2` and `edgeR` overcome the small-sample limitation by borrowing information across all genes via empirical Bayes dispersion shrinkage.
-* **Methodological complementarity between `DESeq2` and `edgeR`:** Despite sharing a Negative Binomial GLM foundation, `DESeq2` and `edgeR` differ in their normalisation strategies (median-of-ratios vs. Trimmed Mean of M-values [TMM]), low-count filtering (`results()` independent filtering vs. `filterByExpr()`), dispersion shrinkage (local regression/MAP shrinkage vs. weighted likelihood empirical Bayes), and hypothesis tests (Wald test vs. Likelihood Ratio Test [LRT]). Combining them tests whether candidate genes are robust to distinct statistical assumptions.
+-   **Discrete Negative Binomial modelling vs. normal-approximation transformations (`limma-voom`):** RNA-seq read counts are discrete, non-negative integers that exhibit strong overdispersion (variance exceeding the mean). While `limma-voom` models log-counts-per-million using precision weights and linear models, benchmark studies show that `voom` requires larger sample sizes to reliably estimate empirical Bayes variance weights and can lose power or control of the false discovery rate (FDR) when biological replicates are very small ($n = 2$ donors per group). In contrast, both `DESeq2` and `edgeR` directly model raw counts using a Negative Binomial Generalized Linear Model (GLM), which is mathematically suited to low-replicate count data.
+-   **Parametric empirical Bayes shrinkage vs. non-parametric rank methods (`NOIseq`, `SAMseq`, `Wilcoxon`):** Non-parametric permutation or rank-based methods avoid distributional assumptions but lack statistical power at $n = 2$ per group because the minimum achievable p-value from rank permutations is bounded by sample size. `DESeq2` and `edgeR` overcome the small-sample limitation by borrowing information across all genes via empirical Bayes dispersion shrinkage.
+-   **Methodological complementarity between `DESeq2` and `edgeR`:** Despite sharing a Negative Binomial GLM foundation, `DESeq2` and `edgeR` differ in their normalisation strategies (median-of-ratios vs. Trimmed Mean of M-values \[TMM\]), low-count filtering (`results()` independent filtering vs. `filterByExpr()`), dispersion shrinkage (local regression/MAP shrinkage vs. weighted likelihood empirical Bayes), and hypothesis tests (Wald test vs. Likelihood Ratio Test \[LRT\]). Combining them tests whether candidate genes are robust to distinct statistical assumptions.
 
 ### Pre-Filtering and Tool-Specific Normalisation
 
@@ -79,8 +81,8 @@ counts_data <- counts_data[!genes_to_remove, ]
 
 Subsequent pre-filtering and normalisation followed each package's recommended best practices rather than forcing a single identical pre-filter onto both tools, which could bias one model's dispersion trend:
 
-* **DESeq2 workflow:** Raw counts were normalised using the **median-of-ratios** method, which scales counts by sample-specific size factors resistant to a small number of highly expressed viral-response genes. Rather than hard-filtering low-count genes prior to dispersion estimation, `DESeq2` retains all expressed genes to model the mean-dispersion trend accurately and applies automated **independent filtering** at the `results()` stage, using the mean normalised count as a filter statistic to maximise the number of discoveries at $\alpha = 0.05$.
-* **edgeR workflow:** Because `edgeR`'s TMM normalisation and dispersion estimation are sensitive to sparse low-count features, `filterByExpr()` was applied first using the `~ donor + condition` design matrix to retain only genes with sufficient counts across biological groups. Library sizes were then recalculated (`keep.lib.sizes = FALSE`) and normalised via **Trimmed Mean of M-values (TMM)** to correct for sequencing depth and RNA composition bias. Both workflows operate on raw integer counts rather than length-normalised metrics (TPM or FPKM), preserving the count-variance relationship required by the Negative Binomial distribution.
+-   **DESeq2 workflow:** Raw counts were normalised using the **median-of-ratios** method, which scales counts by sample-specific size factors resistant to a small number of highly expressed viral-response genes. Rather than hard-filtering low-count genes prior to dispersion estimation, `DESeq2` retains all expressed genes to model the mean-dispersion trend accurately and applies automated **independent filtering** at the `results()` stage, using the mean normalised count as a filter statistic to maximise the number of discoveries at $\alpha = 0.05$.
+-   **edgeR workflow:** Because `edgeR`'s TMM normalisation and dispersion estimation are sensitive to sparse low-count features, `filterByExpr()` was applied first using the `~ donor + condition` design matrix to retain only genes with sufficient counts across biological groups. Library sizes were then recalculated (`keep.lib.sizes = FALSE`) and normalised via **Trimmed Mean of M-values (TMM)** to correct for sequencing depth and RNA composition bias. Both workflows operate on raw integer counts rather than length-normalised metrics (TPM or FPKM), preserving the count-variance relationship required by the Negative Binomial distribution.
 
 ```{r}
 #| include: false
@@ -110,14 +112,14 @@ y <- calcNormFactors(y)
 
 ### Consensus Strategy Justification
 
-To combine the outputs of `DESeq2` and `edgeR`, each tool's raw p-values were first adjusted for multiple hypothesis testing using the Benjamini-Hochberg procedure ($\text{FDR} / p_{\text{adj}} < 0.05$) to control the expected proportion of false discoveries across thousands of simultaneous gene tests. 
+To combine the outputs of `DESeq2` and `edgeR`, each tool's raw p-values were first adjusted for multiple hypothesis testing using the Benjamini-Hochberg procedure ($\text{FDR} / p_{\text{adj}} < 0.05$) to control the expected proportion of false discoveries across thousands of simultaneous gene tests.
 
 A **strict intersection with directional concordance** was chosen over alternative combination methods (such as taking the union of significant genes, or combining p-values via Fisher's method):
 
-1. **Intersection vs. Union:** A union maximises sensitivity (recall) but retains genes that pass significance in only one algorithm due to tool-specific dispersion or filtering artefacts. Because Task 2 requires selecting a *single* high-confidence gene for therapeutic CRISPR targeting, minimising false positives (high precision/specificity) is far more important than maximising gene count.
-2. **Directional concordance (`sign(log2FC_DESeq2) == sign(logFC_edgeR)`):** Requiring identical fold-change signs ensures that both models agree on whether transcription is upregulated or downregulated—a critical requirement because the direction of deregulation directly dictates whether **CRISPRi** (repression) or **CRISPRa** (activation) is deployed in Task 2.
+1.  **Intersection vs. Union:** A union maximises sensitivity (recall) but retains genes that pass significance in only one algorithm due to tool-specific dispersion or filtering artefacts. Because Task 2 requires selecting a *single* high-confidence gene for therapeutic CRISPR targeting, minimising false positives (high precision/specificity) is far more important than maximising gene count.
+2.  **Directional concordance (`sign(log2FC_DESeq2) == sign(logFC_edgeR)`):** Requiring identical fold-change signs ensures that both models agree on whether transcription is upregulated or downregulated—a critical requirement because the direction of deregulation directly dictates whether **CRISPRi** (repression) or **CRISPRa** (activation) is deployed in Task 2.
 
----
+------------------------------------------------------------------------
 
 ## Findings
 
@@ -237,9 +239,9 @@ consensus_table |>
 
 Among the six consensus hits:
 
-* **Five genes are strongly upregulated in SARS-CoV-2 infection:** `OAS2`, `GPRASP1`, `AC026801.2`, `IFI27`, and `CXCL11`.
-* **One gene is downregulated:** `SERPINB2` ($\log_2\text{FC} = -1.69$ in `DESeq2`; $-1.67$ in `edgeR`).
-* **Biotype diversity:** Five genes (`OAS2`, `GPRASP1`, `IFI27`, `SERPINB2`, `CXCL11`) are protein-coding, whereas `AC026801.2` is a long non-coding RNA (lncRNA).
+-   **Five genes are strongly upregulated in SARS-CoV-2 infection:** `OAS2`, `GPRASP1`, `AC026801.2`, `IFI27`, and `CXCL11`.
+-   **One gene is downregulated:** `SERPINB2` ($\log_2\text{FC} = -1.69$ in `DESeq2`; $-1.67$ in `edgeR`).
+-   **Biotype diversity:** Five genes (`OAS2`, `GPRASP1`, `IFI27`, `SERPINB2`, `CXCL11`) are protein-coding, whereas `AC026801.2` is a long non-coding RNA (lncRNA).
 
 ## Discussion & Conclusion
 

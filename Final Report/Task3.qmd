@@ -238,7 +238,9 @@ In Task 2, two CRISPR interference (CRISPRi) guides, **200forw** and **248forw**
 
 Task 3 evaluates both questions across seven individuals from the 1000 Genomes Project (`HG00142`, `HG00178`, `HG00237`, `HG01521`, `HG03129`, `NA19175`, and `NA19462`) to refine the guide selection from Task 2.
 
-## Approach
+## Approach [^genai-task3]
+
+[^genai-task3]: **GenAI Usage & Validation:** Microsoft Copilot was used to assist with the organisation and refinement of R code processing the VCF files (`chr12_OAS2_7samples.vcf`, `sampled_chr1.vcf.zip`, `sampled_chr2.vcf.zip`) and CRISPOR off-target predictions (`offtargetsguide.txt`), as well as improving the clarity and scientific writing style of this chapter (alongside Gemini 4 Argon for book-wide consistency). Outputs were validated via automated `stopifnot()` assertions in the R setup chunk, manual cross-checking of the `chr1:224,887,199` (`AGG` $\rightarrow$ `AGA`) variant against raw VCF records, and independent review against lecture principles. See the [AI Use Declaration](ai-declaration.qmd) for full details.
 
 ### Extracting Individual Genotypes from VCF Datasets
 
@@ -338,5 +340,3 @@ Two methodological limitations should be noted. First, VCF files report variant 
 ## Conclusion
 
 Across the seven evaluated 1000 Genomes individuals, chromosome 12 variant screening confirms that both **200forw** and **248forw** target sites in *OAS2* exon 1 are 100% conserved (`0|0`) on both haplotypes. Off-target screening across chromosomes 1 and 2 identified a single SNP (`chr1:224,887,199 G>A`) affecting a predicted **248forw** off-target site in four individuals, mutating its PAM from `AGG` to `AGA` while preserving four protospacer mismatches. Both **200forw** and **248forw** remain strong candidates for *OAS2* CRISPRi modulation, with **200forw** showing complete invariance across all assessed loci and **248forw** experiencing a haplotype-dependent reduction in canonical PAM availability at one off-target site.
-
-The [Reproducibility chapter](reproducibility.qmd) documents the input files, data access, reproduction workflow and software information. Sources cited here are included in the final [References](references.qmd).
