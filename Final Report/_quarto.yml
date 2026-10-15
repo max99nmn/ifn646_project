@@ -19,6 +19,7 @@ book:
     - Task3.qmd
     - summary.qmd
     - reproducibility.qmd
+    - ai_declaration.qmd
     - references.qmd
 
 bibliography: references.bib
