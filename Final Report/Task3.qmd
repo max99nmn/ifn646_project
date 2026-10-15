@@ -240,7 +240,7 @@ Task 3 evaluates both questions across seven individuals from the 1000 Genomes P
 
 ## Approach [^genai-task3]
 
-[^genai-task3]: **GenAI Usage & Validation:** Microsoft Copilot was used to assist with the organisation and refinement of R code processing the VCF files (`chr12_OAS2_7samples.vcf`, `sampled_chr1.vcf.zip`, `sampled_chr2.vcf.zip`) and CRISPOR off-target predictions (`offtargetsguide.txt`), as well as improving the clarity and scientific writing style of this chapter (alongside Gemini 4 Argon for book-wide consistency). Outputs were validated via automated `stopifnot()` assertions in the R setup chunk, manual cross-checking of the `chr1:224,887,199` (`AGG` $\rightarrow$ `AGA`) variant against raw VCF records, and independent review against lecture principles. See the [AI Use Declaration](ai-declaration.qmd) for full details.
+[^genai-task3]: **GenAI Usage & Validation:** Microsoft Copilot was used to assist with the organisation and refinement of R code processing the VCF files (`chr12_OAS2_7samples.vcf`, `sampled_chr1.vcf.zip`, `sampled_chr2.vcf.zip`) and CRISPOR off-target predictions (`offtargetsguide.txt`), as well as improving the clarity and scientific writing style of this chapter (alongside Gemini 4 Argon for book-wide consistency). Outputs were validated via automated `stopifnot()` assertions in the R setup chunk, manual cross-checking of the `chr1:224,887,199` (`AGG` $\rightarrow$ `AGA`) variant against raw VCF records, and independent review against lecture principles. See the [AI Use Declaration](ai_declaration.qmd) for full details.
 
 ### Extracting Individual Genotypes from VCF Datasets
 

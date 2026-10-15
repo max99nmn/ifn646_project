@@ -20,7 +20,7 @@ The first stage of this study aims to identify human genes that are significantl
 
 ## Approach [^task1-1]
 
-[^task1-1]: **GenAI Usage & Validation:** Google Gemini 3.1 Pro was used to assist in coding and phrasing for the `DESeq2`/`edgeR` workflow, while Gemini 4 (Argon) assisted in structuring and streamlining the chapter text. All experimental design choices (`~ donor + condition`), normalization strategies, and biological interpretations were performed independently. Refactored R code was validated by verifying that gene-filtering counts (33,327 expressed genes), tool-specific hit counts (68 in `DESeq2`, 7 in `edgeR`), and the 6 consensus genes in `data/consensus_table.rds` remained strictly identical before and after code refinement. See the [AI Use Declaration](ai-declaration.qmd) for full details.
+[^task1-1]: **GenAI Usage & Validation:** Google Gemini 3.1 Pro was used to assist in coding and phrasing for the `DESeq2`/`edgeR` workflow, while Gemini 4 (Argon) assisted in structuring and streamlining the chapter text. All experimental design choices (`~ donor + condition`), normalization strategies, and biological interpretations were performed independently. Refactored R code was validated by verifying that gene-filtering counts (33,327 expressed genes), tool-specific hit counts (68 in `DESeq2`, 7 in `edgeR`), and the 6 consensus genes in `data/consensus_table.rds` remained strictly identical before and after code refinement. See the [AI Use Declaration](ai_declaration.qmd) for full details.
 
 ### Experimental Design and Metadata Extraction
 
